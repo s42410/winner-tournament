@@ -4,7 +4,6 @@ const cors = require('cors');
 const path = require('path');
 require('dotenv').config();
 
-// ✅ נתיבי API
 const adminRoutes = require('./routes/adminRoutes');
 const tournamentRoutes = require('./routes/tournamentsRoutes');
 const teamRoutes = require('./routes/teamRoutes');
@@ -14,8 +13,8 @@ const viewerRoutes = require('./routes/viewerRoutes');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// ✅ קבצים סטטיים
-app.use(express.static(path.join(__dirname, '../client/public')));
+// ✅ קבצים סטטיים מתיקיית public הראשית
+app.use(express.static(path.join(__dirname, 'public')));
 
 // ✅ מידלווארים
 app.use(cors());
