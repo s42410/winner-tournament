@@ -4,6 +4,7 @@ const cors = require('cors');
 const path = require('path');
 require('dotenv').config();
 
+// ✅ נתיבי API
 const adminRoutes = require('./routes/adminRoutes');
 const tournamentRoutes = require('./routes/tournamentsRoutes');
 const teamRoutes = require('./routes/teamRoutes');
@@ -13,8 +14,8 @@ const viewerRoutes = require('./routes/viewerRoutes');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// ✅ קבצים סטטיים מתיקיית public הראשית
-app.use(express.static(path.join(__dirname, 'public')));
+// ✅ קבצים סטטיים מ-client/public
+app.use(express.static(path.join(__dirname, '../client/public')));
 
 // ✅ מידלווארים
 app.use(cors());
@@ -26,6 +27,11 @@ app.use('/api/tournaments', tournamentRoutes);
 app.use('/api/teams', teamRoutes);
 app.use('/api/games', gameRoutes);
 app.use('/api/viewers', viewerRoutes);
+
+// ✅ שליחה של index.html כברירת מחדל
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, '../client/public/index.html'));
+});
 
 // ✅ חיבור למסד הנתונים
 mongoose.connect(process.env.MONGO_URL)
