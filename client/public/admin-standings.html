@@ -73,6 +73,10 @@
           fetch(`/api/tournaments/${tournamentId}`)
         ]);
 
+        if (!gamesRes.ok || !teamsRes.ok || !tournamentRes.ok) {
+          throw new Error("שגיאה בטעינת הנתונים מהשרת");
+        }
+
         const games = await gamesRes.json();
         const teams = await teamsRes.json();
         const tournament = await tournamentRes.json();

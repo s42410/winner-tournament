@@ -1,8 +1,8 @@
-<!-- שמור בשם viewer-tournament.html -->
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>פרטי טורניר לצפייה</title>
   <style>
     body {
@@ -13,19 +13,22 @@
       color: #333;
     }
     #logo {
-      width: 300px;
+      width: 280px;
+      max-width: 100%;
       cursor: pointer;
       margin-bottom: 20px;
     }
     h1, h2 {
       color: #00796b;
+      font-size: 24px;
     }
     .section {
       background: #fff;
       padding: 20px;
       border-radius: 12px;
       margin: 20px auto;
-      width: 85%;
+      width: 95%;
+      max-width: 800px;
       box-shadow: 0 0 12px rgba(0,0,0,0.15);
     }
     table {
@@ -46,6 +49,7 @@
       margin: 10px 0;
       border-radius: 10px;
       background-color: #f0f0f0;
+      font-size: 16px;
     }
     .error {
       color: red;
@@ -58,14 +62,15 @@
     }
     .back-button {
       position: fixed;
-      top: 20px;
-      left: 20px;
+      top: 15px;
+      left: 15px;
       background: #ffcc80;
       border: none;
       border-radius: 8px;
       padding: 10px 18px;
       font-size: 16px;
       cursor: pointer;
+      z-index: 10;
     }
   </style>
 </head>
@@ -125,17 +130,21 @@
           fetch(`/api/games/${tournamentId}`)
         ]);
 
+        if (!tournamentRes.ok || !teamsRes.ok || !gamesRes.ok) {
+          throw new Error('בעיה בטעינת הנתונים מהשרת');
+        }
+
         const tournament = await tournamentRes.json();
         const teams = await teamsRes.json();
         const games = await gamesRes.json();
-        document.getElementById('tournamentName').innerText = tournament.name;
+        document.getElementById('tournamentName').innerText = tournament.name || 'טורניר ללא שם';
 
         // טבלת דירוג
         const teamStats = teams.map(team => {
-          const teamGames = games.filter(g => g.teamA._id === team._id || g.teamB._id === team._id);
+          const teamGames = games.filter(g => g.teamA?._id === team._id || g.teamB?._id === team._id);
           let played = teamGames.length, wins = 0, draws = 0, losses = 0, points = 0;
           teamGames.forEach(g => {
-            const isA = g.teamA._id === team._id;
+            const isA = g.teamA?._id === team._id;
             const gF = isA ? g.scoreA : g.scoreB;
             const gA = isA ? g.scoreB : g.scoreA;
             if (gF > gA) { wins++; points += 3; }
@@ -156,18 +165,18 @@
             </tr>`;
         });
 
-        // 🔥 טבלת מלך שערים לפי goals.teamA / teamB
+        // טבלת מלך שערים
         const scorers = {};
-        for (const g of games) {
-          for (const goal of (g.goals?.teamA || [])) {
+        games.forEach(g => {
+          for (const goal of g.goals?.teamA || []) {
             if (!scorers[goal.scorer]) scorers[goal.scorer] = { name: goal.scorer, goals: 0 };
             scorers[goal.scorer].goals++;
           }
-          for (const goal of (g.goals?.teamB || [])) {
+          for (const goal of g.goals?.teamB || []) {
             if (!scorers[goal.scorer]) scorers[goal.scorer] = { name: goal.scorer, goals: 0 };
             scorers[goal.scorer].goals++;
           }
-        }
+        });
 
         const topScorers = Object.values(scorers)
           .sort((a, b) => b.goals - a.goals)
@@ -188,16 +197,18 @@
         const gamesList = document.getElementById('gamesList');
         gamesList.innerHTML = '';
         games.forEach(g => {
+          const teamAName = g.teamA?.name || 'קבוצה א';
+          const teamBName = g.teamB?.name || 'קבוצה ב';
           gamesList.innerHTML += `
             <div class="match-box">
-              ${g.teamA.name} ${g.scoreA ?? '-'} : ${g.scoreB ?? '-'} ${g.teamB.name}
+              ${teamAName} ${g.scoreA ?? '-'} : ${g.scoreB ?? '-'} ${teamBName}
               <br>📅 ${formatDate(g.date)}
             </div>`;
         });
 
       } catch (err) {
         console.error(err);
-        document.getElementById('error').innerText = '❌ שגיאה בטעינת הנתונים';
+        document.getElementById('error').innerText = '❌ שגיאה בטעינת הנתונים: ' + err.message;
       }
     }
 

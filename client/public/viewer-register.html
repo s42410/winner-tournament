@@ -25,12 +25,14 @@
       width: 90%;
       border-radius: 8px;
       border: 1px solid #ccc;
+      box-sizing: border-box;
     }
     button {
       background-color: #2196f3;
       color: white;
       border: none;
       cursor: pointer;
+      transition: 0.3s;
     }
     button:hover {
       background-color: #1976d2;
@@ -38,10 +40,12 @@
     .link {
       margin-top: 15px;
       display: block;
+      font-size: 14px;
     }
     .message {
       margin-top: 15px;
       font-weight: bold;
+      min-height: 24px;
     }
     .success { color: green; }
     .error { color: red; }
@@ -83,9 +87,11 @@
         if (res.ok) {
           message.textContent = '🎉 נרשמת בהצלחה!';
           message.className = 'message success';
-          form.reset();
+          document.getElementById('email').value = '';
+          document.getElementById('password').value = '';
+          document.getElementById('phone').value = '';
         } else {
-          message.textContent = '❌ שגיאה: ' + data.error;
+          message.textContent = '❌ שגיאה: ' + (data.error || 'פרטי הרשמה שגויים');
           message.className = 'message error';
         }
       } catch {

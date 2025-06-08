@@ -109,10 +109,17 @@
 
   <div class="box">
     <h2>⚽ יצירת קבוצה</h2>
+
+    <label for="name" hidden>שם קבוצה</label>
     <input type="text" id="name" placeholder="שם קבוצה" required />
+
+    <label for="color" hidden>צבע מדים</label>
     <input type="text" id="color" placeholder="🎨 צבע מדים" required />
+
+    <label for="ageGroup" hidden>שכבת גיל</label>
     <input type="text" id="ageGroup" placeholder="שכבת גיל (למשל: ד-ה)" required />
-    <button class="btn-save" onclick="saveTeam()">💾 שמור קבוצה</button>
+
+    <button class="btn-save" onclick="saveTeam()" title="שמור קבוצה">💾 שמור קבוצה</button>
 
     <div id="message" class="message"></div>
 
@@ -148,9 +155,9 @@
             <td>${team.color}</td>
             <td>${team.grade}</td>
             <td>
-              <button class="btn-edit" onclick="editTeam('${team._id}', '${team.name}', '${team.color}', '${team.grade}')">✏️ ערוך</button>
-              <button class="btn-delete" onclick="deleteTeam('${team._id}', '${team.name}')">🗑️ מחק</button>
-              <button class="btn-players" onclick="goToPlayers('${team._id}')">👟 ניהול שחקנים</button>
+              <button class="btn-edit" onclick="editTeam('${team._id}', '${team.name}', '${team.color}', '${team.grade}')" title="ערוך קבוצה">✏️</button>
+              <button class="btn-delete" onclick="deleteTeam('${team._id}', '${team.name}')" title="מחק קבוצה">🗑️</button>
+              <button class="btn-players" onclick="goToPlayers('${team._id}')" title="ניהול שחקנים">👟</button>
             </td>
           `;
           tableBody.appendChild(row);
@@ -162,9 +169,15 @@
     }
 
     async function saveTeam() {
-      const name = document.getElementById('name').value;
-      const color = document.getElementById('color').value;
-      const grade = document.getElementById('ageGroup').value;
+      const name = document.getElementById('name').value.trim();
+      const color = document.getElementById('color').value.trim();
+      const grade = document.getElementById('ageGroup').value.trim();
+      if (!name || !color || !grade) {
+        message.textContent = '⚠️ אנא מלא את כל השדות';
+        message.className = 'message error';
+        return;
+      }
+
       const url = editId ? `/api/teams/${editId}` : `/api/teams/${tournamentId}`;
       const method = editId ? 'PUT' : 'POST';
 
@@ -220,7 +233,7 @@
     }
 
     function goToPlayers(teamId) {
-      window.location.href = `/admin-players.html?teamId=${teamId}`;
+      window.location.href = `/admin-players.html?teamId=${encodeURIComponent(teamId)}`;
     }
 
     fetchTeams();

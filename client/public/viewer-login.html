@@ -1,4 +1,3 @@
-<!-- viewer-login.html -->
 <!DOCTYPE html>
 <html lang="he">
 <head>
@@ -27,6 +26,8 @@
       padding: 10px;
       margin: 8px 0;
       font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
     }
 
     button {
@@ -63,6 +64,7 @@
     .message {
       margin-top: 12px;
       font-weight: bold;
+      min-height: 24px;
     }
 
     .success { color: green; }
@@ -76,7 +78,7 @@
   </style>
 </head>
 <body>
-  <img src="logo.png" class="logo" onclick="goHome()" />
+  <img src="logo.png" class="logo" alt="logo" onclick="goHome()" />
   <div class="box">
     <h2>🔐 התחברות צופים</h2>
     <form id="loginForm">
@@ -97,6 +99,8 @@
     }
 
     function loginAsGuest() {
+      // שמור במשתנה מקומי שמדובר באורח
+      localStorage.setItem("guest", "true");
       window.location.href = "viewer-dashboard.html?guest=true";
     }
 
@@ -109,7 +113,7 @@
       const password = document.getElementById('password').value;
 
       try {
-        const res = await fetch('http://localhost:5000/api/viewers/login', {
+        const res = await fetch('/api/viewers/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, password })
@@ -120,11 +124,12 @@
         if (res.ok) {
           message.textContent = "🎉 התחברת בהצלחה! מעביר...";
           message.className = "message success";
+          localStorage.removeItem("guest");
           setTimeout(() => {
             window.location.href = "viewer-dashboard.html";
           }, 1000);
         } else {
-          message.textContent = "❌ " + data.error;
+          message.textContent = "❌ " + (data.error || "שגיאה כללית");
           message.className = "message error";
         }
       } catch (err) {
