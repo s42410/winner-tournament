@@ -1,0 +1,207 @@
+<!-- שמור בשם viewer-tournament.html -->
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title>פרטי טורניר לצפייה</title>
+  <style>
+    body {
+      background: linear-gradient(to right, #e0f7fa, #80deea);
+      font-family: 'Segoe UI', sans-serif;
+      text-align: center;
+      padding: 30px;
+      color: #333;
+    }
+    #logo {
+      width: 300px;
+      cursor: pointer;
+      margin-bottom: 20px;
+    }
+    h1, h2 {
+      color: #00796b;
+    }
+    .section {
+      background: #fff;
+      padding: 20px;
+      border-radius: 12px;
+      margin: 20px auto;
+      width: 85%;
+      box-shadow: 0 0 12px rgba(0,0,0,0.15);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    th, td {
+      border: 1px solid #bbb;
+      padding: 10px;
+      font-size: 15px;
+    }
+    th {
+      background-color: #b2ebf2;
+    }
+    .match-box {
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 10px;
+      background-color: #f0f0f0;
+    }
+    .error {
+      color: red;
+      font-weight: bold;
+    }
+    .footer {
+      margin-top: 40px;
+      font-size: 14px;
+      color: #555;
+    }
+    .back-button {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background: #ffcc80;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 18px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <button class="back-button" onclick="history.back()">🔙 חזור</button>
+  <img src="logo.png" id="logo" onclick="goHome()" />
+  <h1 id="tournamentName">טעינת טורניר...</h1>
+
+  <div id="error" class="error"></div>
+
+  <div class="section">
+    <h2>📊 טבלת דירוג</h2>
+    <table id="standingsTable">
+      <thead>
+        <tr><th>קבוצה</th><th>מש</th><th>נצ</th><th>ת</th><th>ה</th><th>נק'</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <h2>🥇 מלך שערים</h2>
+    <table>
+      <thead>
+        <tr><th>מקום</th><th>שחקן</th><th>שערים</th></tr>
+      </thead>
+      <tbody id="scorersTableBody"></tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <h2>📅 לוח משחקים</h2>
+    <div id="gamesList"></div>
+  </div>
+
+  <div class="footer">
+    האתר נבנה על ידי סטיב רבייב | כל הזכויות שמורות ©
+  </div>
+
+  <script>
+    const tournamentId = new URLSearchParams(window.location.search).get('id');
+
+    function goHome() {
+      window.location.href = 'index.html';
+    }
+
+    function formatDate(dateStr) {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('he-IL');
+    }
+
+    async function loadTournamentData() {
+      try {
+        const [tournamentRes, teamsRes, gamesRes] = await Promise.all([
+          fetch(`/api/tournaments/${tournamentId}`),
+          fetch(`/api/teams?tournamentId=${tournamentId}`),
+          fetch(`/api/games/${tournamentId}`)
+        ]);
+
+        const tournament = await tournamentRes.json();
+        const teams = await teamsRes.json();
+        const games = await gamesRes.json();
+        document.getElementById('tournamentName').innerText = tournament.name;
+
+        // טבלת דירוג
+        const teamStats = teams.map(team => {
+          const teamGames = games.filter(g => g.teamA._id === team._id || g.teamB._id === team._id);
+          let played = teamGames.length, wins = 0, draws = 0, losses = 0, points = 0;
+          teamGames.forEach(g => {
+            const isA = g.teamA._id === team._id;
+            const gF = isA ? g.scoreA : g.scoreB;
+            const gA = isA ? g.scoreB : g.scoreA;
+            if (gF > gA) { wins++; points += 3; }
+            else if (gF === gA) { draws++; points += 1; }
+            else { losses++; }
+          });
+          return { name: team.name, played, wins, draws, losses, points };
+        });
+
+        teamStats.sort((a, b) => b.points - a.points);
+        const standingsBody = document.querySelector('#standingsTable tbody');
+        standingsBody.innerHTML = '';
+        teamStats.forEach(t => {
+          standingsBody.innerHTML += `
+            <tr>
+              <td>${t.name}</td><td>${t.played}</td><td>${t.wins}</td>
+              <td>${t.draws}</td><td>${t.losses}</td><td>${t.points}</td>
+            </tr>`;
+        });
+
+        // 🔥 טבלת מלך שערים לפי goals.teamA / teamB
+        const scorers = {};
+        for (const g of games) {
+          for (const goal of (g.goals?.teamA || [])) {
+            if (!scorers[goal.scorer]) scorers[goal.scorer] = { name: goal.scorer, goals: 0 };
+            scorers[goal.scorer].goals++;
+          }
+          for (const goal of (g.goals?.teamB || [])) {
+            if (!scorers[goal.scorer]) scorers[goal.scorer] = { name: goal.scorer, goals: 0 };
+            scorers[goal.scorer].goals++;
+          }
+        }
+
+        const topScorers = Object.values(scorers)
+          .sort((a, b) => b.goals - a.goals)
+          .slice(0, 5);
+
+        const scorersBody = document.getElementById('scorersTableBody');
+        scorersBody.innerHTML = '';
+        topScorers.forEach((s, i) => {
+          scorersBody.innerHTML += `
+            <tr>
+              <td>${i + 1}</td>
+              <td>${s.name}</td>
+              <td>${s.goals}</td>
+            </tr>`;
+        });
+
+        // לוח משחקים
+        const gamesList = document.getElementById('gamesList');
+        gamesList.innerHTML = '';
+        games.forEach(g => {
+          gamesList.innerHTML += `
+            <div class="match-box">
+              ${g.teamA.name} ${g.scoreA ?? '-'} : ${g.scoreB ?? '-'} ${g.teamB.name}
+              <br>📅 ${formatDate(g.date)}
+            </div>`;
+        });
+
+      } catch (err) {
+        console.error(err);
+        document.getElementById('error').innerText = '❌ שגיאה בטעינת הנתונים';
+      }
+    }
+
+    loadTournamentData();
+  </script>
+</body>
+</html>

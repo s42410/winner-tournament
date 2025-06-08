@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+  <meta charset="UTF-8" />
+  <title>אזור ניהול טורנירים</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      direction: rtl;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(135deg, #7ed6df, #e056fd);
+      min-height: 100vh;
+    }
+    .logo {
+      width: 320px;
+      margin: 30px auto 10px;
+      cursor: pointer;
+      display: block;
+    }
+    .back-button {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background-color: #f39c12;
+      border: none;
+      color: white;
+      padding: 10px 16px;
+      font-size: 16px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .box {
+      background: white;
+      padding: 30px;
+      margin: auto;
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.15);
+      width: 90%;
+      max-width: 720px;
+    }
+    h2 {
+      color: #2c3e50;
+    }
+    form input, form select, form button {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      font-size: 16px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+    form button {
+      background-color: #6c5ce7;
+      color: white;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    form button:hover {
+      background-color: #5a4cd1;
+    }
+    .message {
+      font-weight: bold;
+      margin-top: 10px;
+    }
+    .success { color: green; }
+    .error { color: red; }
+    #tournamentsList {
+      margin-top: 30px;
+      text-align: right;
+    }
+    .tournament {
+      background: #fefefe;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      padding: 15px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+    .tournament-buttons {
+      margin-top: 10px;
+    }
+    .tournament-buttons button {
+      margin: 5px 4px 0;
+      padding: 8px 14px;
+      font-size: 14px;
+      border-radius: 6px;
+      border: none;
+      background-color: #0984e3;
+      color: white;
+      cursor: pointer;
+    }
+    .tournament-buttons button:hover {
+      background-color: #0652dd;
+    }
+    .footer {
+      margin-top: 50px;
+      font-size: 14px;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+
+  <button class="back-button" onclick="history.back()">🔙 חזור</button>
+  <img src="logo.png" alt="לוגו מאמן" class="logo" onclick="window.location.href='index.html'" />
+
+  <div class="box">
+    <h2>ברוך הבא, מנהל!</h2>
+    <p>כאן תוכל לנהל טורנירים, קבוצות, שחקנים וסטטיסטיקות.</p>
+
+    <h3>🆕 יצירת או עריכת טורניר</h3>
+    <form id="createForm">
+      <input type="text" id="name" placeholder="שם הטורניר" required />
+      <input type="text" id="grade" placeholder="שכבת גיל (למשל: ד-ה)" required />
+      <select id="type" required>
+        <option value="">בחר סוג טורניר</option>
+        <option value="ליגה">ליגה</option>
+        <option value="נוקאאוט">נוקאאוט</option>
+        <option value="בתים">בתים</option>
+        <option value="שלבים">שלבים</option>
+        <option value="ליגה + נוקאאוט">ליגה + נוקאאוט</option>
+        <option value="בתים + נוקאאוט">בתים + נוקאאוט</option>
+      </select>
+      <button type="submit">💾 שמור טורניר</button>
+    </form>
+
+    <div id="message" class="message"></div>
+
+    <h3>📋 ניהול טורנירים קיימים</h3>
+    <div id="tournamentsList"></div>
+  </div>
+
+  <div class="footer">
+    האתר נוצר על ידי <strong>Steve_rabaev</strong> | כל הזכויות שמורות ©
+  </div>
+
+  <script>
+    const form = document.getElementById('createForm');
+    const message = document.getElementById('message');
+    const tournamentsList = document.getElementById('tournamentsList');
+    let editId = null;
+
+    async function fetchTournaments() {
+      try {
+        const res = await fetch('/api/tournaments');
+        const data = await res.json();
+        tournamentsList.innerHTML = '';
+
+        data.forEach(t => {
+          const div = document.createElement('div');
+          div.className = 'tournament';
+          div.innerHTML = `
+            <strong>שם:</strong> ${t.name} <br>
+            <strong>שכבת גיל:</strong> ${t.grade || t.ageGroup} <br>
+            <strong>סוג:</strong> ${t.type}
+            <div class="tournament-buttons">
+              <button onclick="editTournament('${t._id}', '${t.name}', '${t.grade || t.ageGroup}', '${t.type}')">✏️ ערוך</button>
+              <button onclick="deleteTournament('${t._id}', '${t.name}')">🗑️ מחק</button>
+              <button onclick="goToTeamManagement('${t._id}')">👥 ניהול קבוצות</button>
+              <button onclick="goToGameManagement('${t._id}')">⚽ ניהול משחקים</button>
+              <button onclick="goToStatsPage('${t._id}')">📊 טבלת דירוג וסטטיסטיקה</button>
+            </div>
+          `;
+          tournamentsList.appendChild(div);
+        });
+      } catch {
+        tournamentsList.innerHTML = '❌ שגיאה בטעינת הטורנירים';
+      }
+    }
+
+    function editTournament(id, name, grade, type) {
+      document.getElementById('name').value = name;
+      document.getElementById('grade').value = grade;
+      document.getElementById('type').value = type;
+      editId = id;
+    }
+
+    async function deleteTournament(id, name) {
+      if (confirm(`למחוק את הטורניר "${name}"?`)) {
+        await fetch(`/api/tournaments/${id}`, { method: 'DELETE' });
+        fetchTournaments();
+      }
+    }
+
+    function goToTeamManagement(tournamentId) {
+      window.location.href = `/admin-teams.html?tournamentId=${tournamentId}`;
+    }
+
+    function goToGameManagement(tournamentId) {
+      window.location.href = `/admin-games.html?tournamentId=${tournamentId}`;
+    }
+
+    function goToStatsPage(tournamentId) {
+      window.location.href = `/admin-standings.html?tournamentId=${tournamentId}`;
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = document.getElementById('name').value;
+      const grade = document.getElementById('grade').value;
+      const type = document.getElementById('type').value;
+
+      const url = editId ? `/api/tournaments/${editId}` : '/api/tournaments/create';
+      const method = editId ? 'PUT' : 'POST';
+
+      try {
+        const res = await fetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, grade, type })
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+          message.textContent = `✅ ${editId ? 'עודכן' : 'נוצר'} טורניר בהצלחה`;
+          message.className = 'message success';
+          form.reset();
+          editId = null;
+          fetchTournaments();
+        } else {
+          message.textContent = '❌ שגיאה: ' + data.error;
+          message.className = 'message error';
+        }
+      } catch {
+        message.textContent = '❌ שגיאה בחיבור לשרת';
+        message.className = 'message error';
+      }
+    });
+
+    fetchTournaments();
+  </script>
+</body>
+</html>

@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+  <meta charset="UTF-8" />
+  <title>⚽ ניהול משחקים בטורניר</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      direction: rtl;
+      background: linear-gradient(to right, #e0f7fa, #f1f8e9);
+      text-align: center;
+      padding: 40px;
+    }
+
+    .top-left {
+      position: absolute;
+      top: 15px;
+      left: 20px;
+    }
+
+    .logo {
+      width: 220px;
+      margin-bottom: 10px;
+      cursor: pointer;
+    }
+
+    .box {
+      background: #ffffff;
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+      display: inline-block;
+      width: 880px;
+      max-width: 100%;
+    }
+
+    h2 {
+      font-size: 28px;
+      color: #00796b;
+      margin-bottom: 20px;
+    }
+
+    .mode-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-bottom: 25px;
+    }
+
+    .mode-buttons button {
+      background-color: #00796b;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 12px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    .mode-buttons button:hover {
+      background-color: #004d40;
+    }
+
+    .form-section {
+      display: none;
+      margin-bottom: 20px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px 20px;
+      margin-bottom: 15px;
+    }
+
+    label {
+      text-align: right;
+      font-weight: bold;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 8px;
+      font-size: 16px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      padding: 10px 16px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .message {
+      font-weight: bold;
+      margin-top: 10px;
+    }
+
+    .success { color: green; }
+    .error { color: red; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    th, td {
+      border: 1px solid #ccc;
+      padding: 10px;
+    }
+
+    th {
+      background-color: #b2dfdb;
+      color: #004d40;
+    }
+
+    td button {
+      background-color: #00796b;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      padding: 6px 12px;
+      font-size: 14px;
+      cursor: pointer;
+      margin: 2px;
+    }
+
+    td button:hover {
+      background-color: #004d40;
+    }
+
+    .section-title {
+      margin-top: 30px;
+      margin-bottom: 10px;
+      font-size: 22px;
+      color: #00796b;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <button class="top-left" onclick="history.back()">⬅️ חזור</button>
+  <a href="index.html"><img src="logo.png" class="logo" alt="לוגו" /></a>
+  <div class="box">
+    <h2>⚽ ניהול משחקים בטורניר</h2>
+
+    <div class="mode-buttons">
+      <button onclick="showManual()">✍️ יצירה ידנית / עריכה</button>
+      <button onclick="autoGenerateGames()">⚙️ יצירה אוטומטית</button>
+    </div>
+
+    <div id="manualForm" class="form-section">
+      <input type="hidden" id="editGameId" />
+      <div class="form-grid">
+        <div>
+          <label for="teamA">קבוצה א'</label>
+          <select id="teamA"></select>
+        </div>
+        <div>
+          <label for="teamB">קבוצה ב'</label>
+          <select id="teamB"></select>
+        </div>
+        <div>
+          <label for="date">תאריך</label>
+          <input type="date" id="date" />
+        </div>
+        <div>
+          <label for="time">שעה</label>
+          <input type="time" id="time" />
+        </div>
+        <div style="grid-column: span 2;">
+          <label for="location">מיקום</label>
+          <input type="text" id="location" placeholder="אולם / מגרש" />
+        </div>
+      </div>
+      <button onclick="saveGame()">💾 שמור משחק</button>
+    </div>
+
+    <div id="message" class="message"></div>
+
+    <div class="section-title">📋 רשימת המשחקים</div>
+    <button onclick="deleteAllGames()">🗑️ מחק את כל המשחקים</button>
+
+    <table id="gamesTable">
+      <thead>
+        <tr>
+          <th>קבוצה א'</th>
+          <th>קבוצה ב'</th>
+          <th>תאריך</th>
+          <th>שעה</th>
+          <th>מיקום</th>
+          <th>תוצאה</th>
+          <th>פעולה</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+<script>
+const tournamentId = new URLSearchParams(window.location.search).get('tournamentId');
+const teamASelect = document.getElementById('teamA');
+const teamBSelect = document.getElementById('teamB');
+const tableBody = document.querySelector('#gamesTable tbody');
+const message = document.getElementById('message');
+const formSection = document.getElementById('manualForm');
+const editGameId = document.getElementById('editGameId');
+
+async function loadTeams() {
+  const res = await fetch(`/api/teams/${tournamentId}`);
+  const teams = await res.json();
+  teamASelect.innerHTML = '<option value="">בחר קבוצה א\'</option>';
+  teamBSelect.innerHTML = '<option value="">בחר קבוצה ב\'</option>';
+  teams.forEach(team => {
+    const optionA = document.createElement('option');
+    optionA.value = team._id;
+    optionA.textContent = team.name;
+    const optionB = optionA.cloneNode(true);
+    teamASelect.appendChild(optionA);
+    teamBSelect.appendChild(optionB);
+  });
+}
+
+teamASelect.addEventListener('change', () => {
+  const selected = teamASelect.value;
+  [...teamBSelect.options].forEach(option => {
+    option.disabled = option.value === selected;
+  });
+});
+
+function showManual() {
+  formSection.style.display = 'block';
+  editGameId.value = '';
+  document.getElementById('date').value = '';
+  document.getElementById('time').value = '';
+  document.getElementById('location').value = '';
+  teamASelect.value = '';
+  teamBSelect.value = '';
+}
+
+async function autoGenerateGames() {
+  const res = await fetch(`/api/teams/${tournamentId}`);
+  const teams = await res.json();
+  for (let i = 0; i < teams.length; i++) {
+    for (let j = i + 1; j < teams.length; j++) {
+      const body = {
+        tournamentId,
+        teamA: teams[i]._id,
+        teamB: teams[j]._id,
+        date: new Date().toISOString().split('T')[0],
+        time: "12:00",
+        location: "מגרש אוטומטי"
+      };
+      await fetch('/api/games', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+    }
+  }
+  fetchGames();
+}
+
+async function fetchGames() {
+  const res = await fetch(`/api/games/${tournamentId}`);
+  const games = await res.json();
+  tableBody.innerHTML = '';
+  games.forEach(game => {
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>${game.teamA?.name || '---'}</td>
+      <td>${game.teamB?.name || '---'}</td>
+      <td>${new Date(game.date).toLocaleDateString('he-IL')}</td>
+      <td>${game.time || '--'}</td>
+      <td>${game.location || '--'}</td>
+      <td>${game.scoreA ?? 0} : ${game.scoreB ?? 0}</td>
+      <td>
+        <button onclick="editGame('${game._id}')">🎯 תוצאה</button>
+        <button onclick="fillEditForm('${game._id}')">⚙️ ערוך</button>
+        <button onclick="deleteGame('${game._id}')">🗑️ מחק</button>
+      </td>
+    `;
+    tableBody.appendChild(row);
+  });
+}
+
+async function saveGame() {
+  const teamA = teamASelect.value;
+  const teamB = teamBSelect.value;
+  const date = document.getElementById('date').value;
+  const time = document.getElementById('time').value;
+  const location = document.getElementById('location').value;
+  const gameId = editGameId.value;
+
+  if (!teamA || !teamB || !date || !time || !location) {
+    message.textContent = '❗ יש למלא את כל השדות';
+    message.className = 'message error';
+    return;
+  }
+
+  if (teamA === teamB) {
+    message.textContent = '❗ קבוצה לא יכולה לשחק נגד עצמה';
+    message.className = 'message error';
+    return;
+  }
+
+  const body = JSON.stringify({ tournamentId, teamA, teamB, date, time, location });
+  const method = gameId ? 'PUT' : 'POST';
+  const url = gameId ? `/api/games/${gameId}` : `/api/games`;
+
+  const res = await fetch(url, {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+    body
+  });
+
+  const data = await res.json();
+  if (res.ok) {
+    message.textContent = gameId ? '✅ המשחק עודכן' : '✅ המשחק נוסף';
+    message.className = 'message success';
+    showManual();
+    fetchGames();
+  } else {
+    message.textContent = '❌ שגיאה: ' + data.error;
+    message.className = 'message error';
+  }
+}
+
+async function fillEditForm(gameId) {
+  const res = await fetch(`/api/games/game/${gameId}`);
+  const game = await res.json();
+  showManual();
+  editGameId.value = game._id;
+  teamASelect.value = game.teamA._id;
+  teamBSelect.value = game.teamB._id;
+  document.getElementById('date').value = game.date.split('T')[0];
+  document.getElementById('time').value = game.time;
+  document.getElementById('location').value = game.location;
+}
+
+async function deleteGame(gameId) {
+  if (!confirm('האם למחוק את המשחק?')) return;
+  await fetch(`/api/games/${gameId}`, { method: 'DELETE' });
+  fetchGames();
+}
+
+async function deleteAllGames() {
+  if (!confirm('למחוק את כל המשחקים?')) return;
+  await fetch(`/api/games/deleteAll/${tournamentId}`, { method: 'DELETE' });
+  fetchGames();
+}
+
+function editGame(gameId) {
+  window.location.href = `/admin-edit-game.html?gameId=${gameId}`;
+}
+
+loadTeams();
+fetchGames();
+</script>
+</body>
+</html>

@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+  <meta charset="UTF-8" />
+  <title>📊 טבלת דירוג וסטטיסטיקה</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      direction: rtl;
+      background-color: #e8f0fe;
+      margin: 0;
+      padding: 30px;
+      text-align: center;
+    }
+    h2 {
+      color: #2c3e50;
+    }
+    table {
+      width: 90%;
+      margin: 20px auto;
+      border-collapse: collapse;
+      background-color: white;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    th, td {
+      padding: 12px;
+      border: 1px solid #ddd;
+    }
+    th {
+      background-color: #3498db;
+      color: white;
+    }
+    tr:nth-child(even) {
+      background-color: #f2f2f2;
+    }
+    .section-title {
+      margin-top: 40px;
+      color: #34495e;
+    }
+    .back-btn {
+      margin-top: 30px;
+      padding: 10px 20px;
+      font-size: 16px;
+      background: #2ecc71;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .back-btn:hover {
+      background-color: #27ae60;
+    }
+  </style>
+</head>
+<body>
+  <h2 id="title-standings">📊 טבלת דירוג קבוצות</h2>
+  <div id="standingsTable">טוען טבלת דירוג...</div>
+
+  <h2 class="section-title" id="title-scorers">🏆 טבלת מלך השערים</h2>
+  <div id="scorersTable">טוען טבלת כובשים...</div>
+
+  <button class="back-btn" onclick="history.back()">⬅ חזור</button>
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const tournamentId = urlParams.get('tournamentId');
+
+    async function loadStats() {
+      try {
+        const [gamesRes, teamsRes, tournamentRes] = await Promise.all([
+          fetch(`/api/games/by-tournament?tournamentId=${tournamentId}`),
+          fetch(`/api/teams?tournamentId=${tournamentId}`),
+          fetch(`/api/tournaments/${tournamentId}`)
+        ]);
+
+        const games = await gamesRes.json();
+        const teams = await teamsRes.json();
+        const tournament = await tournamentRes.json();
+
+        if (tournament.name) {
+          document.getElementById('title-standings').textContent = `📊 טבלת דירוג קבוצות - ${tournament.name}`;
+          document.getElementById('title-scorers').textContent = `🏆 טבלת מלך השערים - ${tournament.name}`;
+        }
+
+        const teamStats = {};
+        const scorers = {};
+
+        for (const game of games) {
+          const { teamA, teamB, scoreA, scoreB, goals } = game;
+
+          [teamA._id, teamB._id].forEach(id => {
+            if (!teamStats[id]) {
+              teamStats[id] = {
+                name: '',
+                games: 0,
+                wins: 0,
+                draws: 0,
+                losses: 0,
+                goalsFor: 0,
+                goalsAgainst: 0,
+                points: 0
+              };
+            }
+          });
+
+          teamStats[teamA._id].games++;
+          teamStats[teamB._id].games++;
+          teamStats[teamA._id].goalsFor += scoreA;
+          teamStats[teamA._id].goalsAgainst += scoreB;
+          teamStats[teamB._id].goalsFor += scoreB;
+          teamStats[teamB._id].goalsAgainst += scoreA;
+
+          if (scoreA > scoreB) {
+            teamStats[teamA._id].wins++;
+            teamStats[teamA._id].points += 3;
+            teamStats[teamB._id].losses++;
+          } else if (scoreA < scoreB) {
+            teamStats[teamB._id].wins++;
+            teamStats[teamB._id].points += 3;
+            teamStats[teamA._id].losses++;
+          } else {
+            teamStats[teamA._id].draws++;
+            teamStats[teamB._id].draws++;
+            teamStats[teamA._id].points += 1;
+            teamStats[teamB._id].points += 1;
+          }
+
+          for (const goal of goals.teamA || []) {
+            if (!scorers[goal.scorer]) scorers[goal.scorer] = { name: goal.scorer, goals: 0 };
+            scorers[goal.scorer].goals++;
+          }
+          for (const goal of goals.teamB || []) {
+            if (!scorers[goal.scorer]) scorers[goal.scorer] = { name: goal.scorer, goals: 0 };
+            scorers[goal.scorer].goals++;
+          }
+        }
+
+        for (const team of teams) {
+          if (teamStats[team._id]) {
+            teamStats[team._id].name = team.name;
+          }
+        }
+
+        const sortedTeams = Object.values(teamStats).sort((a, b) => 
+          b.points - a.points ||
+          (b.goalsFor - b.goalsAgainst) - (a.goalsFor - a.goalsAgainst) ||
+          b.goalsFor - a.goalsFor
+        );
+
+        let standingsHTML = `
+          <table>
+            <tr>
+              <th>מקום</th>
+              <th>קבוצה</th>
+              <th>מש</th>
+              <th>נ</th>
+              <th>ת</th>
+              <th>ה</th>
+              <th>זכות</th>
+              <th>חובה</th>
+              <th>הפרש</th>
+              <th>נק'</th>
+            </tr>
+        `;
+        sortedTeams.forEach((team, i) => {
+          standingsHTML += `
+            <tr>
+              <td>${i + 1}</td>
+              <td>${team.name}</td>
+              <td>${team.games}</td>
+              <td>${team.wins}</td>
+              <td>${team.draws}</td>
+              <td>${team.losses}</td>
+              <td>${team.goalsFor}</td>
+              <td>${team.goalsAgainst}</td>
+              <td>${team.goalsFor - team.goalsAgainst}</td>
+              <td>${team.points}</td>
+            </tr>
+          `;
+        });
+        standingsHTML += `</table>`;
+        document.getElementById('standingsTable').innerHTML = standingsHTML;
+
+        const topScorers = Object.values(scorers)
+          .sort((a, b) => b.goals - a.goals)
+          .slice(0, 5);
+
+        let scorersHTML = `
+          <table>
+            <tr>
+              <th>מקום</th>
+              <th>שחקן</th>
+              <th>שערים</th>
+            </tr>
+        `;
+        topScorers.forEach((s, i) => {
+          scorersHTML += `
+            <tr>
+              <td>${i + 1}</td>
+              <td>${s.name}</td>
+              <td>${s.goals}</td>
+            </tr>
+          `;
+        });
+        scorersHTML += `</table>`;
+        document.getElementById('scorersTable').innerHTML = scorersHTML;
+
+      } catch (err) {
+        document.getElementById('standingsTable').innerHTML = '⚠️ שגיאה בטעינת הטבלה';
+        document.getElementById('scorersTable').innerHTML = '⚠️ שגיאה בטעינת הנתונים';
+      }
+    }
+
+    loadStats();
+  </script>
+</body>
+</html>

@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+  <meta charset="UTF-8" />
+  <title>ניהול קבוצות</title>
+  <style>
+    body {
+      font-family: Arial;
+      direction: rtl;
+      background: linear-gradient(to bottom right, #74ebd5, #acb6e5);
+      background-attachment: fixed;
+      text-align: center;
+      padding: 40px;
+      position: relative;
+    }
+    .box {
+      background: rgba(255, 255, 255, 0.95);
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.25);
+      display: inline-block;
+      width: 700px;
+    }
+    input {
+      width: 100%;
+      margin: 10px 0;
+      padding: 10px;
+      font-size: 16px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+    button {
+      padding: 10px 16px;
+      margin: 4px;
+      font-size: 15px;
+      border: none;
+      border-radius: 8px;
+      color: white;
+      cursor: pointer;
+      transition: transform 0.2s ease, background-color 0.3s ease;
+    }
+    button:hover {
+      opacity: 0.9;
+      transform: scale(1.03);
+    }
+    .btn-save {
+      background-color: #2ecc71;
+    }
+    .btn-edit {
+      background-color: #3498db;
+    }
+    .btn-delete {
+      background-color: #e74c3c;
+    }
+    .btn-players {
+      background-color: #f39c12;
+    }
+
+    .btn-back {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      background-color: #3498db;
+      padding: 12px 18px;
+      font-size: 16px;
+      border-radius: 30px;
+      color: white;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      transition: all 0.3s ease;
+    }
+
+    .btn-back:hover {
+      background-color: #2980b9;
+      transform: scale(1.05);
+    }
+
+    .message {
+      font-weight: bold;
+      margin-top: 10px;
+    }
+    .success { color: green; }
+    .error { color: red; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 10px;
+      font-size: 15px;
+    }
+    th {
+      background-color: #3498db;
+      color: white;
+    }
+    td {
+      background-color: #fefefe;
+    }
+  </style>
+</head>
+<body>
+  <button class="btn-back" onclick="history.back()">⬅️ חזור</button>
+
+  <img src="logo.png" width="240" /><br /><br />
+
+  <div class="box">
+    <h2>⚽ יצירת קבוצה</h2>
+    <input type="text" id="name" placeholder="שם קבוצה" required />
+    <input type="text" id="color" placeholder="🎨 צבע מדים" required />
+    <input type="text" id="ageGroup" placeholder="שכבת גיל (למשל: ד-ה)" required />
+    <button class="btn-save" onclick="saveTeam()">💾 שמור קבוצה</button>
+
+    <div id="message" class="message"></div>
+
+    <h3>📋 רשימת קבוצות</h3>
+    <table id="teamsTable">
+      <thead>
+        <tr>
+          <th>שם קבוצה</th>
+          <th>🎨 צבע</th>
+          <th>שכבת גיל</th>
+          <th>פעולות</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <script>
+    const tournamentId = new URLSearchParams(window.location.search).get('tournamentId');
+    const message = document.getElementById('message');
+    const tableBody = document.querySelector('#teamsTable tbody');
+    let editId = null;
+
+    async function fetchTeams() {
+      try {
+        const res = await fetch(`/api/teams/${tournamentId}`);
+        const data = await res.json();
+        tableBody.innerHTML = '';
+        data.forEach(team => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${team.name}</td>
+            <td>${team.color}</td>
+            <td>${team.grade}</td>
+            <td>
+              <button class="btn-edit" onclick="editTeam('${team._id}', '${team.name}', '${team.color}', '${team.grade}')">✏️ ערוך</button>
+              <button class="btn-delete" onclick="deleteTeam('${team._id}', '${team.name}')">🗑️ מחק</button>
+              <button class="btn-players" onclick="goToPlayers('${team._id}')">👟 ניהול שחקנים</button>
+            </td>
+          `;
+          tableBody.appendChild(row);
+        });
+      } catch {
+        message.textContent = '❌ שגיאה בטעינת קבוצות';
+        message.className = 'message error';
+      }
+    }
+
+    async function saveTeam() {
+      const name = document.getElementById('name').value;
+      const color = document.getElementById('color').value;
+      const grade = document.getElementById('ageGroup').value;
+      const url = editId ? `/api/teams/${editId}` : `/api/teams/${tournamentId}`;
+      const method = editId ? 'PUT' : 'POST';
+
+      try {
+        const res = await fetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, color, grade })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          message.textContent = `✅ ${editId ? 'עודכן' : 'נוצר'} בהצלחה`;
+          message.className = 'message success';
+          document.getElementById('name').value = '';
+          document.getElementById('color').value = '';
+          document.getElementById('ageGroup').value = '';
+          editId = null;
+          fetchTeams();
+        } else {
+          message.textContent = '❌ שגיאה: ' + data.error;
+          message.className = 'message error';
+        }
+      } catch {
+        message.textContent = '❌ שגיאה בחיבור לשרת';
+        message.className = 'message error';
+      }
+    }
+
+    function editTeam(id, name, color, grade) {
+      document.getElementById('name').value = name;
+      document.getElementById('color').value = color;
+      document.getElementById('ageGroup').value = grade;
+      editId = id;
+    }
+
+    async function deleteTeam(id, name) {
+      if (!confirm(`האם למחוק את הקבוצה "${name}"?`)) return;
+      try {
+        const res = await fetch(`/api/teams/${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (res.ok) {
+          message.textContent = '🗑️ הקבוצה נמחקה בהצלחה';
+          message.className = 'message success';
+          fetchTeams();
+        } else {
+          message.textContent = '❌ שגיאה: ' + data.error;
+          message.className = 'message error';
+        }
+      } catch {
+        message.textContent = '❌ שגיאה במחיקה מהשרת';
+        message.className = 'message error';
+      }
+    }
+
+    function goToPlayers(teamId) {
+      window.location.href = `/admin-players.html?teamId=${teamId}`;
+    }
+
+    fetchTeams();
+  </script>
+</body>
+</html>

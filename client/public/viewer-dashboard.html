@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title>דשבורד צופה</title>
+  <style>
+    body {
+      background: linear-gradient(to right, #fceabb, #f8b500);
+      font-family: 'Segoe UI', sans-serif;
+      color: #333;
+      text-align: center;
+      padding: 30px;
+    }
+    #logo {
+      width: 220px;
+      margin-bottom: 30px;
+      cursor: pointer;
+    }
+    h1 {
+      color: #2e3b4e;
+    }
+    .button {
+      background: linear-gradient(to right, #00c6ff, #0072ff);
+      border: none;
+      color: white;
+      padding: 14px 30px;
+      margin: 10px;
+      font-size: 18px;
+      border-radius: 25px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+    .button:hover {
+      background: linear-gradient(to right, #0072ff, #0051a3);
+    }
+    #search-section {
+      margin-top: 30px;
+      display: none;
+    }
+    input[type="text"] {
+      padding: 12px 20px;
+      width: 280px;
+      border: 2px solid #0072ff;
+      border-radius: 20px;
+      font-size: 16px;
+    }
+    .tournament-result, .tracked-tournament {
+      background: #ffffffd4;
+      border: 2px solid #0072ff;
+      padding: 15px;
+      border-radius: 15px;
+      margin: 12px auto;
+      width: 70%;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+    .footer {
+      margin-top: 60px;
+      font-size: 14px;
+      color: #555;
+    }
+    .add-button {
+      margin-top: 10px;
+      background-color: #28a745;
+      padding: 8px 18px;
+      border-radius: 20px;
+      color: white;
+      cursor: pointer;
+      border: none;
+    }
+  </style>
+</head>
+<body>
+
+  <img id="logo" src="logo.png" alt="Logo" onclick="location.href='index.html'">
+  <h1>📊 דף הצופה</h1>
+
+  <button class="button" onclick="toggleSearch()">🔍 חפש טורניר</button>
+  <button class="button" onclick="loadTrackedTournaments()">⭐ הטורנירים במעקב שלי</button>
+
+  <div id="search-section">
+    <h2>🔎 חפש טורניר לפי שם</h2>
+    <input type="text" id="searchInput" placeholder="הכנס שם טורניר" oninput="searchTournament()">
+    <div id="resultsContainer"></div>
+  </div>
+
+  <div id="trackedContainer"></div>
+
+  <div class="footer">
+    כל הזכויות שמורות לסטיב רבייב<br>
+    האתר נוצר על ידי סטיב רבייב - steve_rabaev
+  </div>
+
+  <script>
+    function toggleSearch() {
+      const section = document.getElementById('search-section');
+      section.style.display = section.style.display === 'none' ? 'block' : 'none';
+    }
+
+    async function searchTournament() {
+      const input = document.getElementById('searchInput').value.trim().toLowerCase();
+      const container = document.getElementById('resultsContainer');
+      container.innerHTML = '';
+
+      if (!input) return;
+
+      try {
+        const res = await fetch('/api/tournaments');
+        const data = await res.json();
+
+        const filtered = data.filter(t => t.name?.toLowerCase().startsWith(input));
+
+        if (filtered.length === 0) {
+          container.innerHTML = '<div class="tournament-result">לא נמצאו טורנירים</div>';
+        } else {
+          filtered.forEach(t => {
+            const div = document.createElement('div');
+            div.className = 'tournament-result';
+            div.innerHTML = `<strong>${t.name}</strong><br>
+              <button class="add-button" onclick="addToTracked('${t._id}', '${t.name}')">➕ הוסף למעקב</button>
+              <br>⚽ לחץ לצפייה`;
+            div.onclick = () => window.location.href = `/viewer-tournament.html?id=${t._id}`;
+            container.appendChild(div);
+          });
+        }
+      } catch (err) {
+        container.innerHTML = '<div class="tournament-result">❌ שגיאה בטעינה מהשרת</div>';
+      }
+    }
+
+    function addToTracked(id, name) {
+      let tracked = JSON.parse(localStorage.getItem('trackedTournaments')) || [];
+      if (!tracked.some(t => t.id === id)) {
+        tracked.push({ id, name });
+        localStorage.setItem('trackedTournaments', JSON.stringify(tracked));
+        alert(`✅ ${name} נוסף למעקב`);
+      } else {
+        alert(`📌 הטורניר כבר במעקב`);
+      }
+    }
+
+    function loadTrackedTournaments() {
+      const container = document.getElementById('trackedContainer');
+      container.innerHTML = '';
+      let tracked = JSON.parse(localStorage.getItem('trackedTournaments')) || [];
+
+      if (tracked.length === 0) {
+        container.innerHTML = '<div class="tournament-result">אין טורנירים במעקב</div>';
+        return;
+      }
+
+      tracked.forEach(t => {
+        const div = document.createElement('div');
+        div.className = 'tracked-tournament';
+        div.innerHTML = `<strong>${t.name}</strong><br>
+          ⚽ לחץ לצפייה בפרטי הטורניר`;
+        div.onclick = () => window.location.href = `/viewer-tournament.html?id=${t.id}`;
+        container.appendChild(div);
+      });
+    }
+  </script>
+
+</body>
+</html>

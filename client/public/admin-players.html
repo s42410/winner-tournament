@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+  <meta charset="UTF-8">
+  <title>⚽ ניהול שחקנים</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      direction: rtl;
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(to right, #e0f7fa, #fce4ec);
+      text-align: center;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 30px;
+    }
+
+    .logo {
+      width: 180px;
+    }
+
+    .back-btn {
+      background-color: #ff6f61;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      font-size: 16px;
+      border-radius: 25px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    .back-btn:hover {
+      background-color: #e53935;
+    }
+
+    .box {
+      background: white;
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.1);
+      display: inline-block;
+      width: 600px;
+      margin-bottom: 50px;
+    }
+
+    input {
+      width: 100%;
+      margin: 10px 0;
+      padding: 12px;
+      font-size: 16px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      padding: 12px 20px;
+      margin-top: 12px;
+      font-size: 16px;
+      border: none;
+      border-radius: 25px;
+      cursor: pointer;
+      background-color: #4caf50;
+      color: white;
+      transition: background-color 0.3s;
+    }
+
+    button:hover {
+      background-color: #388e3c;
+    }
+
+    .message {
+      font-weight: bold;
+      margin-top: 10px;
+    }
+
+    .success { color: green; }
+    .error { color: red; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    th, td {
+      border: 1px solid #ccc;
+      padding: 10px;
+    }
+
+    th {
+      background-color: #ffecb3;
+    }
+
+    td button {
+      padding: 6px 12px;
+      font-size: 14px;
+      border-radius: 15px;
+      border: none;
+      background-color: #f44336;
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    td button:hover {
+      background-color: #c62828;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <button class="back-btn" onclick="history.back()">🔙 חזור</button>
+    <img src="logo.png" class="logo" />
+  </div>
+
+  <div class="box">
+    <h2>👟 ניהול שחקנים בקבוצה</h2>
+    <h4 id="teamName">שם הקבוצה: טוען...</h4>
+
+    <input type="text" id="firstName" placeholder="שם פרטי" required />
+    <input type="text" id="lastName" placeholder="שם משפחה" required />
+    <input type="number" id="shirtNumber" placeholder="מספר חולצה" required />
+    <button onclick="addPlayer()">➕ הוסף שחקן</button>
+
+    <div id="message" class="message"></div>
+
+    <h3>📋 רשימת שחקנים</h3>
+    <table id="playersTable">
+      <thead>
+        <tr>
+          <th>שם פרטי</th>
+          <th>שם משפחה</th>
+          <th>מס' חולצה</th>
+          <th>פעולה</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <script>
+  const teamId = new URLSearchParams(window.location.search).get('teamId');
+  const message = document.getElementById('message');
+  const tableBody = document.querySelector('#playersTable tbody');
+  const teamNameHeader = document.getElementById('teamName');
+
+  async function loadTeamData() {
+    try {
+      const res = await fetch(`/api/teams/team/${teamId}`);
+      const team = await res.json();
+      teamNameHeader.textContent = `שם הקבוצה: ${team.name}`;
+    } catch {
+      teamNameHeader.textContent = 'שם הקבוצה: שגיאה בטעינה';
+    }
+  }
+
+  async function fetchPlayers() {
+    try {
+      const res = await fetch(`/api/teams/team/${teamId}`);
+      const team = await res.json();
+      tableBody.innerHTML = '';
+
+      team.players.forEach((player, index) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${player.firstName}</td>
+          <td>${player.lastName}</td>
+          <td>${player.shirtNumber}</td>
+          <td><button onclick="removePlayer(${index})">🗑️ מחק</button></td>
+        `;
+        tableBody.appendChild(row);
+      });
+    } catch {
+      message.textContent = '❌ שגיאה בטעינת שחקנים';
+      message.className = 'message error';
+    }
+  }
+
+  async function addPlayer() {
+    const firstName = document.getElementById('firstName').value.trim();
+    const lastName = document.getElementById('lastName').value.trim();
+    const shirtNumber = document.getElementById('shirtNumber').value.trim();
+
+    if (!firstName || !lastName || !shirtNumber) {
+      message.textContent = '❗ יש למלא את כל השדות';
+      message.className = 'message error';
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/teams/add-player/${teamId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ firstName, lastName, shirtNumber })
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        message.textContent = '✅ שחקן נוסף בהצלחה';
+        message.className = 'message success';
+        document.getElementById('firstName').value = '';
+        document.getElementById('lastName').value = '';
+        document.getElementById('shirtNumber').value = '';
+        document.getElementById('firstName').focus();
+        fetchPlayers();
+      } else {
+        message.textContent = '❌ שגיאה: ' + data.error;
+        message.className = 'message error';
+      }
+    } catch {
+      message.textContent = '❌ שגיאה בחיבור לשרת';
+      message.className = 'message error';
+    }
+  }
+
+  async function removePlayer(index) {
+    if (!confirm('האם למחוק את השחקן?')) return;
+
+    try {
+      const res = await fetch(`/api/teams/remove-player/${teamId}/${index}`, {
+        method: 'DELETE'
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        message.textContent = '🗑️ שחקן הוסר בהצלחה';
+        message.className = 'message success';
+        fetchPlayers();
+      } else {
+        message.textContent = '❌ שגיאה: ' + data.error;
+        message.className = 'message error';
+      }
+    } catch {
+      message.textContent = '❌ שגיאה בחיבור לשרת';
+      message.className = 'message error';
+    }
+  }
+
+  // הוספת מעבר בין שדות עם Enter
+  document.getElementById('firstName').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      document.getElementById('lastName').focus();
+    }
+  });
+
+  document.getElementById('lastName').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      document.getElementById('shirtNumber').focus();
+    }
+  });
+
+  document.getElementById('shirtNumber').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addPlayer();
+    }
+  });
+
+  loadTeamData();
+  fetchPlayers();
+</script>
+</body>
+</html>

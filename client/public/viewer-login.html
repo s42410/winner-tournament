@@ -1,0 +1,137 @@
+<!-- viewer-login.html -->
+<!DOCTYPE html>
+<html lang="he">
+<head>
+  <meta charset="UTF-8">
+  <title>התחברות צופים</title>
+  <style>
+    body {
+      font-family: Arial;
+      direction: rtl;
+      text-align: center;
+      background: linear-gradient(to right, #2193b0, #6dd5ed);
+      padding: 40px;
+    }
+
+    .box {
+      background: #fff;
+      padding: 30px;
+      border-radius: 10px;
+      width: 320px;
+      margin: auto;
+      box-shadow: 0 0 15px rgba(0,0,0,0.3);
+    }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      font-size: 16px;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      font-size: 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      background-color: #007bff;
+      color: white;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    .link {
+      display: block;
+      margin-top: 15px;
+      font-size: 14px;
+    }
+
+    .guest-btn {
+      background-color: #28a745;
+    }
+
+    .guest-btn:hover {
+      background-color: #1e7e34;
+    }
+
+    .message {
+      margin-top: 12px;
+      font-weight: bold;
+    }
+
+    .success { color: green; }
+    .error { color: red; }
+
+    .logo {
+      width: 200px;
+      margin-bottom: 20px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <img src="logo.png" class="logo" onclick="goHome()" />
+  <div class="box">
+    <h2>🔐 התחברות צופים</h2>
+    <form id="loginForm">
+      <input type="email" id="email" placeholder="אימייל" required>
+      <input type="password" id="password" placeholder="סיסמה" required>
+      <button type="submit">התחבר</button>
+    </form>
+
+    <button class="guest-btn" onclick="loginAsGuest()">👀 התחבר כצופה זמני</button>
+
+    <a class="link" href="viewer-register.html">אין לך משתמש? הרשם כאן</a>
+    <div id="message" class="message"></div>
+  </div>
+
+  <script>
+    function goHome() {
+      window.location.href = "index.html";
+    }
+
+    function loginAsGuest() {
+      window.location.href = "viewer-dashboard.html?guest=true";
+    }
+
+    const form = document.getElementById('loginForm');
+    const message = document.getElementById('message');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+
+      try {
+        const res = await fetch('http://localhost:5000/api/viewers/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          message.textContent = "🎉 התחברת בהצלחה! מעביר...";
+          message.className = "message success";
+          setTimeout(() => {
+            window.location.href = "viewer-dashboard.html";
+          }, 1000);
+        } else {
+          message.textContent = "❌ " + data.error;
+          message.className = "message error";
+        }
+      } catch (err) {
+        message.textContent = '❌ שגיאה בחיבור לשרת';
+        message.className = "message error";
+      }
+    });
+  </script>
+</body>
+</html>
