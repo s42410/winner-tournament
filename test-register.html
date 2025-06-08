@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+  <meta charset="UTF-8">
+  <title>בדיקת רישום מנהל</title>
+</head>
+<body>
+  <h1>טופס בדיקה - רישום מנהל</h1>
+  <form id="registerForm">
+    <label>שם מלא: <input type="text" id="name" required></label><br><br>
+    <label>אימייל: <input type="email" id="email" required></label><br><br>
+    <label>סיסמה: <input type="password" id="password" required></label><br><br>
+    <button type="submit" id="submitBtn">שלח</button>
+  </form>
+
+  <pre id="result"></pre>
+
+  <script>
+    const form = document.getElementById('registerForm');
+    const result = document.getElementById('result');
+    const submitBtn = document.getElementById('submitBtn');
+    let isSubmitting = false;
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      if (isSubmitting) return; // עצור אם כבר נשלח
+      isSubmitting = true;
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'שולח...';
+
+      const name = document.getElementById('name').value;
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+
+      try {
+        const response = await fetch('http://localhost:5000/api/admin/register', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ name, email, password })
+        });
+
+        const data = await response.json();
+        result.textContent = JSON.stringify(data, null, 2);
+      } catch (error) {
+        result.textContent = 'שגיאה בחיבור לשרת: ' + error;
+      } finally {
+        isSubmitting = false;
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'שלח';
+      }
+    });
+  </script>
+</body>
+</html>

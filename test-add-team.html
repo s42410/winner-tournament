@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+  <meta charset="UTF-8">
+  <title>הוספת קבוצה</title>
+</head>
+<body>
+  <h1>טופס להוספת קבוצה</h1>
+
+  <form id="teamForm">
+    <label>שם קבוצה: <input type="text" id="name" required></label><br><br>
+    <label>שכבת גיל: <input type="text" id="ageGroup" required></label><br><br>
+
+    <fieldset>
+      <legend>שחקנים (עד 5)</legend>
+      <div id="playersContainer">
+        <!-- שורות השחקנים ייכנסו כאן -->
+      </div>
+      <button type="button" onclick="addPlayer()">➕ הוסף שחקן</button>
+    </fieldset><br>
+
+    <label>מזהה טורניר (לא חובה): <input type="text" id="tournamentId"></label><br><br>
+
+    <button type="submit">שלח</button>
+  </form>
+
+  <pre id="result"></pre>
+
+  <script>
+    const form = document.getElementById('teamForm');
+    const result = document.getElementById('result');
+    const playersContainer = document.getElementById('playersContainer');
+    let playerCount = 0;
+
+    function addPlayer() {
+      if (playerCount >= 5) return alert("מותר עד 5 שחקנים בלבד");
+
+      const div = document.createElement('div');
+      div.innerHTML = `
+        <label>מספר: <input type="number" name="playerNumber${playerCount}" required></label>
+        <label>שם: <input type="text" name="playerName${playerCount}" required></label><br><br>
+      `;
+      playersContainer.appendChild(div);
+      playerCount++;
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const name = document.getElementById('name').value;
+      const ageGroup = document.getElementById('ageGroup').value;
+      const tournamentId = document.getElementById('tournamentId').value;
+
+      const players = [];
+      for (let i = 0; i < playerCount; i++) {
+        const number = document.querySelector(`[name="playerNumber${i}"]`).value;
+        const playerName = document.querySelector(`[name="playerName${i}"]`).value;
+        players.push({ number: Number(number), name: playerName });
+      }
+
+      try {
+        const response = await fetch('http://localhost:5000/api/teams/add', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ name, ageGroup, players, tournamentId })
+        });
+
+        const data = await response.json();
+        result.textContent = JSON.stringify(data, null, 2);
+      } catch (error) {
+        result.textContent = 'שגיאה בשליחה לשרת: ' + error;
+      }
+    });
+  </script>
+</body>
+</html>
