@@ -9,7 +9,7 @@ const adminRoutes = require('./routes/adminRoutes');
 const tournamentRoutes = require('./routes/tournamentsRoutes');
 const teamRoutes = require('./routes/teamRoutes');
 const gameRoutes = require('./routes/gamesRoutes');
-const viewerRoutes = require('./routes/viewerRoutes'); // ❗️ תוקן כאן: viewerRoutes בלי s בשם הקובץ
+const viewerRoutes = require('./routes/viewerRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -21,17 +21,12 @@ app.use(express.static(path.join(__dirname, '../client/public')));
 app.use(cors());
 app.use(express.json());
 
-// ✅ בדיקת תקינות
-app.get('/', (req, res) => {
-  res.send('🔥 השרת פועל');
-});
-
 // ✅ שימוש בנתיבים
 app.use('/api/admin', adminRoutes);
 app.use('/api/tournaments', tournamentRoutes);
 app.use('/api/teams', teamRoutes);
 app.use('/api/games', gameRoutes);
-app.use('/api/viewers', viewerRoutes); // ✅ הנתיב API
+app.use('/api/viewers', viewerRoutes);
 
 // ✅ חיבור למסד הנתונים
 mongoose.connect(process.env.MONGO_URL)
@@ -44,4 +39,3 @@ mongoose.connect(process.env.MONGO_URL)
   .catch(err => {
     console.error('❌ שגיאה בחיבור למסד הנתונים:', err.message);
   });
-  
