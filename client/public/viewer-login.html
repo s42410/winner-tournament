@@ -2,6 +2,7 @@
 <html lang="he">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>התחברות צופים</title>
   <style>
     body {
@@ -74,6 +75,27 @@
       width: 200px;
       margin-bottom: 20px;
       cursor: pointer;
+      max-width: 90%;
+    }
+
+    @media (max-width: 480px) {
+      .box {
+        width: 95%;
+        padding: 35px 20px;
+      }
+
+      input, button {
+        font-size: 18px;
+        padding: 14px;
+      }
+
+      .link {
+        font-size: 16px;
+      }
+
+      h2 {
+        font-size: 22px;
+      }
     }
   </style>
 </head>
@@ -99,7 +121,6 @@
     }
 
     function loginAsGuest() {
-      // שמור במשתנה מקומי שמדובר באורח
       localStorage.setItem("guest", "true");
       window.location.href = "viewer-dashboard.html?guest=true";
     }
