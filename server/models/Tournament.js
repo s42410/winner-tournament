@@ -4,8 +4,7 @@ const tournamentSchema = new mongoose.Schema({
   name: { type: String, required: true },
   type: { type: String, required: true },
   ageGroup: { type: String, required: true },
-  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Admin', required: true },
   createdAt: { type: Date, default: Date.now }
 });
 
-module.exports = mongoose.model('Tournament', tournamentSchema);
+module.exports = mongoose.models.Tournament || mongoose.model('Tournament', tournamentSchema);
