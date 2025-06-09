@@ -1,30 +1,10 @@
 const mongoose = require('mongoose');
 
-const teamSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: true
-  },
-  color: {
-    type: String,
-    required: true
-  },
-  grade: {
-    type: String,
-    required: true
-  },
-  tournamentId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Tournament',
-    required: true
-  },
-  players: [
-    {
-      firstName: String,
-      lastName: String,
-      shirtNumber: Number
-    }
-  ]
+const tournamentSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  type: { type: String, required: true },
+  ageGroup: { type: String, required: true }, // ✅ שם תואם ל-HTML
+  createdAt: { type: Date, default: Date.now }
 });
 
-module.exports = mongoose.model('Team', teamSchema);
+module.exports = mongoose.model('Tournament', tournamentSchema);

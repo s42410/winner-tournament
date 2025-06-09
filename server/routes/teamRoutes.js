@@ -1,122 +1,71 @@
-
 const express = require('express');
 const router = express.Router();
-const Team = require('../models/Team');
+const Tournament = require('../models/Tournament');
 
-// ✅ שליפת כל הקבוצות לפי מזהה טורניר מתוך query (לטבלת דירוג)
+// ✅ שליפה של כל הטורנירים
 router.get('/', async (req, res) => {
-  const tournamentId = req.query.tournamentId;
-  if (!tournamentId) return res.status(400).json({ error: '❗ חסר מזהה טורניר ב-query' });
-
   try {
-    const teams = await Team.find({ tournamentId });
-    res.json(teams);
+    const tournaments = await Tournament.find();
+    res.json(tournaments);
   } catch (err) {
-    res.status(500).json({ error: '❌ שגיאה בקבלת הקבוצות', details: err.message });
+    res.status(500).json({ error: '❌ שגיאה בקבלת הטורנירים', details: err.message });
   }
 });
 
-// ✅ שליפת קבוצה אחת לפי מזהה (לדף ניהול שחקנים)
-router.get('/team/:teamId', async (req, res) => {
+// ✅ שליפה לפי מזהה (לטבלת דירוג)
+router.get('/:id', async (req, res) => {
   try {
-    const team = await Team.findById(req.params.teamId);
-    if (!team) return res.status(404).json({ error: 'קבוצה לא נמצאה' });
-    res.json(team);
+    const tournament = await Tournament.findById(req.params.id);
+    if (!tournament) return res.status(404).json({ error: 'טורניר לא נמצא' });
+    res.json(tournament);
   } catch (err) {
-    res.status(500).json({ error: '❌ שגיאה בשליפת קבוצה', details: err.message });
+    res.status(500).json({ error: '❌ שגיאה בקבלת טורניר', details: err.message });
   }
 });
 
-// ✅ שליפת רשימת שחקנים לפי מזהה קבוצה
-router.get('/players/:teamId', async (req, res) => {
-  try {
-    const team = await Team.findById(req.params.teamId);
-    if (!team) return res.status(404).json({ error: 'קבוצה לא נמצאה' });
-    res.json(team.players);
-  } catch (err) {
-    res.status(500).json({ error: '❌ שגיאה בקבלת שחקנים', details: err.message });
-  }
-});
+// ✅ יצירת טורניר חדש
+router.post('/create', async (req, res) => {
+  const { name, grade, type } = req.body;
 
-// ✅ שליפת כל הקבוצות לפי מזהה טורניר (עבור ניהול קבוצות)
-router.get('/:tournamentId', async (req, res) => {
-  try {
-    const teams = await Team.find({ tournamentId: req.params.tournamentId });
-    res.json(teams);
-  } catch (err) {
-    res.status(500).json({ error: '❌ שגיאה בקבלת הקבוצות', details: err.message });
-  }
-});
-
-// ✅ יצירת קבוצה
-router.post('/:tournamentId', async (req, res) => {
-  const { name, color, grade } = req.body;
-  const { tournamentId } = req.params;
-
-  if (!name || !color || !grade) {
+  if (!name || !grade || !type) {
     return res.status(400).json({ error: '❗ נא למלא את כל השדות' });
   }
 
   try {
-    const newTeam = new Team({ name, color, grade, tournamentId });
-    await newTeam.save();
-    res.status(201).json({ message: '✅ הקבוצה נשמרה בהצלחה', team: newTeam });
+    const newTournament = new Tournament({ name, ageGroup: grade, type });
+    await newTournament.save();
+    res.status(201).json({
+      message: '✅ הטורניר נוצר בהצלחה!',
+      tournament: newTournament
+    });
   } catch (err) {
-    res.status(500).json({ error: '❌ שגיאה ביצירת הקבוצה', details: err.message });
+    res.status(500).json({ error: '❌ שגיאה ביצירת הטורניר', details: err.message });
   }
 });
 
-// ✅ עדכון קבוצה
-router.put('/:teamId', async (req, res) => {
-  const { name, color, grade } = req.body;
+// ✅ עריכת טורניר קיים
+router.put('/:id', async (req, res) => {
+  const { name, grade, type } = req.body;
+
   try {
-    const updated = await Team.findByIdAndUpdate(
-      req.params.teamId,
-      { name, color, grade },
+    const updated = await Tournament.findByIdAndUpdate(
+      req.params.id,
+      { name, ageGroup: grade, type },
       { new: true }
     );
-    res.json({ message: '✅ הקבוצה עודכנה', team: updated });
+    res.json({ message: '📝 הטורניר עודכן בהצלחה', tournament: updated });
   } catch (err) {
-    res.status(500).json({ error: '❌ שגיאה בעדכון', details: err.message });
+    res.status(500).json({ error: '❌ שגיאה בעדכון הטורניר', details: err.message });
   }
 });
 
-// ✅ מחיקת קבוצה
-router.delete('/:teamId', async (req, res) => {
+// ✅ מחיקת טורניר
+router.delete('/:id', async (req, res) => {
   try {
-    await Team.findByIdAndDelete(req.params.teamId);
-    res.json({ message: '🗑️ הקבוצה נמחקה' });
+    await Tournament.findByIdAndDelete(req.params.id);
+    res.json({ message: '🗑️ הטורניר נמחק' });
   } catch (err) {
-    res.status(500).json({ error: '❌ שגיאה במחיקה', details: err.message });
-  }
-});
-
-// ✅ הוספת שחקן
-router.post('/add-player/:teamId', async (req, res) => {
-  const { firstName, lastName, shirtNumber } = req.body;
-  try {
-    const team = await Team.findById(req.params.teamId);
-    if (!team) return res.status(404).json({ error: 'קבוצה לא נמצאה' });
-
-    team.players.push({ firstName, lastName, shirtNumber });
-    await team.save();
-    res.json({ message: '✅ שחקן נוסף בהצלחה', team });
-  } catch (err) {
-    res.status(500).json({ error: '❌ שגיאה בהוספת שחקן', details: err.message });
-  }
-});
-
-// ✅ הסרת שחקן לפי אינדקס
-router.delete('/remove-player/:teamId/:index', async (req, res) => {
-  try {
-    const team = await Team.findById(req.params.teamId);
-    if (!team) return res.status(404).json({ error: 'קבוצה לא נמצאה' });
-
-    team.players.splice(req.params.index, 1);
-    await team.save();
-    res.json({ message: '🗑️ שחקן הוסר', team });
-  } catch (err) {
-    res.status(500).json({ error: '❌ שגיאה במחיקת שחקן', details: err.message });
+    res.status(500).json({ error: '❌ שגיאה במחיקת הטורניר', details: err.message });
   }
 });
 
