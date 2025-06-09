@@ -12,6 +12,17 @@ router.get('/:tournamentId', async (req, res) => {
   }
 });
 
+// ✅ שליפת קבוצה לפי מזהה קבוצה (בשביל admin-players)
+router.get('/team/:teamId', async (req, res) => {
+  try {
+    const team = await Team.findById(req.params.teamId);
+    if (!team) return res.status(404).json({ error: '⚠️ קבוצה לא נמצאה' });
+    res.json(team);
+  } catch (err) {
+    res.status(500).json({ error: '❌ שגיאה בשליפת קבוצה', details: err.message });
+  }
+});
+
 // ✅ יצירת קבוצה
 router.post('/', async (req, res) => {
   try {
@@ -21,11 +32,47 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: 'נא למלא את כל השדות' });
     }
 
-    const newTeam = new Team({ name, color, ageGroup, tournamentId });
+    const newTeam = new Team({ name, color, ageGroup, tournamentId, players: [] });
     await newTeam.save();
     res.status(201).json({ message: '✅ הקבוצה נוספה בהצלחה', team: newTeam });
   } catch (err) {
     res.status(500).json({ error: '❌ שגיאה ביצירת הקבוצה', details: err.message });
+  }
+});
+
+// ✅ הוספת שחקן לקבוצה
+router.post('/add-player/:teamId', async (req, res) => {
+  try {
+    const { firstName, lastName, shirtNumber } = req.body;
+    const team = await Team.findById(req.params.teamId);
+    if (!team) return res.status(404).json({ error: 'קבוצה לא נמצאה' });
+
+    team.players.push({ firstName, lastName, shirtNumber });
+    await team.save();
+
+    res.json({ message: '✅ שחקן נוסף בהצלחה', team });
+  } catch (err) {
+    res.status(500).json({ error: '❌ שגיאה בהוספת שחקן', details: err.message });
+  }
+});
+
+// ✅ מחיקת שחקן לפי אינדקס
+router.delete('/remove-player/:teamId/:index', async (req, res) => {
+  try {
+    const team = await Team.findById(req.params.teamId);
+    if (!team) return res.status(404).json({ error: 'קבוצה לא נמצאה' });
+
+    const index = parseInt(req.params.index);
+    if (isNaN(index) || index < 0 || index >= team.players.length) {
+      return res.status(400).json({ error: 'אינדקס שחקן לא חוקי' });
+    }
+
+    team.players.splice(index, 1);
+    await team.save();
+
+    res.json({ message: '🗑️ שחקן הוסר', team });
+  } catch (err) {
+    res.status(500).json({ error: '❌ שגיאה במחיקת שחקן', details: err.message });
   }
 });
 
