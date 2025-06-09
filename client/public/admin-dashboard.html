@@ -191,6 +191,13 @@
   </div>
 
   <script>
+    const adminId = localStorage.getItem('adminId');
+if (!adminId) {
+  alert("⛔ אין גישה – התחבר שוב");
+  window.location.href = "admin-login.html";
+  return;
+}
+
     const form = document.getElementById('createForm');
     const message = document.getElementById('message');
     const tournamentsList = document.getElementById('tournamentsList');

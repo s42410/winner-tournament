@@ -16,6 +16,8 @@ const gameSchema = new mongoose.Schema({
   teamA: { type: mongoose.Schema.Types.ObjectId, ref: 'Team', required: true },
   teamB: { type: mongoose.Schema.Types.ObjectId, ref: 'Team', required: true },
   date: { type: Date, required: true },
+  time: { type: String }, // נוסיף שדה זמן כנדרש
+  location: { type: String }, // נוסיף מיקום כמו בטופס
   scoreA: { type: Number, default: 0 },
   scoreB: { type: Number, default: 0 },
   goals: {
