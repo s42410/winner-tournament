@@ -21,11 +21,7 @@ router.post('/register', async (req, res) => {
 
     res.status(201).json({
       message: '✅ נרשמת בהצלחה',
-      admin: {
-        _id: newAdmin._id,
-        fullName: newAdmin.fullName,
-        email: newAdmin.email
-      }
+      data: { fullName, email }
     });
   } catch (err) {
     res.status(500).json({ error: '❌ שגיאה בשרת', details: err.message });
@@ -47,14 +43,7 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ error: 'אימייל או סיסמה שגויים' });
     }
 
-    res.json({
-      message: '🎉 התחברת בהצלחה',
-      admin: {
-        _id: admin._id,
-        fullName: admin.fullName,
-        email: admin.email
-      }
-    });
+    res.json({ message: '🎉 התחברת בהצלחה', user: { fullName: admin.fullName, email } });
   } catch (err) {
     res.status(500).json({ error: '❌ שגיאה בשרת', details: err.message });
   }
