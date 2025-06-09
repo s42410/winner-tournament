@@ -69,7 +69,7 @@
       try {
         const [gamesRes, teamsRes, tournamentRes] = await Promise.all([
           fetch(`/api/games/by-tournament?tournamentId=${tournamentId}`),
-          fetch(`/api/teams?tournamentId=${tournamentId}`),
+          fetch(`/api/teams/${tournamentId}`),
           fetch(`/api/tournaments/${tournamentId}`)
         ]);
 
