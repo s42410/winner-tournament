@@ -11,19 +11,14 @@
       padding: 0;
       background: linear-gradient(to right, #fbc2eb, #a6c1ee);
       text-align: center;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
     }
 
     .logo-container {
-      margin-top: 20px;
+      margin-top: 40px;
     }
 
     .logo {
-      width: 240px;
+      width: 280px;
       cursor: pointer;
       transition: transform 0.3s;
     }
@@ -33,23 +28,23 @@
     }
 
     .box {
-      background-color: #ffffff;
-      padding: 40px 30px;
+      background-color: white;
+      padding: 40px;
       border-radius: 20px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-      width: 90%;
-      max-width: 400px;
-      margin: 20px auto;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      width: 350px;
+      display: inline-block;
+      margin-top: 40px;
     }
 
     h2 {
       margin-bottom: 20px;
-      color: #4a148c;
+      color: #333;
     }
 
     input {
       width: 100%;
-      padding: 14px;
+      padding: 12px;
       margin: 10px 0;
       font-size: 16px;
       border: 1px solid #ccc;
@@ -58,19 +53,18 @@
 
     button {
       width: 100%;
-      padding: 14px;
+      padding: 12px;
       font-size: 16px;
       border: none;
       border-radius: 10px;
-      background-color: #4a148c;
+      background-color: #4caf50;
       color: white;
       cursor: pointer;
-      font-weight: bold;
       transition: background-color 0.3s;
     }
 
     button:hover {
-      background-color: #6a1b9a;
+      background-color: #388e3c;
     }
 
     a {
@@ -88,25 +82,10 @@
     .message {
       margin-top: 20px;
       font-weight: bold;
-      font-size: 15px;
     }
 
     .success { color: green; }
     .error { color: red; }
-
-    @media screen and (max-width: 480px) {
-      .logo {
-        width: 200px;
-      }
-
-      .box {
-        padding: 30px 20px;
-      }
-
-      input, button {
-        font-size: 15px;
-      }
-    }
   </style>
 </head>
 <body>
