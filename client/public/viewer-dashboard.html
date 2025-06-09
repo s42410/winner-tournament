@@ -2,6 +2,7 @@
 <html lang="he" dir="rtl">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>דשבורד צופה</title>
   <style>
     body {
@@ -9,66 +10,88 @@
       font-family: 'Segoe UI', sans-serif;
       color: #333;
       text-align: center;
-      padding: 30px;
+      padding: 20px;
     }
+
     #logo {
       width: 220px;
       margin-bottom: 30px;
       cursor: pointer;
+      max-width: 90%;
     }
+
     h1 {
       color: #2e3b4e;
+      font-size: 26px;
+      margin-bottom: 20px;
     }
+
     .button {
       background: linear-gradient(to right, #00c6ff, #0072ff);
       border: none;
       color: white;
-      padding: 14px 30px;
+      padding: 16px 24px;
       margin: 10px;
-      font-size: 18px;
-      border-radius: 25px;
+      font-size: 20px;
+      border-radius: 30px;
       cursor: pointer;
-      transition: background 0.3s ease;
+      transition: background 0.3s ease, transform 0.2s;
+      width: 90%;
+      max-width: 350px;
     }
+
     .button:hover {
       background: linear-gradient(to right, #0072ff, #0051a3);
+      transform: scale(1.03);
     }
+
     #search-section {
       margin-top: 30px;
       display: none;
     }
+
     input[type="text"] {
-      padding: 12px 20px;
-      width: 280px;
+      padding: 14px 20px;
+      width: 90%;
+      max-width: 360px;
       border: 2px solid #0072ff;
-      border-radius: 20px;
-      font-size: 16px;
+      border-radius: 25px;
+      font-size: 18px;
+      margin-bottom: 20px;
     }
-    .tournament-result, .tracked-tournament {
-      background: #ffffffd4;
+
+    .tournament-result,
+    .tracked-tournament {
+      background: #ffffffdd;
       border: 2px solid #0072ff;
-      padding: 15px;
-      border-radius: 15px;
-      margin: 12px auto;
-      width: 70%;
+      padding: 20px;
+      border-radius: 20px;
+      margin: 14px auto;
+      width: 90%;
+      max-width: 450px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.2);
       position: relative;
+      font-size: 18px;
     }
+
     .footer {
       margin-top: 60px;
-      font-size: 14px;
+      font-size: 15px;
       color: #555;
+      line-height: 1.6;
     }
+
     .add-button {
       margin-top: 10px;
       background-color: #28a745;
-      padding: 8px 18px;
+      padding: 10px 20px;
       border-radius: 20px;
       color: white;
       cursor: pointer;
       border: none;
-      font-size: 15px;
+      font-size: 16px;
     }
+
     .add-button:hover {
       background-color: #1e7e34;
     }
@@ -92,13 +115,17 @@
 
   <div class="footer">
     כל הזכויות שמורות לסטיב רבייב<br>
-    האתר נוצר על ידי סטיב רבייב - steve_rabaev
+    האתר נוצר על ידי סטיב רבייב - steve_rabaev<br>
+    &copy; 2025
   </div>
 
   <script>
+    let searchVisible = false;
+
     function toggleSearch() {
       const section = document.getElementById('search-section');
-      section.style.display = section.style.display === 'none' ? 'block' : 'none';
+      searchVisible = !searchVisible;
+      section.style.display = searchVisible ? 'block' : 'none';
     }
 
     async function searchTournament() {
