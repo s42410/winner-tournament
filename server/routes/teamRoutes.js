@@ -12,14 +12,25 @@ router.get('/:tournamentId', async (req, res) => {
   }
 });
 
-// ✅ שליפת קבוצה לפי מזהה קבוצה (בשביל admin-players)
+// ✅ שליפה של קבוצה אחת לפי מזהה (כולל שחקנים)
 router.get('/team/:teamId', async (req, res) => {
   try {
     const team = await Team.findById(req.params.teamId);
-    if (!team) return res.status(404).json({ error: '⚠️ קבוצה לא נמצאה' });
+    if (!team) return res.status(404).json({ error: 'קבוצה לא נמצאה' });
     res.json(team);
   } catch (err) {
-    res.status(500).json({ error: '❌ שגיאה בשליפת קבוצה', details: err.message });
+    res.status(500).json({ error: '❌ שגיאה בקבלת קבוצה', details: err.message });
+  }
+});
+
+// ✅ שליפה של שחקני קבוצה בלבד
+router.get('/players/:teamId', async (req, res) => {
+  try {
+    const team = await Team.findById(req.params.teamId);
+    if (!team) return res.status(404).json({ error: 'קבוצה לא נמצאה' });
+    res.json(team.players || []);
+  } catch (err) {
+    res.status(500).json({ error: '❌ שגיאה בקבלת שחקנים', details: err.message });
   }
 });
 
@@ -44,6 +55,11 @@ router.post('/', async (req, res) => {
 router.post('/add-player/:teamId', async (req, res) => {
   try {
     const { firstName, lastName, shirtNumber } = req.body;
+
+    if (!firstName || !lastName || !shirtNumber) {
+      return res.status(400).json({ error: 'נא למלא את כל השדות' });
+    }
+
     const team = await Team.findById(req.params.teamId);
     if (!team) return res.status(404).json({ error: 'קבוצה לא נמצאה' });
 
@@ -56,7 +72,7 @@ router.post('/add-player/:teamId', async (req, res) => {
   }
 });
 
-// ✅ מחיקת שחקן לפי אינדקס
+// ✅ מחיקת שחקן מקבוצה לפי אינדקס
 router.delete('/remove-player/:teamId/:index', async (req, res) => {
   try {
     const team = await Team.findById(req.params.teamId);
@@ -64,13 +80,13 @@ router.delete('/remove-player/:teamId/:index', async (req, res) => {
 
     const index = parseInt(req.params.index);
     if (isNaN(index) || index < 0 || index >= team.players.length) {
-      return res.status(400).json({ error: 'אינדקס שחקן לא חוקי' });
+      return res.status(400).json({ error: 'אינדקס שחקן לא תקין' });
     }
 
     team.players.splice(index, 1);
     await team.save();
 
-    res.json({ message: '🗑️ שחקן הוסר', team });
+    res.json({ message: '🗑️ שחקן נמחק בהצלחה', team });
   } catch (err) {
     res.status(500).json({ error: '❌ שגיאה במחיקת שחקן', details: err.message });
   }
