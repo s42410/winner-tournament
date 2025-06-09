@@ -154,9 +154,8 @@
         const data = await res.json();
 
         if (res.ok) {
-          // שמירה של adminId בזיכרון הדפדפן
-          if (data.user && data.user._id) {
-            localStorage.setItem('adminId', data.user._id);
+          if (data.admin && data.admin._id) {
+            localStorage.setItem('adminId', data.admin._id);
           }
 
           message.textContent = "🎉 התחברת בהצלחה! מעביר אותך לדשבורד...";
