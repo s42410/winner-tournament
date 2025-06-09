@@ -2,6 +2,7 @@
 <html lang="he">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>הרשמת מנהלים</title>
   <style>
     body {
@@ -21,6 +22,7 @@
       width: 280px;
       cursor: pointer;
       transition: transform 0.3s;
+      max-width: 80vw;
     }
 
     .logo:hover {
@@ -33,6 +35,7 @@
       border-radius: 20px;
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
       width: 350px;
+      max-width: 90vw;
       display: inline-block;
       margin-top: 30px;
     }
@@ -40,6 +43,7 @@
     h2 {
       margin-bottom: 20px;
       color: #333;
+      font-size: 24px;
     }
 
     input {
@@ -49,6 +53,7 @@
       font-size: 16px;
       border: 1px solid #ccc;
       border-radius: 10px;
+      box-sizing: border-box;
       transition: 0.3s;
     }
 
@@ -60,7 +65,7 @@
 
     button {
       width: 100%;
-      padding: 12px;
+      padding: 14px;
       font-size: 16px;
       border: none;
       border-radius: 10px;
@@ -93,6 +98,30 @@
 
     .success { color: green; }
     .error { color: red; }
+
+    @media screen and (max-width: 480px) {
+      .box {
+        padding: 20px;
+        border-radius: 16px;
+      }
+
+      h2 {
+        font-size: 20px;
+      }
+
+      button {
+        font-size: 15px;
+      }
+
+      input {
+        font-size: 15px;
+        padding: 10px;
+      }
+
+      .logo {
+        width: 200px;
+      }
+    }
   </style>
 </head>
 <body>
