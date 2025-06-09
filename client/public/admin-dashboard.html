@@ -198,7 +198,7 @@
 
     async function fetchTournaments() {
       try {
-        const res = await fetch('/api/tournaments');
+        const res = await fetch(`/api/tournaments?adminId=${adminId}`);
         const data = await res.json();
         tournamentsList.innerHTML = '';
 
