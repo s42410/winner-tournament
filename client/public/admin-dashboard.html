@@ -23,16 +23,10 @@
       max-width: 90%;
     }
 
-    .top-buttons {
+    .back-button {
       position: absolute;
       top: 20px;
-      left: 20px;
       right: 20px;
-      display: flex;
-      justify-content: space-between;
-    }
-
-    .btn-top {
       background-color: #f39c12;
       border: none;
       color: white;
@@ -154,7 +148,7 @@
         width: 100%;
       }
 
-      .btn-top {
+      .back-button {
         font-size: 14px;
         padding: 8px 12px;
       }
@@ -163,10 +157,7 @@
 </head>
 <body>
 
-  <div class="top-buttons">
-    <button class="btn-top" onclick="goBack()">🔙 חזור</button>
-    <button class="btn-top" onclick="logout()">🚪 התנתק</button>
-  </div>
+  <button class="back-button" onclick="history.back()">🔙 חזור</button>
   <img src="logo.png" alt="לוגו מאמן" class="logo" onclick="window.location.href='index.html'" />
 
   <div class="box">
@@ -186,7 +177,7 @@
         <option value="ליגה + נוקאאוט">ליגה + נוקאאוט</option>
         <option value="בתים + נוקאאוט">בתים + נוקאאוט</option>
       </select>
-      <button type="submit">📅 שמור טורניר</button>
+      <button type="submit">💾 שמור טורניר</button>
     </form>
 
     <div id="message" class="message"></div>
@@ -205,15 +196,9 @@
     const tournamentsList = document.getElementById('tournamentsList');
     let editId = null;
 
-    const adminId = localStorage.getItem('adminId');
-    if (!adminId) {
-      alert('אין הרשאה. אנא התחבר מחדש.');
-      window.location.href = 'admin-login.html';
-    }
-
     async function fetchTournaments() {
       try {
-        const res = await fetch(`/api/tournaments?adminId=${adminId}`);
+        const res = await fetch('/api/tournaments');
         const data = await res.json();
         tournamentsList.innerHTML = '';
 
@@ -265,15 +250,6 @@
       window.location.href = `/admin-standings.html?tournamentId=${tournamentId}`;
     }
 
-    function logout() {
-      localStorage.removeItem('adminId');
-      window.location.href = 'admin-login.html';
-    }
-
-    function goBack() {
-      window.location.href = 'index.html';
-    }
-
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       const name = document.getElementById('name').value;
@@ -283,13 +259,11 @@
       const url = editId ? `/api/tournaments/${editId}` : '/api/tournaments/create';
       const method = editId ? 'PUT' : 'POST';
 
-      const body = { name, grade, type, adminId };
-
       try {
         const res = await fetch(url, {
           method,
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body)
+          body: JSON.stringify({ name, grade, type })
         });
 
         const data = await res.json();
