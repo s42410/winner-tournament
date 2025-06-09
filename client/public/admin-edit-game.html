@@ -15,7 +15,7 @@
       background: white;
       padding: 30px;
       border-radius: 10px;
-      width: 850px;
+      max-width: 850px;
       margin: auto;
       box-shadow: 0 0 10px rgba(0,0,0,0.2);
       position: relative;
@@ -30,49 +30,49 @@
       left: 20px;
       background: #007bff;
       color: white;
-      padding: 8px 16px;
+      padding: 12px 20px;
+      font-size: 18px;
       border: none;
-      border-radius: 4px;
+      border-radius: 6px;
       cursor: pointer;
     }
     .teams-header {
       display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 22px;
+      flex-direction: column;
+      gap: 10px;
+      font-size: 24px;
       font-weight: bold;
-      margin-bottom: 10px;
+      margin-bottom: 20px;
       color: #333;
     }
     .score-inputs {
       display: flex;
       justify-content: center;
       align-items: center;
-      gap: 10px;
+      gap: 15px;
       margin-bottom: 20px;
     }
     input[type="number"] {
-      width: 50px;
-      font-size: 20px;
+      width: 70px;
+      font-size: 22px;
       text-align: center;
+      padding: 8px;
     }
     .scorers-section {
       display: flex;
-      justify-content: space-between;
-      gap: 20px;
+      flex-direction: column;
+      gap: 30px;
       margin-top: 20px;
-    }
-    .scorer-column {
-      width: 48%;
     }
     .scorer-column h4 {
       margin: 10px 0;
+      font-size: 20px;
       border-bottom: 2px solid #7cb1ff;
       color: #1a3c66;
     }
     .scorer-list, .event-list {
       text-align: right;
-      font-size: 14px;
+      font-size: 16px;
       color: #333;
       margin-top: 10px;
     }
@@ -84,23 +84,24 @@
     }
     .event-section h4 {
       color: #c40000;
+      font-size: 18px;
       margin-bottom: 10px;
     }
     .event-section select, .event-section input {
-      width: 22%;
+      width: 24%;
       margin: 3px;
-      padding: 5px;
-      font-size: 14px;
+      padding: 10px;
+      font-size: 16px;
     }
     button {
       margin-top: 20px;
-      padding: 10px 20px;
-      font-size: 15px;
+      padding: 12px 24px;
+      font-size: 18px;
       cursor: pointer;
       background-color: #007bff;
       color: white;
       border: none;
-      border-radius: 4px;
+      border-radius: 6px;
     }
     .deletable:hover {
       text-decoration: line-through;
@@ -108,7 +109,29 @@
     }
     #message {
       margin-top: 20px;
+      font-size: 16px;
       font-weight: bold;
+    }
+    @media screen and (max-width: 768px) {
+      .container {
+        padding: 20px;
+        width: 95%;
+      }
+      .score-inputs {
+        gap: 10px;
+      }
+      input[type="number"] {
+        width: 50px;
+        font-size: 18px;
+      }
+      button {
+        font-size: 16px;
+        padding: 10px 18px;
+      }
+      .event-section select, .event-section input {
+        width: 48%;
+        font-size: 14px;
+      }
     }
   </style>
 </head>

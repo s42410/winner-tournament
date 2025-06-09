@@ -26,29 +26,30 @@
       background-color: #f39c12;
       border: none;
       color: white;
-      padding: 10px 16px;
-      font-size: 16px;
-      border-radius: 6px;
+      padding: 12px 20px;
+      font-size: 18px;
+      border-radius: 8px;
       cursor: pointer;
     }
     .box {
       background: white;
       padding: 30px;
       margin: auto;
-      border-radius: 12px;
+      border-radius: 16px;
       box-shadow: 0 0 20px rgba(0,0,0,0.15);
-      width: 90%;
-      max-width: 720px;
+      width: 95%;
+      max-width: 760px;
     }
-    h2 {
+    h2, h3 {
       color: #2c3e50;
+      font-size: 24px;
     }
     form input, form select, form button {
       width: 100%;
-      padding: 12px;
-      margin: 10px 0;
-      font-size: 16px;
-      border-radius: 6px;
+      padding: 16px;
+      margin: 12px 0;
+      font-size: 18px;
+      border-radius: 8px;
       border: 1px solid #ccc;
     }
     form button {
@@ -62,7 +63,8 @@
     }
     .message {
       font-weight: bold;
-      margin-top: 10px;
+      margin-top: 12px;
+      font-size: 16px;
     }
     .success { color: green; }
     .error { color: red; }
@@ -73,19 +75,23 @@
     .tournament {
       background: #fefefe;
       border: 1px solid #ddd;
-      border-radius: 10px;
-      padding: 15px;
+      border-radius: 12px;
+      padding: 20px;
       margin-bottom: 20px;
       box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+      font-size: 18px;
     }
     .tournament-buttons {
       margin-top: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
     }
     .tournament-buttons button {
-      margin: 5px 4px 0;
-      padding: 8px 14px;
-      font-size: 14px;
-      border-radius: 6px;
+      flex: 1 1 48%;
+      padding: 14px;
+      font-size: 16px;
+      border-radius: 8px;
       border: none;
       background-color: #0984e3;
       color: white;
@@ -98,6 +104,22 @@
       margin-top: 50px;
       font-size: 14px;
       color: white;
+    }
+
+    @media (max-width: 600px) {
+      .logo {
+        width: 240px;
+      }
+      h2, h3 {
+        font-size: 20px;
+      }
+      .tournament-buttons button {
+        flex: 1 1 100%;
+      }
+      form input, form select, form button {
+        font-size: 16px;
+        padding: 14px;
+      }
     }
   </style>
 </head>
