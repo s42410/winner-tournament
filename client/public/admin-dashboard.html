@@ -2,6 +2,7 @@
 <html lang="he">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>אזור ניהול טורנירים</title>
   <style>
     body {
@@ -13,12 +14,15 @@
       background: linear-gradient(135deg, #7ed6df, #e056fd);
       min-height: 100vh;
     }
+
     .logo {
       width: 320px;
       margin: 30px auto 10px;
       cursor: pointer;
       display: block;
+      max-width: 90%;
     }
+
     .back-button {
       position: absolute;
       top: 20px;
@@ -31,6 +35,7 @@
       border-radius: 6px;
       cursor: pointer;
     }
+
     .box {
       background: white;
       padding: 30px;
@@ -40,10 +45,14 @@
       width: 90%;
       max-width: 720px;
     }
+
     h2 {
       color: #2c3e50;
     }
-    form input, form select, form button {
+
+    form input,
+    form select,
+    form button {
       width: 100%;
       padding: 12px;
       margin: 10px 0;
@@ -51,25 +60,31 @@
       border-radius: 6px;
       border: 1px solid #ccc;
     }
+
     form button {
       background-color: #6c5ce7;
       color: white;
       cursor: pointer;
       font-weight: bold;
     }
+
     form button:hover {
       background-color: #5a4cd1;
     }
+
     .message {
       font-weight: bold;
       margin-top: 10px;
     }
+
     .success { color: green; }
     .error { color: red; }
+
     #tournamentsList {
       margin-top: 30px;
       text-align: right;
     }
+
     .tournament {
       background: #fefefe;
       border: 1px solid #ddd;
@@ -78,11 +93,15 @@
       margin-bottom: 20px;
       box-shadow: 0 2px 5px rgba(0,0,0,0.05);
     }
+
     .tournament-buttons {
       margin-top: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
     }
+
     .tournament-buttons button {
-      margin: 5px 4px 0;
       padding: 8px 14px;
       font-size: 14px;
       border-radius: 6px;
@@ -91,13 +110,48 @@
       color: white;
       cursor: pointer;
     }
+
     .tournament-buttons button:hover {
       background-color: #0652dd;
     }
+
     .footer {
       margin-top: 50px;
       font-size: 14px;
       color: white;
+    }
+
+    @media (max-width: 480px) {
+      .box {
+        padding: 20px;
+      }
+
+      h2, h3, p {
+        font-size: 18px;
+      }
+
+      form input,
+      form select,
+      form button {
+        font-size: 18px;
+        padding: 14px;
+      }
+
+      .tournament-buttons {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .tournament-buttons button {
+        font-size: 16px;
+        padding: 12px;
+        width: 100%;
+      }
+
+      .back-button {
+        font-size: 14px;
+        padding: 8px 12px;
+      }
     }
   </style>
 </head>
@@ -133,7 +187,7 @@
   </div>
 
   <div class="footer">
-    האתר נוצר על ידי <strong>Steve_rabaev</strong> | כל הזכויות שמורות ©
+    האתר נוצר על ידי <strong>Steve_rabaev</strong> | כל הזכויות שמורות ©️
   </div>
 
   <script>
