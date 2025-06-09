@@ -2,13 +2,23 @@ const express = require('express');
 const router = express.Router();
 const Team = require('../models/Team');
 
-// ✅ שליפה של כל הקבוצות לפי מזהה טורניר
+// ✅ שליפה של כל הקבוצות לפי מזהה טורניר (למנהל)
 router.get('/:tournamentId', async (req, res) => {
   try {
     const teams = await Team.find({ tournamentId: req.params.tournamentId });
     res.json(teams);
   } catch (err) {
     res.status(500).json({ error: '❌ שגיאה בקבלת הקבוצות', details: err.message });
+  }
+});
+
+// ✅ שליפה לצפייה לפי טורניר (דרוש ל-viewer-tournament)
+router.get('/tournaments/:tournamentId', async (req, res) => {
+  try {
+    const teams = await Team.find({ tournamentId: req.params.tournamentId });
+    res.json(teams);
+  } catch (err) {
+    res.status(500).json({ error: '❌ שגיאה בקבלת קבוצות לצפייה', details: err.message });
   }
 });
 
