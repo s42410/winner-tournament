@@ -107,7 +107,7 @@
   </div>
 
   <div class="footer">
-    האתר נבנה על ידי סטיב רבייב | כל הזכויות שמורות ©
+    האתר נבנה על ידי סטיב רבייב | כל הזכויות שמורות ©️
   </div>
 
   <script>
@@ -127,7 +127,7 @@
         const [tournamentRes, teamsRes, gamesRes] = await Promise.all([
           fetch(`/api/tournaments/${tournamentId}`),
           fetch(`/api/teams?tournamentId=${tournamentId}`),
-          fetch(`/api/games/${tournamentId}`)
+          fetch(`/api/games/by-tournament?tournamentId=${tournamentId}`)
         ]);
 
         if (!tournamentRes.ok || !teamsRes.ok || !gamesRes.ok) {
