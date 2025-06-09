@@ -156,7 +156,6 @@
   </style>
 </head>
 <body>
-
   <button class="back-button" onclick="history.back()">🔙 חזור</button>
   <img src="logo.png" alt="לוגו מאמן" class="logo" onclick="window.location.href='index.html'" />
 
@@ -195,10 +194,16 @@
     const message = document.getElementById('message');
     const tournamentsList = document.getElementById('tournamentsList');
     let editId = null;
+    const adminId = localStorage.getItem('adminId');
+
+    if (!adminId) {
+      alert('אין הרשאה. אנא התחבר מחדש.');
+      window.location.href = 'admin-login.html';
+    }
 
     async function fetchTournaments() {
       try {
-        const res = await fetch('/api/tournaments');
+        const res = await fetch(`/api/tournaments?adminId=${adminId}`);
         const data = await res.json();
         tournamentsList.innerHTML = '';
 
@@ -263,7 +268,7 @@
         const res = await fetch(url, {
           method,
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, grade, type })
+          body: JSON.stringify({ name, grade, type, adminId })
         });
 
         const data = await res.json();
