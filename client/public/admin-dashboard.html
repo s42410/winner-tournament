@@ -23,10 +23,16 @@
       max-width: 90%;
     }
 
-    .back-button {
+    .top-buttons {
       position: absolute;
       top: 20px;
+      left: 20px;
       right: 20px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .btn-top {
       background-color: #f39c12;
       border: none;
       color: white;
@@ -148,7 +154,7 @@
         width: 100%;
       }
 
-      .back-button {
+      .btn-top {
         font-size: 14px;
         padding: 8px 12px;
       }
@@ -157,7 +163,10 @@
 </head>
 <body>
 
-  <button class="back-button" onclick="logout()">🚪 התנתק</button>
+  <div class="top-buttons">
+    <button class="btn-top" onclick="goBack()">🔙 חזור</button>
+    <button class="btn-top" onclick="logout()">🚪 התנתק</button>
+  </div>
   <img src="logo.png" alt="לוגו מאמן" class="logo" onclick="window.location.href='index.html'" />
 
   <div class="box">
@@ -177,7 +186,7 @@
         <option value="ליגה + נוקאאוט">ליגה + נוקאאוט</option>
         <option value="בתים + נוקאאוט">בתים + נוקאאוט</option>
       </select>
-      <button type="submit">💾 שמור טורניר</button>
+      <button type="submit">📅 שמור טורניר</button>
     </form>
 
     <div id="message" class="message"></div>
@@ -204,7 +213,7 @@
 
     async function fetchTournaments() {
       try {
-        const res = await fetch(`/api/tournaments/byAdmin/${adminId}`);
+        const res = await fetch(`/api/tournaments?adminId=${adminId}`);
         const data = await res.json();
         tournamentsList.innerHTML = '';
 
@@ -259,6 +268,10 @@
     function logout() {
       localStorage.removeItem('adminId');
       window.location.href = 'admin-login.html';
+    }
+
+    function goBack() {
+      window.location.href = 'index.html';
     }
 
     form.addEventListener('submit', async (e) => {

@@ -2,12 +2,12 @@ const express = require('express');
 const router = express.Router();
 const Tournament = require('../models/Tournament');
 
-// ✅ שליפה של כל הטורנירים לפי מזהה מנהל
+// ✅ שליפה של טורנירים לפי מזהה מנהל
 router.get('/', async (req, res) => {
   try {
     const adminId = req.query.adminId;
     if (!adminId) {
-      return res.status(400).json({ error: '❗ יש לספק מזהה מנהל' });
+      return res.status(400).json({ error: '❗ יש לספק מזהה מנהל בשורת הכתובת (adminId)' });
     }
     const tournaments = await Tournament.find({ createdBy: adminId });
     res.json(tournaments);
@@ -27,7 +27,7 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// ✅ יצירת טורניר חדש עם מזהה מנהל
+// ✅ יצירת טורניר חדש עם שיוך למנהל
 router.post('/create', async (req, res) => {
   const { name, grade, type, adminId } = req.body;
 
@@ -36,8 +36,14 @@ router.post('/create', async (req, res) => {
   }
 
   try {
-    const newTournament = new Tournament({ name, ageGroup: grade, type, createdBy: adminId });
+    const newTournament = new Tournament({
+      name,
+      ageGroup: grade,
+      type,
+      createdBy: adminId
+    });
     await newTournament.save();
+
     res.status(201).json({
       message: '✅ הטורניר נוצר בהצלחה!',
       tournament: newTournament
