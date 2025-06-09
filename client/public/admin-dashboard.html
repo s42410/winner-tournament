@@ -156,7 +156,8 @@
   </style>
 </head>
 <body>
-  <button class="back-button" onclick="history.back()">🔙 חזור</button>
+
+  <button class="back-button" onclick="logout()">🚪 התנתק</button>
   <img src="logo.png" alt="לוגו מאמן" class="logo" onclick="window.location.href='index.html'" />
 
   <div class="box">
@@ -194,8 +195,8 @@
     const message = document.getElementById('message');
     const tournamentsList = document.getElementById('tournamentsList');
     let editId = null;
-    const adminId = localStorage.getItem('adminId');
 
+    const adminId = localStorage.getItem('adminId');
     if (!adminId) {
       alert('אין הרשאה. אנא התחבר מחדש.');
       window.location.href = 'admin-login.html';
@@ -203,7 +204,7 @@
 
     async function fetchTournaments() {
       try {
-        const res = await fetch(`/api/tournaments?adminId=${adminId}`);
+        const res = await fetch(`/api/tournaments/byAdmin/${adminId}`);
         const data = await res.json();
         tournamentsList.innerHTML = '';
 
@@ -255,6 +256,11 @@
       window.location.href = `/admin-standings.html?tournamentId=${tournamentId}`;
     }
 
+    function logout() {
+      localStorage.removeItem('adminId');
+      window.location.href = 'admin-login.html';
+    }
+
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       const name = document.getElementById('name').value;
@@ -264,11 +270,13 @@
       const url = editId ? `/api/tournaments/${editId}` : '/api/tournaments/create';
       const method = editId ? 'PUT' : 'POST';
 
+      const body = { name, grade, type, adminId };
+
       try {
         const res = await fetch(url, {
           method,
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, grade, type, adminId })
+          body: JSON.stringify(body)
         });
 
         const data = await res.json();
