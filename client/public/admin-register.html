@@ -129,7 +129,7 @@
       if (!email) return alert("אנא הזן כתובת אימייל");
 
       generatedOTP = generateOTP();
-      emailjs.send("service_pnebwpf", "template_53726x", {
+      emailjs.send("service_pnebwpf", "template_537267x", {
         email: email,
         passcode: generatedOTP,
       }).then(() => {
