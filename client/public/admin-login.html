@@ -71,6 +71,15 @@
       background-color: #388e3c;
     }
 
+    .logout-btn {
+      background-color: #e74c3c;
+      margin-top: 10px;
+    }
+
+    .logout-btn:hover {
+      background-color: #c0392b;
+    }
+
     a {
       display: inline-block;
       margin-top: 20px;
@@ -127,6 +136,7 @@
       <input type="password" id="password" placeholder="סיסמה" required><br>
       <button type="submit">🚀 התחבר</button>
     </form>
+    <button class="logout-btn" onclick="logout()" style="display:none;" id="logoutBtn">🚪 התנתק</button>
     <a href="admin-register.html">אין לך משתמש? הרשם כאן</a>
     <div id="message" class="message"></div>
   </div>
@@ -138,6 +148,22 @@
 
     const form = document.getElementById('loginForm');
     const message = document.getElementById('message');
+    const logoutBtn = document.getElementById('logoutBtn');
+
+    // בדיקה אם כבר התחברת
+    const storedAdminId = localStorage.getItem('adminId');
+    if (storedAdminId) {
+      message.textContent = "🔁 מועבר לדשבורד...";
+      message.className = "message success";
+      setTimeout(() => {
+        window.location.href = 'admin-dashboard.html';
+      }, 1000);
+    }
+
+    // הצגת כפתור התנתקות אם התחברת
+    if (storedAdminId) {
+      logoutBtn.style.display = 'block';
+    }
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -172,6 +198,13 @@
         message.className = "message error";
       }
     });
+
+    function logout() {
+      localStorage.removeItem('adminId');
+      message.textContent = '🚪 התנתקת בהצלחה';
+      message.className = 'message success';
+      logoutBtn.style.display = 'none';
+    }
   </script>
 </body>
 </html>
