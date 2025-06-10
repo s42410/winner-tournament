@@ -189,101 +189,108 @@
   <div class="footer">
     האתר נוצר על ידי <strong>Steve_rabaev</strong> | כל הזכויות שמורות ©️
   </div>
+  <!-- המשך HEADER כמו שהיה -->
+<script>
+  const form = document.getElementById('createForm');
+  const message = document.getElementById('message');
+  const tournamentsList = document.getElementById('tournamentsList');
+  let editId = null;
 
-  <script>
-    const form = document.getElementById('createForm');
-    const message = document.getElementById('message');
-    const tournamentsList = document.getElementById('tournamentsList');
-    let editId = null;
+  const adminEmail = localStorage.getItem("adminEmail") || prompt("הזן מייל מנהל:"); // דרוש כדי לקשר טורנירים
+  localStorage.setItem("adminEmail", adminEmail); // שומר את המייל לשימוש עתידי
 
-    async function fetchTournaments() {
-      try {
-        const res = await fetch('/api/tournaments');
-        const data = await res.json();
-        tournamentsList.innerHTML = '';
+  async function fetchTournaments() {
+    try {
+      const res = await fetch(`/api/tournaments?email=${adminEmail}`);
+      const data = await res.json();
+      tournamentsList.innerHTML = '';
 
-        data.forEach(t => {
-          const div = document.createElement('div');
-          div.className = 'tournament';
-          div.innerHTML = `
-            <strong>שם:</strong> ${t.name} <br>
-            <strong>שכבת גיל:</strong> ${t.ageGroup} <br>
-            <strong>סוג:</strong> ${t.type}
-            <div class="tournament-buttons">
-              <button onclick="editTournament('${t._id}', '${t.name}', '${t.ageGroup}', '${t.type}')">✏️ ערוך</button>
-              <button onclick="deleteTournament('${t._id}', '${t.name}')">🗑️ מחק</button>
-              <button onclick="goToTeamManagement('${t._id}')">👥 ניהול קבוצות</button>
-              <button onclick="goToGameManagement('${t._id}')">⚽ ניהול משחקים</button>
-              <button onclick="goToStatsPage('${t._id}')">📊 טבלת דירוג וסטטיסטיקה</button>
-            </div>
-          `;
-          tournamentsList.appendChild(div);
-        });
-      } catch {
-        tournamentsList.innerHTML = '❌ שגיאה בטעינת הטורנירים';
-      }
+      data.forEach(t => {
+        const div = document.createElement('div');
+        div.className = 'tournament';
+        div.innerHTML = `
+          <strong>שם:</strong> ${t.name} <br>
+          <strong>שכבת גיל:</strong> ${t.ageGroup} <br>
+          <strong>סוג:</strong> ${t.type}
+          <div class="tournament-buttons">
+            <button onclick="editTournament('${t._id}', '${t.name}', '${t.ageGroup}', '${t.type}')">✏️ ערוך</button>
+            <button onclick="deleteTournament('${t._id}', '${t.name}')">🗑️ מחק</button>
+            <button onclick="goToTeamManagement('${t._id}')">👥 ניהול קבוצות</button>
+            <button onclick="goToGameManagement('${t._id}')">⚽ ניהול משחקים</button>
+            <button onclick="goToStatsPage('${t._id}')">📊 טבלת דירוג וסטטיסטיקה</button>
+          </div>
+        `;
+        tournamentsList.appendChild(div);
+      });
+    } catch {
+      tournamentsList.innerHTML = '❌ שגיאה בטעינת הטורנירים';
     }
+  }
 
-    function editTournament(id, name, grade, type) {
-      document.getElementById('name').value = name;
-      document.getElementById('grade').value = grade;
-      document.getElementById('type').value = type;
-      editId = id;
+  function editTournament(id, name, grade, type) {
+    document.getElementById('name').value = name;
+    document.getElementById('grade').value = grade;
+    document.getElementById('type').value = type;
+    editId = id;
+  }
+
+  async function deleteTournament(id, name) {
+    if (confirm(`למחוק את הטורניר "${name}"?`)) {
+      await fetch(`/api/tournaments/${id}`, { method: 'DELETE' });
+      fetchTournaments();
     }
+  }
 
-    async function deleteTournament(id, name) {
-      if (confirm(`למחוק את הטורניר "${name}"?`)) {
-        await fetch(`/api/tournaments/${id}`, { method: 'DELETE' });
+  function goToTeamManagement(tournamentId) {
+    window.location.href = `/admin-teams.html?tournamentId=${tournamentId}`;
+  }
+
+  function goToGameManagement(tournamentId) {
+    window.location.href = `/admin-games.html?tournamentId=${tournamentId}`;
+  }
+
+  function goToStatsPage(tournamentId) {
+    window.location.href = `/admin-standings.html?tournamentId=${tournamentId}`;
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name = document.getElementById('name').value;
+    const grade = document.getElementById('grade').value;
+    const type = document.getElementById('type').value;
+
+    const url = editId ? `/api/tournaments/${editId}` : '/api/tournaments/create';
+    const method = editId ? 'PUT' : 'POST';
+
+    const body = editId
+      ? { name, grade, type }
+      : { name, grade, type, email: adminEmail };
+
+    try {
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        message.textContent = `✅ ${editId ? 'עודכן' : 'נוצר'} טורניר בהצלחה`;
+        message.className = 'message success';
+        form.reset();
+        editId = null;
         fetchTournaments();
-      }
-    }
-
-    function goToTeamManagement(tournamentId) {
-      window.location.href = `/admin-teams.html?tournamentId=${tournamentId}`;
-    }
-
-    function goToGameManagement(tournamentId) {
-      window.location.href = `/admin-games.html?tournamentId=${tournamentId}`;
-    }
-
-    function goToStatsPage(tournamentId) {
-      window.location.href = `/admin-standings.html?tournamentId=${tournamentId}`;
-    }
-
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const name = document.getElementById('name').value;
-      const grade = document.getElementById('grade').value;
-      const type = document.getElementById('type').value;
-
-      const url = editId ? `/api/tournaments/${editId}` : '/api/tournaments/create';
-      const method = editId ? 'PUT' : 'POST';
-
-      try {
-        const res = await fetch(url, {
-          method,
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, grade, type })
-        });
-
-        const data = await res.json();
-        if (res.ok) {
-          message.textContent = `✅ ${editId ? 'עודכן' : 'נוצר'} טורניר בהצלחה`;
-          message.className = 'message success';
-          form.reset();
-          editId = null;
-          fetchTournaments();
-        } else {
-          message.textContent = '❌ שגיאה: ' + data.error;
-          message.className = 'message error';
-        }
-      } catch {
-        message.textContent = '❌ שגיאה בחיבור לשרת';
+      } else {
+        message.textContent = '❌ שגיאה: ' + data.error;
         message.className = 'message error';
       }
-    });
+    } catch {
+      message.textContent = '❌ שגיאה בחיבור לשרת';
+      message.className = 'message error';
+    }
+  });
 
-    fetchTournaments();
-  </script>
+  fetchTournaments();
+</script>
 </body>
 </html>
