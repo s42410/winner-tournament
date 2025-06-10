@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>אישור כניסה לניהול</title>
+  <style>
+    body {
+      direction: rtl;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to right, #74ebd5, #acb6e5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .box {
+      background-color: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+      width: 90%;
+      max-width: 400px;
+      text-align: center;
+    }
+
+    h2 {
+      margin-bottom: 10px;
+    }
+
+    p {
+      font-size: 14px;
+      margin-bottom: 20px;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 15px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      background-color: #0984e3;
+      color: white;
+      font-size: 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #0652dd;
+    }
+
+    .error {
+      color: red;
+      font-size: 14px;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h2>🔒 גישת ניהול</h2>
+    <p>המערכת פתוחה רק למורשים באישור מייסד האתר – סטיב רבייב</p>
+    <p>אם יש בידך סיסמת אישור, נא להזין אותה כדי להמשיך:</p>
+    <input type="password" id="accessCode" placeholder="הזן סיסמה">
+    <button onclick="verifyPassword()">המשך</button>
+    <div id="error" class="error"></div>
+  </div>
+
+  <script>
+    function verifyPassword() {
+      const password = document.getElementById("accessCode").value;
+      const error = document.getElementById("error");
+
+      if (password === "Alla19802008") {
+        window.location.href = "admin-register.html";
+      } else {
+        error.textContent = "❌ סיסמה שגויה. אין לך הרשאה להיכנס.";
+      }
+    }
+  </script>
+</body>
+</html>
