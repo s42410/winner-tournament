@@ -2,10 +2,12 @@ const express = require('express');
 const router = express.Router();
 const Tournament = require('../models/Tournament');
 
-// שליפה של כל הטורנירים
+// שליפה של כל הטורנירים לפי מייל יוצר
 router.get('/', async (req, res) => {
+  const email = req.query.email;
   try {
-    const tournaments = await Tournament.find();
+    const filter = email ? { creatorEmail: email } : {};
+    const tournaments = await Tournament.find(filter);
     res.json(tournaments);
   } catch (err) {
     res.status(500).json({ error: '❌ שגיאה בקבלת הטורנירים', details: err.message });
@@ -25,14 +27,13 @@ router.get('/:id', async (req, res) => {
 
 // יצירת טורניר
 router.post('/create', async (req, res) => {
-  const { name, grade, type } = req.body;
-
-  if (!name || !grade || !type) {
+  const { name, grade, type, email } = req.body;
+  if (!name || !grade || !type || !email) {
     return res.status(400).json({ error: '❗ נא למלא את כל השדות' });
   }
 
   try {
-    const newTournament = new Tournament({ name, ageGroup: grade, type });
+    const newTournament = new Tournament({ name, ageGroup: grade, type, creatorEmail: email });
     await newTournament.save();
     res.status(201).json({
       message: '✅ הטורניר נוצר בהצלחה!',
@@ -46,7 +47,6 @@ router.post('/create', async (req, res) => {
 // עדכון טורניר
 router.put('/:id', async (req, res) => {
   const { name, grade, type } = req.body;
-
   try {
     const updated = await Tournament.findByIdAndUpdate(
       req.params.id,

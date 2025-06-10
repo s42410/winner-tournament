@@ -196,9 +196,16 @@
     const tournamentsList = document.getElementById('tournamentsList');
     let editId = null;
 
+    const currentUserEmail = localStorage.getItem("adminEmail");
+
+    if (!currentUserEmail) {
+      alert("שגיאה: לא נמצא אימייל של המשתמש");
+      window.location.href = "admin-login.html";
+    }
+
     async function fetchTournaments() {
       try {
-        const res = await fetch('/api/tournaments');
+        const res = await fetch(`/api/tournaments?email=${encodeURIComponent(currentUserEmail)}`);
         const data = await res.json();
         tournamentsList.innerHTML = '';
 
@@ -263,7 +270,7 @@
         const res = await fetch(url, {
           method,
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, grade, type })
+          body: JSON.stringify({ name, grade, type, email: currentUserEmail })
         });
 
         const data = await res.json();
