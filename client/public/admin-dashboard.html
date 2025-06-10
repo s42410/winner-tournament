@@ -36,6 +36,19 @@
       cursor: pointer;
     }
 
+    .logout-button {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      background-color: #ff4d4d;
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      font-size: 16px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
     .box {
       background: white;
       padding: 30px;
@@ -148,7 +161,7 @@
         width: 100%;
       }
 
-      .back-button {
+      .back-button, .logout-button {
         font-size: 14px;
         padding: 8px 12px;
       }
@@ -158,6 +171,8 @@
 <body>
 
   <button class="back-button" onclick="history.back()">🔙 חזור</button>
+  <button class="logout-button" onclick="logoutAdmin()">🔓 התנתק</button>
+
   <img src="logo.png" alt="לוגו מאמן" class="logo" onclick="window.location.href='index.html'" />
 
   <div class="box">
@@ -248,6 +263,12 @@
 
     function goToStatsPage(tournamentId) {
       window.location.href = `/admin-standings.html?tournamentId=${tournamentId}`;
+    }
+
+    function logoutAdmin() {
+      localStorage.removeItem('adminApproved');
+      alert('התנתקת בהצלחה.');
+      window.location.href = 'index.html';
     }
 
     form.addEventListener('submit', async (e) => {
