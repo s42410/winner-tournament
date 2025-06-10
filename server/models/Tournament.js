@@ -4,6 +4,7 @@ const tournamentSchema = new mongoose.Schema({
   name: { type: String, required: true },
   type: { type: String, required: true },
   ageGroup: { type: String, required: true },
+  adminEmail: { type: String }, // מייל של יוצר הטורניר
   createdAt: { type: Date, default: Date.now }
 });
 

@@ -196,9 +196,14 @@
     const tournamentsList = document.getElementById('tournamentsList');
     let editId = null;
 
+    const adminEmail = localStorage.getItem('adminEmail');
+    if (!adminEmail) {
+      alert('❗ כתובת אימייל של מנהל לא קיימת. הפנה מהעמוד הראשי מחדש.');
+    }
+
     async function fetchTournaments() {
       try {
-        const res = await fetch('/api/tournaments');
+        const res = await fetch(`/api/tournaments?email=${encodeURIComponent(adminEmail)}`);
         const data = await res.json();
         tournamentsList.innerHTML = '';
 
@@ -259,11 +264,15 @@
       const url = editId ? `/api/tournaments/${editId}` : '/api/tournaments/create';
       const method = editId ? 'PUT' : 'POST';
 
+      const body = editId
+        ? { name, grade, type }
+        : { name, grade, type, adminEmail };
+
       try {
         const res = await fetch(url, {
           method,
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, grade, type })
+          body: JSON.stringify(body)
         });
 
         const data = await res.json();
