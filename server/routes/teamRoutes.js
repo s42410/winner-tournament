@@ -44,20 +44,43 @@ router.get('/players/:teamId', async (req, res) => {
   }
 });
 
-// ✅ יצירת קבוצה
+// ✅ יצירת קבוצה (בלי ageGroup)
 router.post('/', async (req, res) => {
   try {
-    const { name, color, ageGroup, tournamentId } = req.body;
+    const { name, color, tournamentId } = req.body;
 
-    if (!name || !color || !ageGroup || !tournamentId) {
+    if (!name || !color || !tournamentId) {
       return res.status(400).json({ error: 'נא למלא את כל השדות' });
     }
 
-    const newTeam = new Team({ name, color, ageGroup, tournamentId, players: [] });
+    const newTeam = new Team({ name, color, tournamentId, players: [] });
     await newTeam.save();
     res.status(201).json({ message: '✅ הקבוצה נוספה בהצלחה', team: newTeam });
   } catch (err) {
     res.status(500).json({ error: '❌ שגיאה ביצירת הקבוצה', details: err.message });
+  }
+});
+
+// ✅ עדכון קבוצה (גם בלי ageGroup)
+router.put('/:teamId', async (req, res) => {
+  try {
+    const { name, color } = req.body;
+
+    if (!name || !color) {
+      return res.status(400).json({ error: 'נא למלא את כל השדות' });
+    }
+
+    const updated = await Team.findByIdAndUpdate(
+      req.params.teamId,
+      { name, color },
+      { new: true }
+    );
+
+    if (!updated) return res.status(404).json({ error: 'קבוצה לא נמצאה' });
+
+    res.json({ message: '✏️ הקבוצה עודכנה בהצלחה', team: updated });
+  } catch (err) {
+    res.status(500).json({ error: '❌ שגיאה בעדכון קבוצה', details: err.message });
   }
 });
 

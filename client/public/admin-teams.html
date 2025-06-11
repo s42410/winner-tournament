@@ -2,200 +2,302 @@
 <html lang="he">
 <head>
   <meta charset="UTF-8" />
-  <title>ניהול קבוצות</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>אזור ניהול טורנירים</title>
   <style>
     body {
-      font-family: Arial;
+      font-family: 'Segoe UI', sans-serif;
       direction: rtl;
-      background: linear-gradient(to bottom right, #74ebd5, #acb6e5);
-      background-attachment: fixed;
       text-align: center;
-      padding: 40px;
-      position: relative;
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(135deg, #7ed6df, #e056fd);
+      min-height: 100vh;
     }
+
+    .logo {
+      width: 320px;
+      margin: 30px auto 10px;
+      cursor: pointer;
+      display: block;
+      max-width: 90%;
+    }
+
+    .top-buttons {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      right: 20px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .btn-top {
+      background-color: #f39c12;
+      border: none;
+      color: white;
+      padding: 10px 16px;
+      font-size: 16px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
     .box {
-      background: rgba(255, 255, 255, 0.95);
+      background: white;
       padding: 30px;
+      margin: auto;
       border-radius: 12px;
-      box-shadow: 0 0 20px rgba(0,0,0,0.25);
-      display: inline-block;
-      width: 700px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.15);
+      width: 90%;
+      max-width: 720px;
     }
-    input {
+
+    h2 {
+      color: #2c3e50;
+    }
+
+    form input,
+    form select,
+    form button {
       width: 100%;
+      padding: 12px;
       margin: 10px 0;
-      padding: 10px;
       font-size: 16px;
       border-radius: 6px;
       border: 1px solid #ccc;
     }
-    button {
-      padding: 10px 16px;
-      margin: 4px;
-      font-size: 15px;
-      border: none;
-      border-radius: 8px;
+
+    form button {
+      background-color: #6c5ce7;
       color: white;
       cursor: pointer;
-      transition: transform 0.2s ease, background-color 0.3s ease;
-    }
-    button:hover {
-      opacity: 0.9;
-      transform: scale(1.03);
-    }
-    .btn-save {
-      background-color: #2ecc71;
-    }
-    .btn-edit {
-      background-color: #3498db;
-    }
-    .btn-delete {
-      background-color: #e74c3c;
-    }
-    .btn-players {
-      background-color: #f39c12;
+      font-weight: bold;
     }
 
-    .btn-back {
-      position: absolute;
-      top: 20px;
-      left: 20px;
-      background-color: #3498db;
-      padding: 12px 18px;
-      font-size: 16px;
-      border-radius: 30px;
-      color: white;
-      border: none;
-      cursor: pointer;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-      transition: all 0.3s ease;
-    }
-
-    .btn-back:hover {
-      background-color: #2980b9;
-      transform: scale(1.05);
+    form button:hover {
+      background-color: #5a4cd1;
     }
 
     .message {
       font-weight: bold;
       margin-top: 10px;
     }
+
     .success { color: green; }
     .error { color: red; }
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 20px;
+    #tournamentsList {
+      margin-top: 30px;
+      text-align: right;
     }
-    th, td {
-      border: 1px solid #ccc;
-      padding: 10px;
-      font-size: 15px;
+
+    .tournament {
+      background: #fefefe;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      padding: 15px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
     }
-    th {
-      background-color: #3498db;
+
+    .tournament-buttons {
+      margin-top: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .tournament-buttons button {
+      padding: 8px 14px;
+      font-size: 14px;
+      border-radius: 6px;
+      border: none;
+      background-color: #0984e3;
+      color: white;
+      cursor: pointer;
+    }
+
+    .tournament-buttons button:hover {
+      background-color: #0652dd;
+    }
+
+    .footer {
+      margin-top: 50px;
+      font-size: 14px;
       color: white;
     }
-    td {
-      background-color: #fefefe;
+
+    @media (max-width: 480px) {
+      .box {
+        padding: 20px;
+      }
+
+      h2, h3, p {
+        font-size: 18px;
+      }
+
+      form input,
+      form select,
+      form button {
+        font-size: 18px;
+        padding: 14px;
+      }
+
+      .tournament-buttons {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .tournament-buttons button {
+        font-size: 16px;
+        padding: 12px;
+        width: 100%;
+      }
+
+      .btn-top {
+        font-size: 14px;
+        padding: 8px 12px;
+      }
     }
   </style>
 </head>
 <body>
-  <button class="btn-back" onclick="history.back()">⬅️ חזור</button>
-
-  <img src="logo.png" width="240" /><br /><br />
+  <div class="top-buttons">
+    <button class="btn-top" onclick="goBack()">🔙 חזור</button>
+    <button class="btn-top" onclick="logout()">🚪 התנתק</button>
+  </div>
+  <img src="logo.png" alt="לוגו מאמן" class="logo" onclick="window.location.href='index.html'" />
 
   <div class="box">
-    <h2>⚽ יצירת קבוצה</h2>
+    <h2>ברוך הבא, מנהל!</h2>
+    <p>כאן תוכל לנהל טורנירים, קבוצות, שחקנים וסטטיסטיקות.</p>
 
-    <label for="name" hidden>שם קבוצה</label>
-    <input type="text" id="name" placeholder="שם קבוצה" required />
-
-    <label for="color" hidden>צבע מדים</label>
-    <input type="text" id="color" placeholder="🎨 צבע מדים" required />
-
-    <label for="ageGroup" hidden>שכבת גיל</label>
-    <input type="text" id="ageGroup" placeholder="שכבת גיל (למשל: ד-ה)" required />
-
-    <button class="btn-save" onclick="saveTeam()" title="שמור קבוצה">💾 שמור קבוצה</button>
+    <h3>🆕 יצירת או עריכת טורניר</h3>
+    <form id="createForm">
+      <input type="text" id="name" placeholder="שם הטורניר" required />
+      <input type="text" id="grade" placeholder="שכבת גיל (למשל: ד-ה)" required />
+      <select id="type" required>
+        <option value="">בחר סוג טורניר</option>
+        <option value="ליגה">ליגה</option>
+        <option value="נוקאאוט">נוקאאוט</option>
+        <option value="בתים">בתים</option>
+        <option value="שלבים">שלבים</option>
+        <option value="ליגה + נוקאאוט">ליגה + נוקאאוט</option>
+        <option value="בתים + נוקאאוט">בתים + נוקאאוט</option>
+      </select>
+      <button type="submit">📅 שמור טורניר</button>
+    </form>
 
     <div id="message" class="message"></div>
 
-    <h3>📋 רשימת קבוצות</h3>
-    <table id="teamsTable">
-      <thead>
-        <tr>
-          <th>שם קבוצה</th>
-          <th>🎨 צבע</th>
-          <th>שכבת גיל</th>
-          <th>פעולות</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
+    <h3>📋 ניהול טורנירים קיימים</h3>
+    <div id="tournamentsList"></div>
+  </div>
+
+  <div class="footer">
+    האתר נוצר על ידי <strong>Steve_rabaev</strong> | כל הזכויות שמורות ©️
   </div>
 
   <script>
-    const tournamentId = new URLSearchParams(window.location.search).get('tournamentId');
+    const form = document.getElementById('createForm');
     const message = document.getElementById('message');
-    const tableBody = document.querySelector('#teamsTable tbody');
+    const tournamentsList = document.getElementById('tournamentsList');
     let editId = null;
 
-    async function fetchTeams() {
+    const adminId = localStorage.getItem('adminId');
+    if (!adminId) {
+      alert('אין הרשאה. אנא התחבר מחדש.');
+      window.location.href = 'admin-login.html';
+    }
+
+    async function fetchTournaments() {
       try {
-        const res = await fetch(`/api/teams/${tournamentId}`);
+        const res = await fetch(`/api/tournaments?adminId=${adminId}`);
         const data = await res.json();
-        tableBody.innerHTML = '';
-        data.forEach(team => {
-          const row = document.createElement('tr');
-          row.innerHTML = `
-            <td>${team.name}</td>
-            <td>${team.color}</td>
-            <td>${team.grade}</td>
-            <td>
-              <button class="btn-edit" onclick="editTeam('${team._id}', '${team.name}', '${team.color}', '${team.grade}')" title="ערוך קבוצה">✏️</button>
-              <button class="btn-delete" onclick="deleteTeam('${team._id}', '${team.name}')" title="מחק קבוצה">🗑️</button>
-              <button class="btn-players" onclick="goToPlayers('${team._id}')" title="ניהול שחקנים">👟</button>
-            </td>
+        tournamentsList.innerHTML = '';
+
+        data.forEach(t => {
+          const div = document.createElement('div');
+          div.className = 'tournament';
+          div.innerHTML = `
+            <strong>שם:</strong> ${t.name} <br>
+            <strong>שכבת גיל:</strong> ${t.ageGroup} <br>
+            <strong>סוג:</strong> ${t.type}
+            <div class="tournament-buttons">
+              <button onclick="editTournament('${t._id}', '${t.name}', '${t.ageGroup}', '${t.type}')">✏️ ערוך</button>
+              <button onclick="deleteTournament('${t._id}', '${t.name}')">🗑️ מחק</button>
+              <button onclick="goToTeamManagement('${t._id}')">👥 ניהול קבוצות</button>
+              <button onclick="goToGameManagement('${t._id}')">⚽ ניהול משחקים</button>
+              <button onclick="goToStatsPage('${t._id}')">📊 טבלת דירוג וסטטיסטיקה</button>
+            </div>
           `;
-          tableBody.appendChild(row);
+          tournamentsList.appendChild(div);
         });
       } catch {
-        message.textContent = '❌ שגיאה בטעינת קבוצות';
-        message.className = 'message error';
+        tournamentsList.innerHTML = '❌ שגיאה בטעינת הטורנירים';
       }
     }
 
-    async function saveTeam() {
-      const name = document.getElementById('name').value.trim();
-      const color = document.getElementById('color').value.trim();
-      const grade = document.getElementById('ageGroup').value.trim();
-      if (!name || !color || !grade) {
-        message.textContent = '⚠️ אנא מלא את כל השדות';
-        message.className = 'message error';
-        return;
-      }
+    function editTournament(id, name, grade, type) {
+      document.getElementById('name').value = name;
+      document.getElementById('grade').value = grade;
+      document.getElementById('type').value = type;
+      editId = id;
+    }
 
-      const url = editId ? `/api/teams/${editId}` : `/api/teams/${tournamentId}`;
+    async function deleteTournament(id, name) {
+      if (confirm(`למחוק את הטורניר "${name}"?`)) {
+        await fetch(`/api/tournaments/${id}`, { method: 'DELETE' });
+        fetchTournaments();
+      }
+    }
+
+    function goToTeamManagement(tournamentId) {
+      window.location.href = `/admin-teams.html?tournamentId=${tournamentId}`;
+    }
+
+    function goToGameManagement(tournamentId) {
+      window.location.href = `/admin-games.html?tournamentId=${tournamentId}`;
+    }
+
+    function goToStatsPage(tournamentId) {
+      window.location.href = `/admin-standings.html?tournamentId=${tournamentId}`;
+    }
+
+    function logout() {
+      localStorage.removeItem('adminId');
+      window.location.href = 'admin-login.html';
+    }
+
+    function goBack() {
+      window.location.href = 'index.html';
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = document.getElementById('name').value;
+      const grade = document.getElementById('grade').value;
+      const type = document.getElementById('type').value;
+
+      const url = editId ? `/api/tournaments/${editId}` : '/api/tournaments/create';
       const method = editId ? 'PUT' : 'POST';
+
+      const body = { name, grade, type, adminId };
 
       try {
         const res = await fetch(url, {
           method,
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, color, grade })
+          body: JSON.stringify(body)
         });
+
         const data = await res.json();
         if (res.ok) {
-          message.textContent = `✅ ${editId ? 'עודכן' : 'נוצר'} בהצלחה`;
+          message.textContent = `✅ ${editId ? 'עודכן' : 'נוצר'} טורניר בהצלחה`;
           message.className = 'message success';
-          document.getElementById('name').value = '';
-          document.getElementById('color').value = '';
-          document.getElementById('ageGroup').value = '';
+          form.reset();
           editId = null;
-          fetchTeams();
+          fetchTournaments();
         } else {
           message.textContent = '❌ שגיאה: ' + data.error;
           message.className = 'message error';
@@ -204,39 +306,9 @@
         message.textContent = '❌ שגיאה בחיבור לשרת';
         message.className = 'message error';
       }
-    }
+    });
 
-    function editTeam(id, name, color, grade) {
-      document.getElementById('name').value = name;
-      document.getElementById('color').value = color;
-      document.getElementById('ageGroup').value = grade;
-      editId = id;
-    }
-
-    async function deleteTeam(id, name) {
-      if (!confirm(`האם למחוק את הקבוצה "${name}"?`)) return;
-      try {
-        const res = await fetch(`/api/teams/${id}`, { method: 'DELETE' });
-        const data = await res.json();
-        if (res.ok) {
-          message.textContent = '🗑️ הקבוצה נמחקה בהצלחה';
-          message.className = 'message success';
-          fetchTeams();
-        } else {
-          message.textContent = '❌ שגיאה: ' + data.error;
-          message.className = 'message error';
-        }
-      } catch {
-        message.textContent = '❌ שגיאה במחיקה מהשרת';
-        message.className = 'message error';
-      }
-    }
-
-    function goToPlayers(teamId) {
-      window.location.href = `/admin-players.html?teamId=${encodeURIComponent(teamId)}`;
-    }
-
-    fetchTeams();
+    fetchTournaments();
   </script>
 </body>
 </html>
