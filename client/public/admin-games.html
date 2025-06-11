@@ -1,371 +1,203 @@
 <!DOCTYPE html>
 <html lang="he">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>⚽ ניהול משחקים בטורניר</title>
+  <title>⚽ ניהול משחקים</title>
   <style>
     body {
-      font-family: 'Segoe UI', sans-serif;
+      font-family: Arial;
       direction: rtl;
-      background: linear-gradient(to right, #e0f7fa, #f1f8e9);
       text-align: center;
-      padding: 40px 15px;
-      margin: 0;
+      background-color: #f0f9ff;
+      padding: 20px;
     }
-
-    .top-left {
-      position: absolute;
-      top: 15px;
-      left: 20px;
+    .container {
+      max-width: 950px;
+      margin: auto;
+      background: white;
+      border-radius: 12px;
+      padding: 25px;
+      box-shadow: 0 0 12px rgba(0,0,0,0.1);
     }
-
     .logo {
-      width: 220px;
-      margin-bottom: 10px;
-      cursor: pointer;
+      width: 160px;
+      margin-bottom: 20px;
     }
-
-    .box {
-      background: #ffffff;
-      padding: 30px;
-      border-radius: 15px;
-      box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
-      display: inline-block;
-      width: 100%;
-      max-width: 880px;
-      box-sizing: border-box;
-    }
-
     h2 {
-      font-size: 28px;
-      color: #00796b;
-      margin-bottom: 20px;
+      color: #003366;
+      margin-bottom: 30px;
     }
-
-    .mode-buttons {
+    form {
       display: flex;
-      flex-direction: column;
-      gap: 15px;
-      margin-bottom: 25px;
-    }
-
-    .mode-buttons button {
-      background-color: #00796b;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      padding: 14px;
-      font-size: 18px;
-      cursor: pointer;
-      transition: background-color 0.3s;
-    }
-
-    .mode-buttons button:hover {
-      background-color: #004d40;
-    }
-
-    .form-section {
-      display: none;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
       margin-bottom: 20px;
     }
-
-    .form-grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 12px;
-      margin-bottom: 15px;
-    }
-
-    @media(min-width: 600px) {
-      .form-grid {
-        grid-template-columns: 1fr 1fr;
-      }
-      .mode-buttons {
-        flex-direction: row;
-        justify-content: center;
-      }
-    }
-
-    label {
-      text-align: right;
-      font-weight: bold;
-    }
-
     input, select {
-      width: 100%;
-      padding: 10px;
-      font-size: 16px;
-      border-radius: 6px;
+      padding: 8px;
+      font-size: 15px;
+      border-radius: 4px;
       border: 1px solid #ccc;
+      min-width: 140px;
     }
-
     button {
-      padding: 12px 18px;
-      font-size: 16px;
-      cursor: pointer;
-    }
-
-    .message {
-      font-weight: bold;
-      margin-top: 10px;
-    }
-
-    .success { color: green; }
-    .error { color: red; }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 20px;
-      font-size: 14px;
-    }
-
-    th, td {
-      border: 1px solid #ccc;
-      padding: 10px;
-    }
-
-    th {
-      background-color: #b2dfdb;
-      color: #004d40;
-    }
-
-    td button {
-      background-color: #00796b;
-      color: white;
+      padding: 10px 20px;
+      font-size: 15px;
       border: none;
       border-radius: 5px;
-      padding: 6px 12px;
-      font-size: 14px;
       cursor: pointer;
-      margin: 2px;
+      background: #007bff;
+      color: white;
+    }
+    .game-card {
+      background-color: #e9f3ff;
+      padding: 15px;
+      margin-bottom: 15px;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    .game-card strong {
+      font-size: 17px;
+    }
+    .game-card small {
+      display: block;
+      margin-top: 5px;
+      color: #555;
+    }
+    .actions {
+      margin-top: 10px;
+    }
+    .actions button {
+      margin: 0 5px;
+    }
+    #refresh-btn, #delete-all-btn {
+      margin: 10px 5px;
     }
 
-    td button:hover {
-      background-color: #004d40;
-    }
-
-    .section-title {
-      margin-top: 30px;
-      margin-bottom: 10px;
-      font-size: 22px;
-      color: #00796b;
-      font-weight: bold;
+    @media (max-width: 600px) {
+      form {
+        flex-direction: column;
+        align-items: center;
+      }
+      input, select {
+        width: 100%;
+      }
     }
   </style>
 </head>
 <body>
-  <button class="top-left" onclick="history.back()">⬅️ חזור</button>
-  <a href="index.html"><img src="logo.png" class="logo" alt="לוגו" /></a>
-  <div class="box">
+  <div class="container">
+    <img src="logo.png" class="logo" alt="לוגו" />
     <h2>⚽ ניהול משחקים בטורניר</h2>
 
-    <div class="mode-buttons">
-      <button onclick="showManual()">✍️ יצירה ידנית / עריכה</button>
-      <button onclick="autoGenerateGames()">⚙️ יצירה אוטומטית</button>
+    <form id="createGameForm">
+      <select id="teamA" required></select>
+      <select id="teamB" required></select>
+      <input type="date" id="date" required>
+      <input type="time" id="time" required>
+      <input type="text" id="location" placeholder="מיקום" required>
+      <button type="submit">➕ צור משחק</button>
+    </form>
+
+    <div>
+      <button id="refresh-btn" onclick="loadGames()">🔄 רענן רשימת משחקים</button>
+      <button id="delete-all-btn" onclick="deleteAllGames()">🗑️ מחק את כל המשחקים</button>
     </div>
 
-    <div id="manualForm" class="form-section">
-      <input type="hidden" id="editGameId" />
-      <div class="form-grid">
-        <div>
-          <label for="teamA">קבוצה א'</label>
-          <select id="teamA"></select>
-        </div>
-        <div>
-          <label for="teamB">קבוצה ב'</label>
-          <select id="teamB"></select>
-        </div>
-        <div>
-          <label for="date">תאריך</label>
-          <input type="date" id="date" />
-        </div>
-        <div>
-          <label for="time">שעה</label>
-          <input type="time" id="time" />
-        </div>
-        <div style="grid-column: span 2;">
-          <label for="location">מיקום</label>
-          <input type="text" id="location" placeholder="אולם / מגרש" />
-        </div>
-      </div>
-      <button onclick="saveGame()">💾 שמור משחק</button>
-    </div>
-
-    <div id="message" class="message"></div>
-
-    <div class="section-title">📋 רשימת המשחקים</div>
-    <button onclick="deleteAllGames()">🗑️ מחק את כל המשחקים</button>
-
-    <table id="gamesTable">
-      <thead>
-        <tr>
-          <th>קבוצה א'</th>
-          <th>קבוצה ב'</th>
-          <th>תאריך</th>
-          <th>שעה</th>
-          <th>מיקום</th>
-          <th>תוצאה</th>
-          <th>פעולה</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
+    <div id="gamesList"></div>
   </div>
 
-<script>
-const tournamentId = new URLSearchParams(window.location.search).get('tournamentId');
-const teamASelect = document.getElementById('teamA');
-const teamBSelect = document.getElementById('teamB');
-const tableBody = document.querySelector('#gamesTable tbody');
-const message = document.getElementById('message');
-const formSection = document.getElementById('manualForm');
-const editGameId = document.getElementById('editGameId');
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const tournamentId = urlParams.get("tournamentId");
 
-async function loadTeams() {
-  const res = await fetch(`/api/teams/${tournamentId}`);
-  const teams = await res.json();
-  teamASelect.innerHTML = '<option value="">בחר קבוצה א\'</option>';
-  teamBSelect.innerHTML = '<option value="">בחר קבוצה ב\'</option>';
-  teams.forEach(team => {
-    const optionA = new Option(team.name, team._id);
-    const optionB = new Option(team.name, team._id);
-    teamASelect.appendChild(optionA);
-    teamBSelect.appendChild(optionB);
-  });
-}
+    async function loadTeams() {
+      const res = await fetch(`/api/teams/${tournamentId}`);
+      const teams = await res.json();
+      const teamA = document.getElementById("teamA");
+      const teamB = document.getElementById("teamB");
 
-teamASelect.addEventListener('change', () => {
-  const selected = teamASelect.value;
-  [...teamBSelect.options].forEach(option => {
-    option.disabled = option.value === selected;
-  });
-});
+      teamA.innerHTML = teams.map(t => `<option value="${t._id}">${t.name}</option>`).join("");
+      teamB.innerHTML = teams.map(t => `<option value="${t._id}">${t.name}</option>`).join("");
+    }
 
-function showManual() {
-  formSection.style.display = 'block';
-  editGameId.value = '';
-  document.getElementById('date').value = '';
-  document.getElementById('time').value = '';
-  document.getElementById('location').value = '';
-  teamASelect.value = '';
-  teamBSelect.value = '';
-}
+    async function loadGames() {
+      const res = await fetch(`/api/games?tournamentId=${tournamentId}`);
+      const games = await res.json();
+      const list = document.getElementById("gamesList");
+      list.innerHTML = "";
 
-async function autoGenerateGames() {
-  const res = await fetch(`/api/teams/${tournamentId}`);
-  const teams = await res.json();
-  for (let i = 0; i < teams.length; i++) {
-    for (let j = i + 1; j < teams.length; j++) {
-      await fetch('/api/games', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          tournamentId,
-          teamA: teams[i]._id,
-          teamB: teams[j]._id,
-          date: new Date().toISOString().split('T')[0],
-          time: "12:00",
-          location: "מגרש אוטומטי"
-        })
+      games.forEach(g => {
+        const div = document.createElement("div");
+        div.className = "game-card";
+        div.innerHTML = `
+          <strong>${g.teamA.name} ${g.scoreA ?? '-'} : ${g.scoreB ?? '-'} ${g.teamB.name}</strong>
+          <small>${new Date(g.date).toLocaleDateString()} ${new Date(g.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} | מיקום: ${g.location || ''}</small>
+          <div class="actions">
+            <button onclick="editGame('${g._id}')">⚙️ ערוך</button>
+            <button onclick="editResult('${g._id}')">🏁 תוצאה</button>
+            <button onclick="deleteGame('${g._id}')">🗑️ מחק</button>
+          </div>
+        `;
+        list.appendChild(div);
       });
     }
-  }
-  fetchGames();
-}
 
-async function fetchGames() {
-  const res = await fetch(`/api/games/${tournamentId}`);
-  const games = await res.json();
-  tableBody.innerHTML = '';
-  games.forEach(game => {
-    const row = document.createElement('tr');
-    row.innerHTML = `
-      <td>${game.teamA?.name || '---'}</td>
-      <td>${game.teamB?.name || '---'}</td>
-      <td>${new Date(game.date).toLocaleDateString('he-IL')}</td>
-      <td>${game.time || '--'}</td>
-      <td>${game.location || '--'}</td>
-      <td>${game.scoreA ?? 0} : ${game.scoreB ?? 0}</td>
-      <td>
-        <button onclick="editGame('${game._id}')">🎯 תוצאה</button>
-        <button onclick="fillEditForm('${game._id}')">⚙️ ערוך</button>
-        <button onclick="deleteGame('${game._id}')">🗑️ מחק</button>
-      </td>
-    `;
-    tableBody.appendChild(row);
-  });
-}
+    document.getElementById("createGameForm").addEventListener("submit", async e => {
+      e.preventDefault();
+      const teamA = document.getElementById("teamA").value;
+      const teamB = document.getElementById("teamB").value;
+      if (teamA === teamB) return alert("❌ אין ליצור משחק בין קבוצה לעצמה");
 
-async function saveGame() {
-  const teamA = teamASelect.value;
-  const teamB = teamBSelect.value;
-  const date = document.getElementById('date').value;
-  const time = document.getElementById('time').value;
-  const location = document.getElementById('location').value;
-  const gameId = editGameId.value;
+      const date = document.getElementById("date").value;
+      const time = document.getElementById("time").value;
+      const location = document.getElementById("location").value;
 
-  if (!teamA || !teamB || !date || !time || !location) {
-    message.textContent = '❗ יש למלא את כל השדות';
-    message.className = 'message error';
-    return;
-  }
+      const body = { teamA, teamB, date: `${date}T${time}`, location, tournamentId };
+      const res = await fetch("/api/games", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
 
-  if (teamA === teamB) {
-    message.textContent = '❗ קבוצה לא יכולה לשחק נגד עצמה';
-    message.className = 'message error';
-    return;
-  }
+      if (res.ok) {
+        loadGames();
+        document.getElementById("createGameForm").reset();
+      } else {
+        alert("❌ שגיאה ביצירת משחק");
+      }
+    });
 
-  const res = await fetch(gameId ? `/api/games/${gameId}` : '/api/games', {
-    method: gameId ? 'PUT' : 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ tournamentId, teamA, teamB, date, time, location })
-  });
+    function editResult(gameId) {
+      window.location.href = `admin-edit-game.html?gameId=${gameId}`;
+    }
 
-  const data = await res.json();
-  if (res.ok) {
-    message.textContent = gameId ? '✅ המשחק עודכן' : '✅ המשחק נוסף';
-    message.className = 'message success';
-    showManual();
-    fetchGames();
-  } else {
-    message.textContent = '❌ שגיאה: ' + data.error;
-    message.className = 'message error';
-  }
-}
+    function editGame(gameId) {
+      alert("עריכת פרטי משחק - טרם מיושם");
+    }
 
-async function fillEditForm(gameId) {
-  const res = await fetch(`/api/games/game/${gameId}`);
-  const game = await res.json();
-  showManual();
-  editGameId.value = game._id;
-  teamASelect.value = game.teamA._id;
-  teamBSelect.value = game.teamB._id;
-  document.getElementById('date').value = game.date.split('T')[0];
-  document.getElementById('time').value = game.time;
-  document.getElementById('location').value = game.location;
-}
+    async function deleteGame(gameId) {
+      if (!confirm("האם למחוק את המשחק?")) return;
+      await fetch(`/api/games/${gameId}`, { method: "DELETE" });
+      loadGames();
+    }
 
-async function deleteGame(gameId) {
-  if (!confirm('האם למחוק את המשחק?')) return;
-  await fetch(`/api/games/${gameId}`, { method: 'DELETE' });
-  fetchGames();
-}
+    async function deleteAllGames() {
+      if (!confirm("האם למחוק את כל המשחקים בטורניר?")) return;
+      await fetch(`/api/games/all?tournamentId=${tournamentId}`, { method: "DELETE" });
+      loadGames();
+    }
 
-async function deleteAllGames() {
-  if (!confirm('למחוק את כל המשחקים?')) return;
-  await fetch(`/api/games/deleteAll/${tournamentId}`, { method: 'DELETE' });
-  fetchGames();
-}
-
-function editGame(gameId) {
-  window.location.href = `/admin-edit-game.html?gameId=${gameId}`;
-}
-
-loadTeams();
-fetchGames();
-</script>
+    window.onload = async () => {
+      await loadTeams();
+      await loadGames();
+      if (localStorage.getItem("refreshGames") === "true") {
+        localStorage.removeItem("refreshGames");
+        loadGames();
+      }
+    };
+  </script>
 </body>
 </html>
