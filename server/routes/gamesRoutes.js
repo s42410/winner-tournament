@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Game = require('../models/Game');
+const Team = require('../models/Team');
 
 // ✅ שליפת משחק בודד כולל קבוצות
 router.get('/game/:gameId', async (req, res) => {
@@ -36,7 +37,7 @@ router.get('/:tournamentId', async (req, res) => {
   }
 });
 
-// ✅ יצירת משחק חדש
+// ✅ יצירת משחק רגיל
 router.post('/', async (req, res) => {
   try {
     const { tournamentId, teamA, teamB, date, time, location, knockoutStage } = req.body;
@@ -62,19 +63,39 @@ router.post('/', async (req, res) => {
   }
 });
 
-// ✅ יצירת משחקי שלב נוקאאוט (חדש!)
-router.post('/create-knockout', async (req, res) => {
+// ✅ יצירת שלב נוקאאוט אוטומטי מהדירוג
+router.post('/create-knockout-auto', async (req, res) => {
   try {
-    const { tournamentId, stage, matches } = req.body;
+    const { tournamentId, stage, numTeams } = req.body;
 
-    if (!tournamentId || !stage || !Array.isArray(matches)) {
+    if (!tournamentId || !stage || !numTeams) {
       return res.status(400).json({ error: '❗ חסרים נתונים ליצירת שלב נוקאאוט' });
     }
 
+    // שלב 1: שלוף דירוג מהליגה
+    const teams = await Team.find({ tournamentId }).sort({ points: -1 }).limit(numTeams);
+    if (teams.length < numTeams) {
+      return res.status(400).json({ error: 'לא נמצאו מספיק קבוצות' });
+    }
+
+    // שלב 2: צור משחקים (לדוגמה רבע גמר => 8 קבוצות => 4 משחקים)
+    const matches = [];
+    for (let i = 0; i < teams.length; i += 2) {
+      if (teams[i + 1]) {
+        matches.push({
+          teamA: teams[i]._id,
+          teamB: teams[i + 1]._id,
+          date: new Date(),
+          time: '12:00',
+          location: 'מגרש נוקאאוט',
+          knockoutStage: stage
+        });
+      }
+    }
+
+    // שלב 3: שמור
     const newGames = [];
     for (const m of matches) {
-      if (m.teamA === m.teamB) continue;
-
       const game = new Game({
         tournamentId,
         teamA: m.teamA,
@@ -84,21 +105,25 @@ router.post('/create-knockout', async (req, res) => {
         location: m.location,
         knockoutStage: stage
       });
-
       await game.save();
       newGames.push(game);
     }
 
-    res.status(201).json({ message: `✅ שלב נוקאאוט ${stage} נוצר בהצלחה`, games: newGames });
+    res.status(201).json({ message: `✅ שלב ${stage} נוצר אוטומטית`, games: newGames });
   } catch (err) {
     res.status(500).json({ error: '❌ שגיאה ביצירת שלב נוקאאוט', details: err.message });
   }
 });
 
-// ✅ עדכון משחק
+// ✅ עדכון תוצאה כולל שערים וכרטיסים
 router.put('/:gameId', async (req, res) => {
   try {
-    const updated = await Game.findByIdAndUpdate(req.params.gameId, req.body, { new: true });
+    const { scoreA, scoreB, goals, cards } = req.body;
+    const updated = await Game.findByIdAndUpdate(
+      req.params.gameId,
+      { scoreA, scoreB, goals, cards },
+      { new: true }
+    );
     res.json({ message: '✅ המשחק עודכן', game: updated });
   } catch (err) {
     res.status(500).json({ error: '❌ שגיאה בעדכון המשחק', details: err.message });

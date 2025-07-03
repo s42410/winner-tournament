@@ -16,8 +16,8 @@ const gameSchema = new mongoose.Schema({
   teamA: { type: mongoose.Schema.Types.ObjectId, ref: 'Team', required: true },
   teamB: { type: mongoose.Schema.Types.ObjectId, ref: 'Team', required: true },
   date: { type: Date, required: true },
-  time: { type: String }, // נוסיף שדה זמן כנדרש
-  location: { type: String }, // נוסיף מיקום כמו בטופס
+  time: { type: String },
+  location: { type: String },
   scoreA: { type: Number, default: 0 },
   scoreB: { type: Number, default: 0 },
   goals: {
@@ -27,7 +27,9 @@ const gameSchema = new mongoose.Schema({
   cards: {
     teamA: [cardSchema],
     teamB: [cardSchema]
-  }
+  },
+  // ✅ תוספת לנוקאאוט:
+  knockoutStage: { type: String } // דוגמה: 'שמינית', 'רבע', 'חצי', 'גמר'
 });
 
 module.exports = mongoose.model('Game', gameSchema);

@@ -54,8 +54,12 @@
     .knockout-section {
       margin-top: 40px;
     }
+    select {
+      padding: 8px;
+      font-size: 16px;
+      margin: 10px;
+    }
     .knockout-btn {
-      margin-top: 10px;
       padding: 10px 20px;
       background: #9b59b6;
       color: white;
@@ -77,13 +81,13 @@
 
   <div class="knockout-section">
     <h2>🥇 שלבי נוקאאוט</h2>
-    <button class="knockout-btn" onclick="showKnockoutForm()">➕ הוסף שלב נוקאאוט</button>
-    <div id="knockoutForm" style="display:none;">
-      <h3>צור שלב נוקאאוט</h3>
-      <input id="stage" placeholder="שם שלב (רבע גמר / חצי גמר)" /><br/>
-      <textarea id="matches" rows="6" cols="50" placeholder='JSON: [{"teamA":"ID","teamB":"ID","date":"2025-07-10","time":"12:00","location":"מגרש א"}]'></textarea><br/>
-      <button onclick="saveKnockout()">💾 שמור שלב נוקאאוט</button>
-    </div>
+    <label for="knockoutStage">בחר שלב:</label>
+    <select id="knockoutStage">
+      <option value="רבע גמר">רבע גמר (8 קבוצות)</option>
+      <option value="חצי גמר">חצי גמר (4 קבוצות)</option>
+      <option value="גמר">גמר (2 קבוצות)</option>
+    </select>
+    <button class="knockout-btn" onclick="createKnockout()">⚡ צור שלב נוקאאוט</button>
     <div id="knockoutContainer"></div>
   </div>
 
@@ -92,33 +96,27 @@
   <script>
     const tournamentId = new URLSearchParams(window.location.search).get('tournamentId');
 
-    function showKnockoutForm() {
-      document.getElementById('knockoutForm').style.display = 'block';
-    }
+    async function createKnockout() {
+      const stage = document.getElementById('knockoutStage').value;
+      let numTeams = 0;
+      if (stage === 'רבע גמר') numTeams = 8;
+      if (stage === 'חצי גמר') numTeams = 4;
+      if (stage === 'גמר') numTeams = 2;
 
-    async function saveKnockout() {
-      const stage = document.getElementById('stage').value.trim();
-      let matches;
-      try {
-        matches = JSON.parse(document.getElementById('matches').value.trim());
-      } catch {
-        alert('פורמט JSON לא תקין!');
-        return;
-      }
-      if (!stage || !matches.length) {
-        alert('נא למלא את כל השדות');
+      if (!numTeams) {
+        alert('שלב לא תקין');
         return;
       }
 
-      const res = await fetch('/api/games/create-knockout', {
+      const res = await fetch('/api/games/create-knockout-auto', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tournamentId, stage, matches })
+        body: JSON.stringify({ tournamentId, stage, numTeams })
       });
 
       const data = await res.json();
       if (res.ok) {
-        alert('✅ שלב נוקאאוט נוסף בהצלחה!');
+        alert(`✅ ${stage} נוצר בהצלחה`);
         loadKnockout();
       } else {
         alert('❌ שגיאה: ' + data.error);
@@ -215,7 +213,7 @@
       }
       document.getElementById('standingsContainer').innerHTML = standingsHTML;
 
-      // מלך השערים כולל נוקאאוט
+      // מלכי שערים כולל נוקאאוט
       const scorers = {};
       games.forEach(g => {
         for (const goal of g.goals?.teamA || []) {
