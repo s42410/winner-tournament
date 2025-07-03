@@ -65,6 +65,9 @@ router.post('/', async (req, res) => {
 router.put('/:teamId', async (req, res) => {
   try {
     const { name, color, group } = req.body;
+const updateFields = { name, color };
+if (group !== undefined) updateFields.group = group;
+
 
     if (!name || !color) {
       return res.status(400).json({ error: 'נא למלא את כל השדות' });
@@ -72,9 +75,10 @@ router.put('/:teamId', async (req, res) => {
 
     const updated = await Team.findByIdAndUpdate(
       req.params.teamId,
-      { name, color, group },
-      { new: true }
-    );
+      { name, color, teamId },
+      updateFields,
+  { new: true }
+);
 
     if (!updated) return res.status(404).json({ error: 'קבוצה לא נמצאה' });
 
