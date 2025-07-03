@@ -12,7 +12,7 @@ router.get('/:tournamentId', async (req, res) => {
   }
 });
 
-// ✅ שליפה לצפייה לפי טורניר (דרוש ל-viewer-tournament)
+// ✅ שליפה לצפייה לפי טורניר (לצופים)
 router.get('/tournaments/:tournamentId', async (req, res) => {
   try {
     const teams = await Team.find({ tournamentId: req.params.tournamentId });
@@ -48,7 +48,6 @@ router.get('/players/:teamId', async (req, res) => {
 router.post('/', async (req, res) => {
   try {
     const { name, color, tournamentId, group } = req.body;
-
     if (!name || !color || !tournamentId) {
       return res.status(400).json({ error: 'נא למלא את כל השדות' });
     }
@@ -61,30 +60,52 @@ router.post('/', async (req, res) => {
   }
 });
 
-// ✅ עדכון קבוצה (כולל group)
+// ✅ עדכון קבוצה (שם, צבע, ואופציונלי group)
 router.put('/:teamId', async (req, res) => {
   try {
     const { name, color, group } = req.body;
-const updateFields = { name, color };
-if (group !== undefined) updateFields.group = group;
-
 
     if (!name || !color) {
       return res.status(400).json({ error: 'נא למלא את כל השדות' });
     }
 
+    const updateFields = { name, color };
+    if (group !== undefined) updateFields.group = group;
+
     const updated = await Team.findByIdAndUpdate(
       req.params.teamId,
-      { name, color, teamId },
       updateFields,
-  { new: true }
-);
+      { new: true }
+    );
 
     if (!updated) return res.status(404).json({ error: 'קבוצה לא נמצאה' });
 
     res.json({ message: '✏️ הקבוצה עודכנה בהצלחה', team: updated });
   } catch (err) {
     res.status(500).json({ error: '❌ שגיאה בעדכון קבוצה', details: err.message });
+  }
+});
+
+// ✅ עדכון group בלבד (לשמירת בתים ע"י Enter)
+router.put('/group/:teamId', async (req, res) => {
+  try {
+    const { group } = req.body;
+
+    if (group === undefined) {
+      return res.status(400).json({ error: 'שדה בית חסר' });
+    }
+
+    const updated = await Team.findByIdAndUpdate(
+      req.params.teamId,
+      { group },
+      { new: true }
+    );
+
+    if (!updated) return res.status(404).json({ error: 'קבוצה לא נמצאה' });
+
+    res.json({ message: '✅ הבית עודכן בהצלחה', team: updated });
+  } catch (err) {
+    res.status(500).json({ error: '❌ שגיאה בעדכון הבית', details: err.message });
   }
 });
 
