@@ -164,6 +164,7 @@
     <div class="mode-buttons">
       <button onclick="showManual()">✍️ יצירה ידנית / עריכה</button>
       <button onclick="autoGenerateGames()">⚙️ יצירה אוטומטית</button>
+      <button onclick="autoGenerateGroupStage()">🏆 יצירה אוטומטית שלב בתים</button>
     </div>
 
     <div id="manualForm" class="form-section">
@@ -222,10 +223,11 @@ const tableBody = document.querySelector('#gamesTable tbody');
 const message = document.getElementById('message');
 const formSection = document.getElementById('manualForm');
 const editGameId = document.getElementById('editGameId');
+let teams = [];
 
 async function loadTeams() {
   const res = await fetch(`/api/teams/${tournamentId}`);
-  const teams = await res.json();
+  teams = await res.json();
   teamASelect.innerHTML = '<option value="">בחר קבוצה א\'</option>';
   teamBSelect.innerHTML = '<option value="">בחר קבוצה ב\'</option>';
   teams.forEach(team => {
@@ -254,8 +256,6 @@ function showManual() {
 }
 
 async function autoGenerateGames() {
-  const res = await fetch(`/api/teams/${tournamentId}`);
-  const teams = await res.json();
   for (let i = 0; i < teams.length; i++) {
     for (let j = i + 1; j < teams.length; j++) {
       await fetch('/api/games', {
@@ -270,6 +270,36 @@ async function autoGenerateGames() {
           location: "מגרש אוטומטי"
         })
       });
+    }
+  }
+  fetchGames();
+}
+
+async function autoGenerateGroupStage() {
+  const groups = {};
+  teams.forEach(team => {
+    const group = team.group || 'A';
+    if (!groups[group]) groups[group] = [];
+    groups[group].push(team);
+  });
+
+  for (const group in groups) {
+    const groupTeams = groups[group];
+    for (let i = 0; i < groupTeams.length; i++) {
+      for (let j = i + 1; j < groupTeams.length; j++) {
+        await fetch('/api/games', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            tournamentId,
+            teamA: groupTeams[i]._id,
+            teamB: groupTeams[j]._id,
+            date: new Date().toISOString().split('T')[0],
+            time: "12:00",
+            location: `בית ${group}`
+          })
+        });
+      }
     }
   }
   fetchGames();

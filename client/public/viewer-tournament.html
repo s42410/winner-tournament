@@ -28,7 +28,7 @@
       border-radius: 12px;
       margin: 20px auto;
       width: 95%;
-      max-width: 800px;
+      max-width: 900px;
       box-shadow: 0 0 12px rgba(0,0,0,0.15);
     }
     table {
@@ -72,26 +72,21 @@
       cursor: pointer;
       z-index: 10;
     }
+    .house-title {
+      margin-top: 20px;
+      font-weight: bold;
+      color: #00796b;
+    }
   </style>
 </head>
 <body>
   <button class="back-button" onclick="history.back()">🔙 חזור</button>
   <img src="logo.png" id="logo" onclick="goHome()" />
   <h1 id="tournamentName">טעינת טורניר...</h1>
-
   <div id="error" class="error"></div>
 
-  <div class="section">
-    <h2>📊 טבלת דירוג</h2>
-    <table id="standingsTable">
-      <thead>
-        <tr><th>קבוצה</th><th>מש</th><th>נצ</th><th>ת</th><th>ה</th><th>נק'</th></tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>
-
-  <div class="section">
+  <div id="standingsContainer"></div>
+  <div id="scorersContainer" class="section">
     <h2>🥇 מלך שערים</h2>
     <table>
       <thead>
@@ -101,7 +96,7 @@
     </table>
   </div>
 
-  <div class="section">
+  <div id="gamesContainer" class="section">
     <h2>📅 לוח משחקים</h2>
     <div id="gamesList"></div>
   </div>
@@ -139,33 +134,86 @@
         const games = await gamesRes.json();
         document.getElementById('tournamentName').innerText = tournament.name || 'טורניר ללא שם';
 
-        // טבלת דירוג
-        const teamStats = teams.map(team => {
-          const teamGames = games.filter(g => g.teamA?._id === team._id || g.teamB?._id === team._id);
-          let played = teamGames.length, wins = 0, draws = 0, losses = 0, points = 0;
-          teamGames.forEach(g => {
-            const isA = g.teamA?._id === team._id;
-            const gF = isA ? g.scoreA : g.scoreB;
-            const gA = isA ? g.scoreB : g.scoreA;
-            if (gF > gA) { wins++; points += 3; }
-            else if (gF === gA) { draws++; points += 1; }
-            else { losses++; }
+        const hasHouses = teams.some(team => team.house); // בדיקה אם יש בתים
+
+        const standingsContainer = document.getElementById('standingsContainer');
+        standingsContainer.innerHTML = '';
+
+        if (hasHouses) {
+          // קיבוץ לפי בתים
+          const houses = {};
+          teams.forEach(team => {
+            const house = team.house || 'לא מוגדר';
+            if (!houses[house]) houses[house] = [];
+            houses[house].push(team);
           });
-          return { name: team.name, played, wins, draws, losses, points };
-        });
 
-        teamStats.sort((a, b) => b.points - a.points);
-        const standingsBody = document.querySelector('#standingsTable tbody');
-        standingsBody.innerHTML = '';
-        teamStats.forEach(t => {
-          standingsBody.innerHTML += `
-            <tr>
-              <td>${t.name}</td><td>${t.played}</td><td>${t.wins}</td>
-              <td>${t.draws}</td><td>${t.losses}</td><td>${t.points}</td>
+          for (const [houseName, houseTeams] of Object.entries(houses)) {
+            standingsContainer.innerHTML += `<div class="section"><h2 class="house-title">📊 דירוג - בית ${houseName}</h2><table>
+              <thead>
+                <tr><th>קבוצה</th><th>מש</th><th>נצ</th><th>ת</th><th>ה</th><th>נק'</th></tr>
+              </thead><tbody id="standings-${houseName}"></tbody></table></div>`;
+
+            const houseGames = games.filter(g =>
+              houseTeams.some(t => t._id === g.teamA?._id) || houseTeams.some(t => t._id === g.teamB?._id)
+            );
+
+            const houseStats = houseTeams.map(team => {
+              const teamGames = houseGames.filter(g => g.teamA?._id === team._id || g.teamB?._id === team._id);
+              let played = teamGames.length, wins = 0, draws = 0, losses = 0, points = 0;
+              teamGames.forEach(g => {
+                const isA = g.teamA?._id === team._id;
+                const gF = isA ? g.scoreA : g.scoreB;
+                const gA = isA ? g.scoreB : g.scoreA;
+                if (gF > gA) { wins++; points += 3; }
+                else if (gF === gA) { draws++; points += 1; }
+                else { losses++; }
+              });
+              return { name: team.name, played, wins, draws, losses, points };
+            });
+
+            houseStats.sort((a, b) => b.points - a.points);
+            const houseBody = document.getElementById(`standings-${houseName}`);
+            houseStats.forEach(t => {
+              houseBody.innerHTML += `<tr><td>${t.name}</td><td>${t.played}</td><td>${t.wins}</td><td>${t.draws}</td><td>${t.losses}</td><td>${t.points}</td></tr>`;
+            });
+          }
+        } else {
+          // רגיל - ליגה אחת
+          standingsContainer.innerHTML += `<div class="section">
+            <h2>📊 טבלת דירוג</h2>
+            <table>
+              <thead>
+                <tr><th>קבוצה</th><th>מש</th><th>נצ</th><th>ת</th><th>ה</th><th>נק'</th></tr>
+              </thead>
+              <tbody id="standingsTable"></tbody>
+            </table>
+          </div>`;
+
+          const teamStats = teams.map(team => {
+            const teamGames = games.filter(g => g.teamA?._id === team._id || g.teamB?._id === team._id);
+            let played = teamGames.length, wins = 0, draws = 0, losses = 0, points = 0;
+            teamGames.forEach(g => {
+              const isA = g.teamA?._id === team._id;
+              const gF = isA ? g.scoreA : g.scoreB;
+              const gA = isA ? g.scoreB : g.scoreA;
+              if (gF > gA) { wins++; points += 3; }
+              else if (gF === gA) { draws++; points += 1; }
+              else { losses++; }
+            });
+            return { name: team.name, played, wins, draws, losses, points };
+          });
+
+          teamStats.sort((a, b) => b.points - a.points);
+          const standingsBody = document.getElementById('standingsTable');
+          teamStats.forEach(t => {
+            standingsBody.innerHTML += `<tr>
+              <td>${t.name}</td><td>${t.played}</td><td>${t.wins}</td><td>${t.draws}</td><td>${t.losses}</td><td>${t.points}</td>
             </tr>`;
-        });
+          });
+        }
 
-        // טבלת מלך שערים
+        // טבלת מלך שערים - כמו שהיה
         const scorers = {};
         games.forEach(g => {
           for (const goal of g.goals?.teamA || []) {
@@ -185,24 +233,20 @@
         const scorersBody = document.getElementById('scorersTableBody');
         scorersBody.innerHTML = '';
         topScorers.forEach((s, i) => {
-          scorersBody.innerHTML += `
-            <tr>
-              <td>${i + 1}</td>
-              <td>${s.name}</td>
-              <td>${s.goals}</td>
-            </tr>`;
+          scorersBody.innerHTML += `<tr><td>${i + 1}</td><td>${s.name}</td><td>${s.goals}</td></tr>`;
         });
 
-        // לוח משחקים
+        // לוח משחקים רגיל
         const gamesList = document.getElementById('gamesList');
         gamesList.innerHTML = '';
         games.forEach(g => {
           const teamAName = g.teamA?.name || 'קבוצה א';
           const teamBName = g.teamB?.name || 'קבוצה ב';
+          const houseInfo = g.house ? ` | בית ${g.house}` : '';
           gamesList.innerHTML += `
             <div class="match-box">
               ${teamAName} ${g.scoreA ?? '-'} : ${g.scoreB ?? '-'} ${teamBName}
-              <br>📅 ${formatDate(g.date)}
+              <br>📅 ${formatDate(g.date)}${houseInfo}
             </div>`;
         });
 

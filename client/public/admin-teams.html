@@ -2,7 +2,7 @@
 <html lang="he">
 <head>
   <meta charset="UTF-8" />
-  <title>ניהול קבוצות</title>
+  <title>⚽ ניהול קבוצות</title>
   <style>
     body {
       font-family: Arial;
@@ -11,17 +11,16 @@
       text-align: center;
       padding: 40px;
     }
-
     .box {
       background: rgba(255, 255, 255, 0.95);
       padding: 30px;
       border-radius: 12px;
       box-shadow: 0 0 20px rgba(0,0,0,0.25);
       display: inline-block;
-      width: 700px;
+      width: 750px;
+      max-width: 95%;
     }
-
-    input {
+    input, select {
       width: 100%;
       margin: 10px 0;
       padding: 10px;
@@ -29,7 +28,6 @@
       border-radius: 6px;
       border: 1px solid #ccc;
     }
-
     button {
       padding: 10px 16px;
       margin: 4px;
@@ -39,12 +37,10 @@
       color: white;
       cursor: pointer;
     }
-
     .btn-save { background-color: #2ecc71; }
     .btn-edit { background-color: #3498db; }
     .btn-delete { background-color: #e74c3c; }
     .btn-players { background-color: #f39c12; }
-
     .btn-back {
       position: absolute;
       top: 20px;
@@ -54,23 +50,19 @@
       border-radius: 30px;
       color: white;
     }
-
     .message { font-weight: bold; margin-top: 10px; }
     .success { color: green; }
     .error { color: red; }
-
     table {
       width: 100%;
       border-collapse: collapse;
       margin-top: 20px;
     }
-
     th, td {
       border: 1px solid #ccc;
       padding: 10px;
       font-size: 15px;
     }
-
     th { background-color: #3498db; color: white; }
     td { background-color: #fefefe; }
   </style>
@@ -83,6 +75,7 @@
     <h2>⚽ יצירת קבוצה</h2>
     <input type="text" id="name" placeholder="שם קבוצה" required />
     <input type="text" id="color" placeholder="🎨 צבע מדים" required />
+    <input type="text" id="house" placeholder="🏠 בית (למשל A, B, 1, 2)" />
     <button class="btn-save" onclick="saveTeam()">💾 שמור קבוצה</button>
     <div id="message" class="message"></div>
 
@@ -92,6 +85,7 @@
         <tr>
           <th>שם קבוצה</th>
           <th>🎨 צבע</th>
+          <th>🏠 בית</th>
           <th>פעולות</th>
         </tr>
       </thead>
@@ -115,8 +109,9 @@
           row.innerHTML = `
             <td>${team.name}</td>
             <td>${team.color}</td>
+            <td>${team.house || '-'}</td>
             <td>
-              <button class="btn-edit" onclick="editTeam('${team._id}', '${team.name}', '${team.color}')">✏️</button>
+              <button class="btn-edit" onclick="editTeam('${team._id}', '${team.name}', '${team.color}', '${team.house || ''}')">✏️</button>
               <button class="btn-delete" onclick="deleteTeam('${team._id}', '${team.name}')">🗑️</button>
               <button class="btn-players" onclick="goToPlayers('${team._id}')">👟</button>
             </td>
@@ -132,16 +127,15 @@
     async function saveTeam() {
       const name = document.getElementById('name').value.trim();
       const color = document.getElementById('color').value.trim();
+      const house = document.getElementById('house').value.trim();
       if (!name || !color) {
-        message.textContent = '⚠️ נא למלא את כל השדות';
+        message.textContent = '⚠️ נא למלא את שם הקבוצה והצבע';
         message.className = 'message error';
         return;
       }
-
       const url = editId ? `/api/teams/${editId}` : `/api/teams`;
       const method = editId ? 'PUT' : 'POST';
-      const body = editId ? { name, color } : { name, color, tournamentId };
-
+      const body = editId ? { name, color, house } : { name, color, house, tournamentId };
       try {
         const res = await fetch(url, {
           method,
@@ -154,6 +148,7 @@
           message.className = 'message success';
           document.getElementById('name').value = '';
           document.getElementById('color').value = '';
+          document.getElementById('house').value = '';
           editId = null;
           fetchTeams();
         } else {
@@ -166,9 +161,10 @@
       }
     }
 
-    function editTeam(id, name, color) {
+    function editTeam(id, name, color, house) {
       document.getElementById('name').value = name;
       document.getElementById('color').value = color;
+      document.getElementById('house').value = house || '';
       editId = id;
     }
 

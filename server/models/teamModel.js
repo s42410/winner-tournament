@@ -1,14 +1,8 @@
 const mongoose = require('mongoose');
 
 const teamSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: true
-  },
-  ageGroup: {
-    type: String,
-    required: true // למשל: "ד-ה", "ו-ז"
-  },
+  name: { type: String, required: true },
+  ageGroup: { type: String, required: true }, // אם אתה באמת צריך Age Group
   players: [
     {
       number: Number,
