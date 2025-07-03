@@ -30,6 +30,7 @@
     .knockout-section { margin-top: 40px; }
     .knockout-btn { padding: 10px 20px; background: #9b59b6; color: white; border: none; border-radius: 6px; cursor: pointer; }
     .knockout-btn:hover { background-color: #8e44ad; }
+    .action-btn { margin: 0 5px; }
   </style>
 </head>
 <body>
@@ -42,6 +43,7 @@
   <div class="knockout-section">
     <h2>🥇 שלבי נוקאאוט</h2>
     <button class="knockout-btn" onclick="createKnockout()">⚡ צור שלב נוקאאוט אוטומטי</button>
+    <button class="knockout-btn" onclick="deleteAllKnockout()">🗑️ מחק את כל שלבי הנוקאאוט</button>
     <div id="knockoutContainer"></div>
   </div>
 
@@ -80,17 +82,10 @@
         ];
       }
 
-      const toSave = matches.map(m => ({
-        ...m,
-        date: new Date(),
-        time: '12:00',
-        location: 'מגרש נוקאאוט'
-      }));
-
       const saveRes = await fetch('/api/games/create-knockout-auto', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tournamentId, stage, numTeams: toSave.length * 2 })
+        body: JSON.stringify({ tournamentId, stage, numTeams: matches.length * 2 })
       });
 
       const data = await saveRes.json();
@@ -117,12 +112,16 @@
       for (const stage of ['רבע גמר','חצי גמר','גמר']) {
         html += `<h3>${stage}</h3>`;
         if (stages[stage]) {
-          html += `<table><tr><th>קבוצה א'</th><th>קבוצה ב'</th><th>תוצאה</th></tr>`;
+          html += `<table><tr><th>קבוצה א'</th><th>קבוצה ב'</th><th>תוצאה</th><th>ניהול</th></tr>`;
           stages[stage].forEach(g => {
             html += `<tr>
               <td>${g.teamA?.name || '---'}</td>
               <td>${g.teamB?.name || '---'}</td>
               <td>${g.scoreA ?? '-'} : ${g.scoreB ?? '-'}</td>
+              <td>
+                <button class="action-btn" onclick="editGame('${g._id}')">✏️ דוח משחק</button>
+                <button class="action-btn" onclick="deleteGame('${g._id}')">🗑️ מחק</button>
+              </td>
             </tr>`;
           });
           html += `</table>`;
@@ -131,6 +130,32 @@
         }
       }
       document.getElementById('knockoutContainer').innerHTML = html;
+    }
+
+    function editGame(gameId) {
+      window.location.href = `/admin-edit-game.html?gameId=${gameId}`;
+    }
+
+    async function deleteGame(gameId) {
+      if (!confirm('אתה בטוח שאתה רוצה למחוק משחק זה?')) return;
+      const res = await fetch(`/api/games/${gameId}`, { method: 'DELETE' });
+      if (res.ok) {
+        alert('🗑️ המשחק נמחק');
+        loadKnockout();
+      } else {
+        alert('❌ שגיאה במחיקת משחק');
+      }
+    }
+
+    async function deleteAllKnockout() {
+      if (!confirm('למחוק את כל שלבי הנוקאאוט?')) return;
+      const res = await fetch(`/api/games/deleteAll/${tournamentId}`, { method: 'DELETE' });
+      if (res.ok) {
+        alert('🗑️ כל שלבי הנוקאאוט נמחקו');
+        loadKnockout();
+      } else {
+        alert('❌ שגיאה במחיקה');
+      }
     }
 
     async function loadStats() {
