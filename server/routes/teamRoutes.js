@@ -44,16 +44,16 @@ router.get('/players/:teamId', async (req, res) => {
   }
 });
 
-// ✅ יצירת קבוצה (בלי ageGroup)
+// ✅ יצירת קבוצה (כולל HOUSE!)
 router.post('/', async (req, res) => {
   try {
-    const { name, color, tournamentId } = req.body;
+    const { name, color, house, tournamentId } = req.body;
 
     if (!name || !color || !tournamentId) {
       return res.status(400).json({ error: 'נא למלא את כל השדות' });
     }
 
-    const newTeam = new Team({ name, color, tournamentId, players: [] });
+    const newTeam = new Team({ name, color, house, tournamentId, players: [] });
     await newTeam.save();
     res.status(201).json({ message: '✅ הקבוצה נוספה בהצלחה', team: newTeam });
   } catch (err) {
@@ -61,18 +61,23 @@ router.post('/', async (req, res) => {
   }
 });
 
-// ✅ עדכון קבוצה (גם בלי ageGroup)
+// ✅ עדכון קבוצה (כולל HOUSE!)
 router.put('/:teamId', async (req, res) => {
   try {
-    const { name, color } = req.body;
+    const { name, color, house } = req.body;
 
-    if (!name || !color) {
-      return res.status(400).json({ error: 'נא למלא את כל השדות' });
+    if (!name && !color && !house) {
+      return res.status(400).json({ error: 'נא למלא לפחות שדה אחד לעדכון' });
     }
+
+    const updateFields = {};
+    if (name) updateFields.name = name;
+    if (color) updateFields.color = color;
+    if (house !== undefined) updateFields.house = house;
 
     const updated = await Team.findByIdAndUpdate(
       req.params.teamId,
-      { name, color },
+      updateFields,
       { new: true }
     );
 

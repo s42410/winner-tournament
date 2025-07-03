@@ -9,6 +9,7 @@ const playerSchema = new mongoose.Schema({
 const teamSchema = new mongoose.Schema({
   name: { type: String, required: true },
   color: { type: String, required: true },
+  house: { type: String }, // ✅ שדה בית נוסף!
   tournamentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Tournament', required: true },
   players: [playerSchema],
   createdAt: { type: Date, default: Date.now }
