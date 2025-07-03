@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Game = require('../models/Game');
 
-// ✅ שליפת משחק בודד כולל קבוצות (לעריכה)
+// ✅ שליפת משחק בודד כולל קבוצות
 router.get('/game/:gameId', async (req, res) => {
   try {
     const game = await Game.findById(req.params.gameId).populate('teamA teamB');
@@ -13,7 +13,7 @@ router.get('/game/:gameId', async (req, res) => {
   }
 });
 
-// ✅ שליפת משחקים לפי מזהה טורניר דרך QUERY (לצופים ולדירוג)
+// ✅ שליפת משחקים לפי טורניר (לדירוג)
 router.get('/by-tournament', async (req, res) => {
   const { tournamentId } = req.query;
   if (!tournamentId) return res.status(400).json({ error: '❗ חסר מזהה טורניר' });
@@ -26,7 +26,7 @@ router.get('/by-tournament', async (req, res) => {
   }
 });
 
-// ✅ שליפת משחקים לפי מזהה טורניר (מזהה בפרמטר – לדשבורד ניהול)
+// ✅ שליפת משחקים לפי מזהה טורניר (ניהול)
 router.get('/:tournamentId', async (req, res) => {
   try {
     const games = await Game.find({ tournamentId: req.params.tournamentId }).populate('teamA teamB');
@@ -53,7 +53,7 @@ router.post('/', async (req, res) => {
   }
 });
 
-// ✅ עדכון תוצאה + כובשים + כרטיסים
+// ✅ עדכון משחק
 router.put('/:gameId', async (req, res) => {
   try {
     const updated = await Game.findByIdAndUpdate(req.params.gameId, req.body, { new: true });

@@ -1,62 +1,82 @@
 <!DOCTYPE html>
 <html lang="he">
 <head>
-  <meta charset="UTF-8" />
-  <title>ניהול קבוצות</title>
+  <meta charset="UTF-8">
+  <title>⚽ ניהול קבוצות</title>
   <style>
     body {
-      font-family: Arial;
       direction: rtl;
       background: linear-gradient(to bottom right, #74ebd5, #acb6e5);
-      padding: 40px;
+      font-family: Arial, sans-serif;
       text-align: center;
+      padding: 30px;
     }
+
+    .logo {
+      width: 220px;
+    }
+
     .box {
-      background: rgba(255,255,255,0.95);
+      background: rgba(255, 255, 255, 0.95);
       border-radius: 12px;
-      box-shadow: 0 0 20px rgba(0,0,0,0.25);
+      box-shadow: 0 0 20px rgba(0,0,0,0.15);
       padding: 30px;
       display: inline-block;
       width: 750px;
       max-width: 95%;
     }
-    input, select {
+
+    input {
       width: 100%;
-      margin: 10px 0;
       padding: 10px;
-      font-size: 16px;
+      margin-bottom: 15px;
       border-radius: 6px;
       border: 1px solid #ccc;
     }
+
     button {
-      padding: 10px 16px;
-      margin: 4px;
-      font-size: 15px;
+      padding: 10px 20px;
       border: none;
       border-radius: 8px;
       cursor: pointer;
+      margin: 5px;
     }
-    .btn-save { background-color: #22cc71; color: white; }
-    .btn-house { background-color: #f39c12; color: white; }
+
+    .btn-save { background: #22cc71; color: white; }
+    .btn-house { background: #ff9800; color: white; }
+    .btn-back {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      background: #3498db; color: white;
+    }
+
     table {
       width: 100%;
       border-collapse: collapse;
       margin-top: 20px;
     }
+
     th, td {
       border: 1px solid #ccc;
       padding: 10px;
     }
+
+    .success { color: green; margin-top: 10px; }
+    .error { color: red; margin-top: 10px; }
   </style>
 </head>
 <body>
+  <button class="btn-back" onclick="history.back()">🔙 חזור</button>
+  <img src="logo.png" class="logo" alt="logo">
   <div class="box">
-    <h3>📋 יצירת קבוצה</h3>
-    <input type="text" id="name" placeholder="שם קבוצה" required />
-    <input type="text" id="color" placeholder="צבע מדים" required />
-    <input type="text" id="house" placeholder="בית (אם מופעל)" style="display:none;" />
-    <button id="saveBtn" class="btn-save">💾 שמור קבוצה</button>
-    <button id="houseBtn" class="btn-house">🏠 צור פורמט בתים</button>
+    <h2>⚽ יצירת קבוצה</h2>
+    <input type="text" id="name" placeholder="שם קבוצה" required>
+    <input type="text" id="color" placeholder="צבע מדיה" required>
+    <input type="text" id="house" placeholder="בית (רשות)" style="display:none;">
+    <button onclick="addHouseField()" class="btn-house">🏠 צור פורמט בתים</button>
+    <button onclick="saveTeam()" class="btn-save">💾 שמור קבוצה</button>
+    <button onclick="saveAllChanges()" class="btn-save">💾 שמור שינויים</button>
     <div id="message"></div>
 
     <table>
@@ -64,7 +84,7 @@
         <tr>
           <th>שם קבוצה</th>
           <th>צבע</th>
-          <th id="houseHeader" style="display:none;">בית</th>
+          <th>בית</th>
           <th>פעולות</th>
         </tr>
       </thead>
@@ -73,118 +93,94 @@
   </div>
 
   <script>
-    let showHouse = false;
-
-    document.getElementById('houseBtn').onclick = () => {
-      showHouse = true;
-      document.getElementById('house').style.display = 'block';
-      document.getElementById('houseHeader').style.display = 'table-cell';
-      fetchTeams();
-    };
-
-    const tournamentId = new URLSearchParams(window.location.search).get("tournamentId");
-    const tableBody = document.getElementById("teamsTable");
-    const message = document.getElementById("message");
     let editId = null;
+    let houseEnabled = false;
+
+    const tournamentId = new URLSearchParams(window.location.search).get('tournamentId');
+    const msg = document.getElementById('message');
+    const houseField = document.getElementById('house');
+
+    function addHouseField() {
+      houseEnabled = true;
+      houseField.style.display = 'block';
+      document.querySelectorAll('.houseInput').forEach(e => e.style.display = 'inline');
+    }
 
     async function fetchTeams() {
       const res = await fetch(`/api/teams/${tournamentId}`);
       const data = await res.json();
-      tableBody.innerHTML = "";
+      const tbody = document.getElementById('teamsTable');
+      tbody.innerHTML = '';
       data.forEach(team => {
-        const row = document.createElement("tr");
+        const row = document.createElement('tr');
         row.innerHTML = `
-          <td>${team.name}</td>
-          <td>${team.color}</td>
-          <td style="display:${showHouse ? 'table-cell' : 'none'};" ondblclick="editHouse('${team._id}', this)">${team.house || ''}</td>
+          <td><input type="text" value="${team.name}" class="editName"></td>
+          <td><input type="text" value="${team.color}" class="editColor"></td>
+          <td><input type="text" value="${team.house || ''}" class="houseInput" ${houseEnabled ? '' : 'style="display:none;"'}></td>
           <td>
-            <button onclick="editTeam('${team._id}', '${team.name}', '${team.color}', '${team.house || ''}')">✏️</button>
-            <button onclick="deleteTeam('${team._id}', '${team.name}')">🗑️</button>
-            <button onclick="goToPlayers('${team._id}')">👥</button>
-          </td>`;
-        tableBody.appendChild(row);
+            <button onclick="editTeam('${team._id}')">✏️</button>
+            <button onclick="deleteTeam('${team._id}')">🗑️</button>
+          </td>
+        `;
+        tbody.appendChild(row);
       });
     }
 
     async function saveTeam() {
-      const name = document.getElementById("name").value.trim();
-      const color = document.getElementById("color").value.trim();
-      const house = showHouse ? document.getElementById("house").value.trim() : "";
+      const name = document.getElementById('name').value.trim();
+      const color = document.getElementById('color').value.trim();
+      const house = houseField.value.trim();
+
       if (!name || !color) {
-        message.textContent = "❌ נא למלא שם וצבע!";
+        msg.textContent = '❌ נא למלא שם וצבע';
+        msg.className = 'error';
         return;
       }
 
-      const url = editId ? `/api/teams/${editId}` : "/api/teams";
-      const method = editId ? "PUT" : "POST";
-      const body = { name, color, house, tournamentId };
-
-      const res = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body)
+      const res = await fetch('/api/teams', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, color, house, tournamentId })
       });
+
       const data = await res.json();
       if (res.ok) {
-        message.textContent = "✅ נשמר בהצלחה!";
-        document.getElementById("name").value = "";
-        document.getElementById("color").value = "";
-        document.getElementById("house").value = "";
-        editId = null;
+        msg.textContent = '✅ נוספה קבוצה';
+        msg.className = 'success';
         fetchTeams();
       } else {
-        message.textContent = "❌ שגיאה: " + data.error;
+        msg.textContent = '❌ ' + data.error;
+        msg.className = 'error';
       }
     }
 
-    function editTeam(id, name, color, house) {
-      document.getElementById("name").value = name;
-      document.getElementById("color").value = color;
-      if (showHouse) document.getElementById("house").value = house;
+    async function saveAllChanges() {
+      const rows = document.querySelectorAll('#teamsTable tr');
+      for (const row of rows) {
+        const id = row.querySelector('button').getAttribute('onclick').match(/'(.*?)'/)[1];
+        const name = row.querySelector('.editName').value.trim();
+        const color = row.querySelector('.editColor').value.trim();
+        const house = row.querySelector('.houseInput').value.trim();
+        await fetch(`/api/teams/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, color, house })
+        });
+      }
+      msg.textContent = '✅ כל השינויים נשמרו';
+      msg.className = 'success';
+      fetchTeams();
+    }
+
+    async function editTeam(id) {
       editId = id;
     }
 
-    async function deleteTeam(id, name) {
-      if (!confirm(`למחוק את הקבוצה "${name}"?`)) return;
-      const res = await fetch(`/api/teams/${id}`, { method: "DELETE" });
-      if (res.ok) {
-        message.textContent = "✅ נמחק בהצלחה";
-        fetchTeams();
-      } else {
-        const data = await res.json();
-        message.textContent = "❌ שגיאה: " + data.error;
-      }
+    async function deleteTeam(id) {
+      await fetch(`/api/teams/${id}`, { method: 'DELETE' });
+      fetchTeams();
     }
 
-    function goToPlayers(id) {
-      window.location.href = `/admin-players.html?teamId=${id}`;
-    }
-
-    async function editHouse(id, cell) {
-      const oldHouse = cell.textContent.trim();
-      const input = document.createElement("input");
-      input.value = oldHouse;
-      cell.innerHTML = "";
-      cell.appendChild(input);
-      input.focus();
-      input.addEventListener("keyup", async (e) => {
-        if (e.key === "Enter") {
-          const newHouse = input.value.trim();
-          const res = await fetch(`/api/teams/${id}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ house: newHouse })
-          });
-          if (res.ok) {
-            cell.textContent = newHouse;
-          } else {
-            cell.textContent = oldHouse;
-          }
-        }
-      });
-    }
-
-    document.getElementById("saveBtn").onclick = saveTeam;
     fetchTeams();
   </script>
 </body>

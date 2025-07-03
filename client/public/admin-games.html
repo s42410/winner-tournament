@@ -22,7 +22,7 @@
 
     .logo {
       width: 220px;
-      margin-bottom: 10px;
+      margin-bottom: 20px;
       cursor: pointer;
     }
 
@@ -45,8 +45,9 @@
 
     .mode-buttons {
       display: flex;
-      flex-direction: column;
+      flex-wrap: wrap;
       gap: 15px;
+      justify-content: center;
       margin-bottom: 25px;
     }
 
@@ -55,7 +56,7 @@
       color: white;
       border: none;
       border-radius: 8px;
-      padding: 14px;
+      padding: 14px 20px;
       font-size: 18px;
       cursor: pointer;
       transition: background-color 0.3s;
@@ -80,10 +81,6 @@
     @media(min-width: 600px) {
       .form-grid {
         grid-template-columns: 1fr 1fr;
-      }
-      .mode-buttons {
-        flex-direction: row;
-        justify-content: center;
       }
     }
 
@@ -114,16 +111,25 @@
     .success { color: green; }
     .error { color: red; }
 
+    .group-title {
+      background: #00796b;
+      color: white;
+      padding: 10px;
+      border-radius: 8px;
+      margin-top: 30px;
+      font-size: 20px;
+    }
+
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 20px;
-      font-size: 14px;
+      margin-top: 10px;
     }
 
     th, td {
       border: 1px solid #ccc;
       padding: 10px;
+      font-size: 14px;
     }
 
     th {
@@ -145,14 +151,6 @@
     td button:hover {
       background-color: #004d40;
     }
-
-    .section-title {
-      margin-top: 30px;
-      margin-bottom: 10px;
-      font-size: 22px;
-      color: #00796b;
-      font-weight: bold;
-    }
   </style>
 </head>
 <body>
@@ -165,6 +163,7 @@
       <button onclick="showManual()">✍️ יצירה ידנית / עריכה</button>
       <button onclick="autoGenerateGames()">⚙️ יצירה אוטומטית</button>
       <button onclick="autoGenerateGroupStage()">🏆 יצירה אוטומטית שלב בתים</button>
+      <button onclick="deleteAllGames()">🗑️ מחק את כל המשחקים</button>
     </div>
 
     <div id="manualForm" class="form-section">
@@ -195,31 +194,14 @@
     </div>
 
     <div id="message" class="message"></div>
-
-    <div class="section-title">📋 רשימת המשחקים</div>
-    <button onclick="deleteAllGames()">🗑️ מחק את כל המשחקים</button>
-
-    <table id="gamesTable">
-      <thead>
-        <tr>
-          <th>קבוצה א'</th>
-          <th>קבוצה ב'</th>
-          <th>תאריך</th>
-          <th>שעה</th>
-          <th>מיקום</th>
-          <th>תוצאה</th>
-          <th>פעולה</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
+    <div id="gamesContainer"></div>
   </div>
 
 <script>
 const tournamentId = new URLSearchParams(window.location.search).get('tournamentId');
 const teamASelect = document.getElementById('teamA');
 const teamBSelect = document.getElementById('teamB');
-const tableBody = document.querySelector('#gamesTable tbody');
+const gamesContainer = document.getElementById('gamesContainer');
 const message = document.getElementById('message');
 const formSection = document.getElementById('manualForm');
 const editGameId = document.getElementById('editGameId');
@@ -308,24 +290,49 @@ async function autoGenerateGroupStage() {
 async function fetchGames() {
   const res = await fetch(`/api/games/${tournamentId}`);
   const games = await res.json();
-  tableBody.innerHTML = '';
+  const grouped = {};
   games.forEach(game => {
-    const row = document.createElement('tr');
-    row.innerHTML = `
-      <td>${game.teamA?.name || '---'}</td>
-      <td>${game.teamB?.name || '---'}</td>
-      <td>${new Date(game.date).toLocaleDateString('he-IL')}</td>
-      <td>${game.time || '--'}</td>
-      <td>${game.location || '--'}</td>
-      <td>${game.scoreA ?? 0} : ${game.scoreB ?? 0}</td>
-      <td>
-        <button onclick="editGame('${game._id}')">🎯 תוצאה</button>
-        <button onclick="fillEditForm('${game._id}')">⚙️ ערוך</button>
-        <button onclick="deleteGame('${game._id}')">🗑️ מחק</button>
-      </td>
-    `;
-    tableBody.appendChild(row);
+    const loc = game.location || 'כללי';
+    if (!grouped[loc]) grouped[loc] = [];
+    grouped[loc].push(game);
   });
+
+  gamesContainer.innerHTML = '';
+  for (const group in grouped) {
+    gamesContainer.innerHTML += `<div class="group-title">${group}</div>`;
+    gamesContainer.innerHTML += `
+      <table>
+        <thead>
+          <tr>
+            <th>קבוצה א'</th>
+            <th>קבוצה ב'</th>
+            <th>תאריך</th>
+            <th>שעה</th>
+            <th>מיקום</th>
+            <th>תוצאה</th>
+            <th>פעולה</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${grouped[group].map(game => `
+            <tr>
+              <td>${game.teamA?.name || '---'}</td>
+              <td>${game.teamB?.name || '---'}</td>
+              <td>${new Date(game.date).toLocaleDateString('he-IL')}</td>
+              <td>${game.time || '--'}</td>
+              <td>${game.location || '--'}</td>
+              <td>${game.scoreA ?? 0} : ${game.scoreB ?? 0}</td>
+              <td>
+                <button onclick="editGame('${game._id}')">🎯 תוצאה</button>
+                <button onclick="fillEditForm('${game._id}')">⚙️ ערוך</button>
+                <button onclick="deleteGame('${game._id}')">🗑️ מחק</button>
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+  }
 }
 
 async function saveGame() {
@@ -358,7 +365,7 @@ async function saveGame() {
   if (res.ok) {
     message.textContent = gameId ? '✅ המשחק עודכן' : '✅ המשחק נוסף';
     message.className = 'message success';
-    showManual();
+    formSection.style.display = 'none';
     fetchGames();
   } else {
     message.textContent = '❌ שגיאה: ' + data.error;
