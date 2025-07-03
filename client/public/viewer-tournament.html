@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>פרטי טורניר לצפייה</title>
+  <title>📊 מעקב טורניר</title>
   <style>
     body {
       background: linear-gradient(to right, #e0f7fa, #80deea);
@@ -18,9 +18,8 @@
       cursor: pointer;
       margin-bottom: 20px;
     }
-    h1, h2 {
+    h1, h2, h3 {
       color: #00796b;
-      font-size: 24px;
     }
     .section {
       background: #fff;
@@ -86,6 +85,7 @@
   <div id="error" class="error"></div>
 
   <div id="standingsContainer"></div>
+
   <div id="scorersContainer" class="section">
     <h2>🥇 מלך שערים</h2>
     <table>
@@ -99,6 +99,11 @@
   <div id="gamesContainer" class="section">
     <h2>📅 לוח משחקים</h2>
     <div id="gamesList"></div>
+  </div>
+
+  <div id="knockoutContainer" class="section">
+    <h2>🏆 שלבי נוקאאוט</h2>
+    <div id="knockoutStages"></div>
   </div>
 
   <div class="footer">
@@ -134,13 +139,11 @@
         const games = await gamesRes.json();
         document.getElementById('tournamentName').innerText = tournament.name || 'טורניר ללא שם';
 
-        const hasHouses = teams.some(team => team.house); // בדיקה אם יש בתים
-
+        const hasHouses = teams.some(team => team.house);
         const standingsContainer = document.getElementById('standingsContainer');
         standingsContainer.innerHTML = '';
 
         if (hasHouses) {
-          // קיבוץ לפי בתים
           const houses = {};
           teams.forEach(team => {
             const house = team.house || 'לא מוגדר';
@@ -179,7 +182,6 @@
             });
           }
         } else {
-          // רגיל - ליגה אחת
           standingsContainer.innerHTML += `<div class="section">
             <h2>📊 טבלת דירוג</h2>
             <table>
@@ -213,7 +215,6 @@
           });
         }
 
-        // טבלת מלך שערים - כמו שהיה
         const scorers = {};
         games.forEach(g => {
           for (const goal of g.goals?.teamA || []) {
@@ -226,28 +227,46 @@
           }
         });
 
-        const topScorers = Object.values(scorers)
-          .sort((a, b) => b.goals - a.goals)
-          .slice(0, 5);
-
+        const topScorers = Object.values(scorers).sort((a, b) => b.goals - a.goals).slice(0, 5);
         const scorersBody = document.getElementById('scorersTableBody');
         scorersBody.innerHTML = '';
         topScorers.forEach((s, i) => {
           scorersBody.innerHTML += `<tr><td>${i + 1}</td><td>${s.name}</td><td>${s.goals}</td></tr>`;
         });
 
-        // לוח משחקים רגיל
         const gamesList = document.getElementById('gamesList');
         gamesList.innerHTML = '';
         games.forEach(g => {
+          if (g.knockoutStage) return; // לוח רגיל בלי נוקאאוט
           const teamAName = g.teamA?.name || 'קבוצה א';
           const teamBName = g.teamB?.name || 'קבוצה ב';
           const houseInfo = g.house ? ` | בית ${g.house}` : '';
-          gamesList.innerHTML += `
-            <div class="match-box">
-              ${teamAName} ${g.scoreA ?? '-'} : ${g.scoreB ?? '-'} ${teamBName}
-              <br>📅 ${formatDate(g.date)}${houseInfo}
-            </div>`;
+          gamesList.innerHTML += `<div class="match-box">
+            ${teamAName} ${g.scoreA ?? '-'} : ${g.scoreB ?? '-'} ${teamBName}<br>
+            📅 ${formatDate(g.date)}${houseInfo}
+          </div>`;
+        });
+
+        const stages = {};
+        games.forEach(g => {
+          if (!g.knockoutStage) return;
+          if (!stages[g.knockoutStage]) stages[g.knockoutStage] = [];
+          stages[g.knockoutStage].push(g);
+        });
+
+        const knockoutStages = document.getElementById('knockoutStages');
+        knockoutStages.innerHTML = '';
+        ['רבע גמר','חצי גמר','גמר'].forEach(stage => {
+          knockoutStages.innerHTML += `<h3>${stage}</h3>`;
+          if (stages[stage]) {
+            stages[stage].forEach(g => {
+              knockoutStages.innerHTML += `<div class="match-box">
+                ${g.teamA?.name || '---'} ${g.scoreA ?? '-'} : ${g.scoreB ?? '-'} ${g.teamB?.name || '---'}
+              </div>`;
+            });
+          } else {
+            knockoutStages.innerHTML += `<p>טרם הוגדר</p>`;
+          }
         });
 
       } catch (err) {
