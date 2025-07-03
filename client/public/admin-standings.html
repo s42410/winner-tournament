@@ -69,10 +69,10 @@
   </style>
 </head>
 <body>
-  <h2 id="title-standings">📊 טבלת דירוג קבוצות</h2>
+  <h2>📊 טבלת דירוג קבוצות</h2>
   <div id="standingsContainer"></div>
 
-  <h2 class="section-title" id="title-scorers">🏆 טבלת מלך השערים</h2>
+  <h2 class="section-title">🏆 טבלת מלך השערים</h2>
   <div id="scorersContainer"></div>
 
   <div class="knockout-section">
@@ -80,8 +80,8 @@
     <button class="knockout-btn" onclick="showKnockoutForm()">➕ הוסף שלב נוקאאוט</button>
     <div id="knockoutForm" style="display:none;">
       <h3>צור שלב נוקאאוט</h3>
-      <input id="stage" placeholder="שם שלב (רבע גמר / חצי גמר)" />
-      <textarea id="matches" rows="6" cols="50" placeholder="פורמט JSON: [{teamA:ID,teamB:ID,date,time,location}]"></textarea><br/>
+      <input id="stage" placeholder="שם שלב (רבע גמר / חצי גמר)" /><br/>
+      <textarea id="matches" rows="6" cols="50" placeholder='JSON: [{"teamA":"ID","teamB":"ID","date":"2025-07-10","time":"12:00","location":"מגרש א"}]'></textarea><br/>
       <button onclick="saveKnockout()">💾 שמור שלב נוקאאוט</button>
     </div>
     <div id="knockoutContainer"></div>
@@ -98,8 +98,14 @@
 
     async function saveKnockout() {
       const stage = document.getElementById('stage').value.trim();
-      const matches = JSON.parse(document.getElementById('matches').value.trim() || '[]');
-      if (!stage || matches.length === 0) {
+      let matches;
+      try {
+        matches = JSON.parse(document.getElementById('matches').value.trim());
+      } catch {
+        alert('פורמט JSON לא תקין!');
+        return;
+      }
+      if (!stage || !matches.length) {
         alert('נא למלא את כל השדות');
         return;
       }
@@ -132,7 +138,7 @@
 
       let html = '';
       for (const stage in stages) {
-        html += `<h3>${stage}</h3><table><tr><th>קבוצה א'</th><th>קבוצה ב'</th><th>תאריך</th><th>שעה</th><th>מיקום</th></tr>`;
+        html += `<h3>${stage}</h3><table><tr><th>קבוצה א'</th><th>קבוצה ב'</th><th>תאריך</th><th>שעה</th><th>מיקום</th><th>תוצאה</th></tr>`;
         stages[stage].forEach(g => {
           html += `<tr>
             <td>${g.teamA?.name || '---'}</td>
@@ -140,11 +146,11 @@
             <td>${new Date(g.date).toLocaleDateString('he-IL')}</td>
             <td>${g.time || '--'}</td>
             <td>${g.location || '--'}</td>
+            <td>${g.scoreA ?? 0} : ${g.scoreB ?? 0}</td>
           </tr>`;
         });
         html += '</table>';
       }
-
       document.getElementById('knockoutContainer').innerHTML = html;
     }
 
@@ -168,13 +174,12 @@
       for (const group in groups) {
         standingsHTML += `<h3>בית ${group}</h3>`;
         const stats = {};
-        const groupTeams = groups[group];
-        for (const t of groupTeams) {
+        groups[group].forEach(t => {
           stats[t._id] = { name: t.name, games: 0, wins: 0, draws: 0, losses: 0, goalsFor: 0, goalsAgainst: 0, points: 0 };
-        }
+        });
 
         for (const g of games) {
-          if (g.knockoutStage) continue; // לא כולל נוקאאוט
+          if (g.knockoutStage) continue; // דירוג מתעלם מנוקאאוט
           const [ta, tb] = [g.teamA?._id, g.teamB?._id];
           if (!stats[ta] || !stats[tb]) continue;
           stats[ta].games++;
@@ -197,9 +202,7 @@
         }
 
         const sorted = Object.values(stats).sort((a,b)=>b.points-a.points);
-        standingsHTML += `<table><tr>
-          <th>מקום</th><th>קבוצה</th><th>מש</th><th>נ</th><th>ת</th><th>ה</th>
-          <th>זכות</th><th>חובה</th><th>הפרש</th><th>נק'</th></tr>`;
+        standingsHTML += `<table><tr><th>מקום</th><th>קבוצה</th><th>מש</th><th>נ</th><th>ת</th><th>ה</th><th>זכות</th><th>חובה</th><th>הפרש</th><th>נק'</th></tr>`;
         sorted.forEach((t,i)=> {
           standingsHTML += `<tr>
             <td>${i+1}</td><td>${t.name}</td><td>${t.games}</td>
@@ -210,12 +213,11 @@
         });
         standingsHTML += `</table>`;
       }
-
       document.getElementById('standingsContainer').innerHTML = standingsHTML;
 
+      // מלך השערים כולל נוקאאוט
       const scorers = {};
-      for (const g of games) {
-        if (g.knockoutStage) continue; // לא כולל נוקאאוט
+      games.forEach(g => {
         for (const goal of g.goals?.teamA || []) {
           if (!scorers[goal.scorer]) scorers[goal.scorer] = 0;
           scorers[goal.scorer]++;
@@ -224,7 +226,7 @@
           if (!scorers[goal.scorer]) scorers[goal.scorer] = 0;
           scorers[goal.scorer]++;
         }
-      }
+      });
 
       const top = Object.entries(scorers).sort((a,b)=>b[1]-a[1]).slice(0,10);
       let scorersHTML = `<table><tr><th>מקום</th><th>שחקן</th><th>שערים</th></tr>`;
