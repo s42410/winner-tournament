@@ -13,9 +13,7 @@
       padding: 30px;
       text-align: center;
     }
-    h2 {
-      color: #2c3e50;
-    }
+    h2 { color: #2c3e50; }
     table {
       width: 90%;
       margin: 20px auto;
@@ -23,53 +21,15 @@
       background-color: white;
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
-    th, td {
-      padding: 12px;
-      border: 1px solid #ddd;
-    }
-    th {
-      background-color: #3498db;
-      color: white;
-    }
-    tr:nth-child(even) {
-      background-color: #f2f2f2;
-    }
-    .section-title {
-      margin-top: 40px;
-      color: #34495e;
-    }
-    .back-btn {
-      margin-top: 30px;
-      padding: 10px 20px;
-      font-size: 16px;
-      background: #2ecc71;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-    .back-btn:hover {
-      background-color: #27ae60;
-    }
-    .knockout-section {
-      margin-top: 40px;
-    }
-    select {
-      padding: 8px;
-      font-size: 16px;
-      margin: 10px;
-    }
-    .knockout-btn {
-      padding: 10px 20px;
-      background: #9b59b6;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-    .knockout-btn:hover {
-      background-color: #8e44ad;
-    }
+    th, td { padding: 12px; border: 1px solid #ddd; }
+    th { background-color: #3498db; color: white; }
+    tr:nth-child(even) { background-color: #f2f2f2; }
+    .section-title { margin-top: 40px; color: #34495e; }
+    .back-btn { margin-top: 30px; padding: 10px 20px; font-size: 16px; background: #2ecc71; color: white; border: none; border-radius: 6px; cursor: pointer; }
+    .back-btn:hover { background-color: #27ae60; }
+    .knockout-section { margin-top: 40px; }
+    .knockout-btn { padding: 10px 20px; background: #9b59b6; color: white; border: none; border-radius: 6px; cursor: pointer; }
+    .knockout-btn:hover { background-color: #8e44ad; }
   </style>
 </head>
 <body>
@@ -81,13 +41,7 @@
 
   <div class="knockout-section">
     <h2>🥇 שלבי נוקאאוט</h2>
-    <label for="knockoutStage">בחר שלב:</label>
-    <select id="knockoutStage">
-      <option value="רבע גמר">רבע גמר (8 קבוצות)</option>
-      <option value="חצי גמר">חצי גמר (4 קבוצות)</option>
-      <option value="גמר">גמר (2 קבוצות)</option>
-    </select>
-    <button class="knockout-btn" onclick="createKnockout()">⚡ צור שלב נוקאאוט</button>
+    <button class="knockout-btn" onclick="createKnockout()">⚡ צור שלב נוקאאוט אוטומטי</button>
     <div id="knockoutContainer"></div>
   </div>
 
@@ -97,26 +51,51 @@
     const tournamentId = new URLSearchParams(window.location.search).get('tournamentId');
 
     async function createKnockout() {
-      const stage = document.getElementById('knockoutStage').value;
-      let numTeams = 0;
-      if (stage === 'רבע גמר') numTeams = 8;
-      if (stage === 'חצי גמר') numTeams = 4;
-      if (stage === 'גמר') numTeams = 2;
+      const res = await fetch(`/api/teams/${tournamentId}`);
+      const teams = await res.json();
 
-      if (!numTeams) {
-        alert('שלב לא תקין');
-        return;
-      }
-
-      const res = await fetch('/api/games/create-knockout-auto', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tournamentId, stage, numTeams })
+      const groups = {};
+      teams.forEach(t => {
+        const group = t.group || 'ליגה';
+        if (!groups[group]) groups[group] = [];
+        groups[group].push(t);
       });
 
-      const data = await res.json();
-      if (res.ok) {
-        alert(`✅ ${stage} נוצר בהצלחה`);
+      let matches = [];
+      let stage = 'חצי גמר';
+
+      if (Object.keys(groups).length > 1) {
+        const [A, B] = Object.keys(groups);
+        const groupA = groups[A].sort((a,b)=>b.points-a.points);
+        const groupB = groups[B].sort((a,b)=>b.points-a.points);
+        matches = [
+          { teamA: groupA[0]._id, teamB: groupB[1]._id },
+          { teamA: groupB[0]._id, teamB: groupA[1]._id }
+        ];
+      } else {
+        const sorted = teams.sort((a,b)=>b.points-a.points);
+        matches = [
+          { teamA: sorted[0]._id, teamB: sorted[3]._id },
+          { teamA: sorted[1]._id, teamB: sorted[2]._id }
+        ];
+      }
+
+      const toSave = matches.map(m => ({
+        ...m,
+        date: new Date(),
+        time: '12:00',
+        location: 'מגרש נוקאאוט'
+      }));
+
+      const saveRes = await fetch('/api/games/create-knockout-auto', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tournamentId, stage, numTeams: toSave.length * 2 })
+      });
+
+      const data = await saveRes.json();
+      if (saveRes.ok) {
+        alert('✅ נוקאאוט נוצר');
         loadKnockout();
       } else {
         alert('❌ שגיאה: ' + data.error);
@@ -135,19 +114,21 @@
       });
 
       let html = '';
-      for (const stage in stages) {
-        html += `<h3>${stage}</h3><table><tr><th>קבוצה א'</th><th>קבוצה ב'</th><th>תאריך</th><th>שעה</th><th>מיקום</th><th>תוצאה</th></tr>`;
-        stages[stage].forEach(g => {
-          html += `<tr>
-            <td>${g.teamA?.name || '---'}</td>
-            <td>${g.teamB?.name || '---'}</td>
-            <td>${new Date(g.date).toLocaleDateString('he-IL')}</td>
-            <td>${g.time || '--'}</td>
-            <td>${g.location || '--'}</td>
-            <td>${g.scoreA ?? 0} : ${g.scoreB ?? 0}</td>
-          </tr>`;
-        });
-        html += '</table>';
+      for (const stage of ['רבע גמר','חצי גמר','גמר']) {
+        html += `<h3>${stage}</h3>`;
+        if (stages[stage]) {
+          html += `<table><tr><th>קבוצה א'</th><th>קבוצה ב'</th><th>תוצאה</th></tr>`;
+          stages[stage].forEach(g => {
+            html += `<tr>
+              <td>${g.teamA?.name || '---'}</td>
+              <td>${g.teamB?.name || '---'}</td>
+              <td>${g.scoreA ?? '-'} : ${g.scoreB ?? '-'}</td>
+            </tr>`;
+          });
+          html += `</table>`;
+        } else {
+          html += `<p>טרם הוגדר</p>`;
+        }
       }
       document.getElementById('knockoutContainer').innerHTML = html;
     }
@@ -162,58 +143,46 @@
       const teams = await teamsRes.json();
 
       const groups = {};
-      teams.forEach(team => {
-        const group = team.group || 'כללי';
+      teams.forEach(t => {
+        const group = t.group || 'ליגה';
         if (!groups[group]) groups[group] = [];
-        groups[group].push(team);
+        groups[group].push(t);
       });
 
       let standingsHTML = '';
       for (const group in groups) {
-        standingsHTML += `<h3>בית ${group}</h3>`;
+        standingsHTML += `<h3>${group}</h3>`;
         const stats = {};
         groups[group].forEach(t => {
-          stats[t._id] = { name: t.name, games: 0, wins: 0, draws: 0, losses: 0, goalsFor: 0, goalsAgainst: 0, points: 0 };
+          stats[t._id] = { name: t.name, games: 0, wins: 0, draws: 0, losses: 0, goalsFor: 0, goalsAgainst: 0, points: t.points ?? 0 };
         });
 
-        for (const g of games) {
-          if (g.knockoutStage) continue; // דירוג מתעלם מנוקאאוט
+        games.forEach(g => {
+          if (g.knockoutStage) return;
           const [ta, tb] = [g.teamA?._id, g.teamB?._id];
-          if (!stats[ta] || !stats[tb]) continue;
-          stats[ta].games++;
-          stats[tb].games++;
-          stats[ta].goalsFor += g.scoreA;
-          stats[ta].goalsAgainst += g.scoreB;
-          stats[tb].goalsFor += g.scoreB;
-          stats[tb].goalsAgainst += g.scoreA;
+          if (!stats[ta] || !stats[tb]) return;
+          stats[ta].games++; stats[tb].games++;
+          stats[ta].goalsFor += g.scoreA; stats[ta].goalsAgainst += g.scoreB;
+          stats[tb].goalsFor += g.scoreB; stats[tb].goalsAgainst += g.scoreA;
 
-          if (g.scoreA > g.scoreB) {
-            stats[ta].wins++; stats[ta].points += 3;
-            stats[tb].losses++;
-          } else if (g.scoreA < g.scoreB) {
-            stats[tb].wins++; stats[tb].points += 3;
-            stats[ta].losses++;
-          } else {
-            stats[ta].draws++; stats[tb].draws++;
-            stats[ta].points += 1; stats[tb].points += 1;
-          }
-        }
+          if (g.scoreA > g.scoreB) { stats[ta].wins++; stats[tb].losses++; stats[ta].points += 3; }
+          else if (g.scoreA < g.scoreB) { stats[tb].wins++; stats[ta].losses++; stats[tb].points += 3; }
+          else { stats[ta].draws++; stats[tb].draws++; stats[ta].points += 1; stats[tb].points += 1; }
+        });
 
         const sorted = Object.values(stats).sort((a,b)=>b.points-a.points);
-        standingsHTML += `<table><tr><th>מקום</th><th>קבוצה</th><th>מש</th><th>נ</th><th>ת</th><th>ה</th><th>זכות</th><th>חובה</th><th>הפרש</th><th>נק'</th></tr>`;
-        sorted.forEach((t,i)=> {
+        standingsHTML += `<table><tr><th>מקום</th><th>קבוצה</th><th>מש</th><th>נ</th><th>ת</th><th>ה</th><th>נק'</th></tr>`;
+        sorted.forEach((t,i) => {
           standingsHTML += `<tr>
             <td>${i+1}</td><td>${t.name}</td><td>${t.games}</td>
             <td>${t.wins}</td><td>${t.draws}</td><td>${t.losses}</td>
-            <td>${t.goalsFor}</td><td>${t.goalsAgainst}</td>
-            <td>${t.goalsFor - t.goalsAgainst}</td><td>${t.points}</td>
+            <td>${t.points}</td>
           </tr>`;
         });
         standingsHTML += `</table>`;
       }
       document.getElementById('standingsContainer').innerHTML = standingsHTML;
 
-      // מלכי שערים כולל נוקאאוט
       const scorers = {};
       games.forEach(g => {
         for (const goal of g.goals?.teamA || []) {
