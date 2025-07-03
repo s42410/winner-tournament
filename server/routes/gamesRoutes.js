@@ -63,7 +63,7 @@ router.post('/', async (req, res) => {
   }
 });
 
-// ✅ יצירת שלב נוקאאוט אוטומטי מהדירוג
+// ✅ יצירת שלב נוקאאוט אוטומטי לפי דירוג (ליגה/בתים)
 router.post('/create-knockout-auto', async (req, res) => {
   try {
     const { tournamentId, stage, numTeams } = req.body;
@@ -72,44 +72,95 @@ router.post('/create-knockout-auto', async (req, res) => {
       return res.status(400).json({ error: '❗ חסרים נתונים ליצירת שלב נוקאאוט' });
     }
 
-    // שלב 1: שלוף דירוג מהליגה
-    const teams = await Team.find({ tournamentId }).sort({ points: -1 }).limit(numTeams);
-    if (teams.length < numTeams) {
-      return res.status(400).json({ error: 'לא נמצאו מספיק קבוצות' });
-    }
+    const allTeams = await Team.find({ tournamentId });
+    const allGames = await Game.find({ tournamentId }).populate('teamA teamB');
 
-    // שלב 2: צור משחקים (לדוגמה רבע גמר => 8 קבוצות => 4 משחקים)
-    const matches = [];
-    for (let i = 0; i < teams.length; i += 2) {
-      if (teams[i + 1]) {
-        matches.push({
-          teamA: teams[i]._id,
-          teamB: teams[i + 1]._id,
-          date: new Date(),
-          time: '12:00',
-          location: 'מגרש נוקאאוט',
-          knockoutStage: stage
-        });
+    const hasGroups = allTeams.some(t => t.group && t.group.trim() !== '');
+    let pairs = [];
+
+    if (hasGroups) {
+      // 👉 ניהול לפי בתים
+      const groups = {};
+      allTeams.forEach(t => {
+        const g = t.group.trim();
+        if (!groups[g]) groups[g] = [];
+        groups[g].push({ team: t, points: 0 });
+      });
+
+      for (const game of allGames) {
+        if (!game.knockoutStage) {
+          if (game.scoreA > game.scoreB) {
+            groups[game.teamA.group].find(t => t.team._id.equals(game.teamA._id)).points += 3;
+          } else if (game.scoreB > game.scoreA) {
+            groups[game.teamB.group].find(t => t.team._id.equals(game.teamB._id)).points += 3;
+          } else {
+            groups[game.teamA.group].find(t => t.team._id.equals(game.teamA._id)).points += 1;
+            groups[game.teamB.group].find(t => t.team._id.equals(game.teamB._id)).points += 1;
+          }
+        }
+      }
+
+      const groupKeys = Object.keys(groups);
+      if (groupKeys.length < 2) {
+        return res.status(400).json({ error: 'צריך לפחות שני בתים' });
+      }
+
+      for (const g of groupKeys) {
+        groups[g].sort((a,b) => b.points - a.points);
+      }
+
+      const g1 = groups[groupKeys[0]];
+      const g2 = groups[groupKeys[1]];
+
+      if (g1.length < 2 || g2.length < 2) {
+        return res.status(400).json({ error: 'לא מספיק קבוצות בכל בית' });
+      }
+
+      pairs.push([g1[0].team, g2[1].team]); // 1-2
+      pairs.push([g2[0].team, g1[1].team]); // 1-2
+
+    } else {
+      // 👉 ניהול לפי ליגה
+      const stats = {};
+      allTeams.forEach(t => stats[t._id] = { team: t, points: 0 });
+
+      for (const game of allGames) {
+        if (!game.knockoutStage) {
+          if (game.scoreA > game.scoreB) {
+            stats[game.teamA._id].points += 3;
+          } else if (game.scoreB > game.scoreA) {
+            stats[game.teamB._id].points += 3;
+          } else {
+            stats[game.teamA._id].points += 1;
+            stats[game.teamB._id].points += 1;
+          }
+        }
+      }
+
+      const sorted = Object.values(stats).sort((a,b)=>b.points - a.points).map(s => s.team);
+
+      for (let i = 0; i < numTeams / 2; i++) {
+        pairs.push([sorted[i], sorted[numTeams - 1 - i]]);
       }
     }
 
-    // שלב 3: שמור
     const newGames = [];
-    for (const m of matches) {
+    for (const [teamA, teamB] of pairs) {
       const game = new Game({
         tournamentId,
-        teamA: m.teamA,
-        teamB: m.teamB,
-        date: m.date,
-        time: m.time,
-        location: m.location,
+        teamA: teamA._id,
+        teamB: teamB._id,
+        date: new Date(),
+        time: '12:00',
+        location: 'מגרש נוקאאוט',
         knockoutStage: stage
       });
       await game.save();
       newGames.push(game);
     }
 
-    res.status(201).json({ message: `✅ שלב ${stage} נוצר אוטומטית`, games: newGames });
+    res.status(201).json({ message: `✅ שלב ${stage} נוצר לפי חוקיות ${hasGroups ? 'בתים' : 'ליגה'}`, games: newGames });
+
   } catch (err) {
     res.status(500).json({ error: '❌ שגיאה ביצירת שלב נוקאאוט', details: err.message });
   }
