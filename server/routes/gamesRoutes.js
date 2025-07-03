@@ -79,7 +79,6 @@ router.post('/create-knockout-auto', async (req, res) => {
     let pairs = [];
 
     if (hasGroups) {
-      // 👉 ניהול לפי בתים
       const groups = {};
       allTeams.forEach(t => {
         const g = t.group.trim();
@@ -116,11 +115,10 @@ router.post('/create-knockout-auto', async (req, res) => {
         return res.status(400).json({ error: 'לא מספיק קבוצות בכל בית' });
       }
 
-      pairs.push([g1[0].team, g2[1].team]); // 1-2
-      pairs.push([g2[0].team, g1[1].team]); // 1-2
+      pairs.push([g1[0].team, g2[1].team]);
+      pairs.push([g2[0].team, g1[1].team]);
 
     } else {
-      // 👉 ניהול לפי ליגה
       const stats = {};
       allTeams.forEach(t => stats[t._id] = { team: t, points: 0 });
 
@@ -166,16 +164,57 @@ router.post('/create-knockout-auto', async (req, res) => {
   }
 });
 
-// ✅ עדכון תוצאה כולל שערים וכרטיסים
+// ✅ עדכון תוצאה כולל שערים, כרטיסים ויצירת גמר אוטומטי
 router.put('/:gameId', async (req, res) => {
   try {
     const { scoreA, scoreB, goals, cards } = req.body;
+
     const updated = await Game.findByIdAndUpdate(
       req.params.gameId,
       { scoreA, scoreB, goals, cards },
       { new: true }
     );
+
+    // יצירת גמר אוטומטית אם כל חצי גמר הוזן
+    if (updated.knockoutStage === 'חצי גמר') {
+      const semis = await Game.find({
+        tournamentId: updated.tournamentId,
+        knockoutStage: 'חצי גמר'
+      });
+
+      const finished = semis.filter(g => g.scoreA != null && g.scoreB != null);
+      if (finished.length === 2) {
+        const winners = finished.map(g => {
+          if (g.scoreA > g.scoreB) return g.teamA;
+          if (g.scoreB > g.scoreA) return g.teamB;
+          return null;
+        }).filter(Boolean);
+
+        if (winners.length === 2) {
+          const existingFinal = await Game.findOne({
+            tournamentId: updated.tournamentId,
+            knockoutStage: 'גמר'
+          });
+
+          if (!existingFinal) {
+            const newFinal = new Game({
+              tournamentId: updated.tournamentId,
+              teamA: winners[0],
+              teamB: winners[1],
+              date: new Date(),
+              time: '12:00',
+              location: 'מגרש גמר',
+              knockoutStage: 'גמר'
+            });
+            await newFinal.save();
+            console.log('🎉 משחק גמר נוצר אוטומטית');
+          }
+        }
+      }
+    }
+
     res.json({ message: '✅ המשחק עודכן', game: updated });
+
   } catch (err) {
     res.status(500).json({ error: '❌ שגיאה בעדכון המשחק', details: err.message });
   }
