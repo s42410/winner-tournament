@@ -11,7 +11,6 @@
       text-align: center;
       padding: 40px;
     }
-
     .box {
       background: rgba(255, 255, 255, 0.95);
       padding: 30px;
@@ -20,7 +19,6 @@
       display: inline-block;
       width: 700px;
     }
-
     input {
       width: 100%;
       margin: 10px 0;
@@ -29,7 +27,6 @@
       border-radius: 6px;
       border: 1px solid #ccc;
     }
-
     button {
       padding: 10px 16px;
       margin: 4px;
@@ -39,13 +36,11 @@
       color: white;
       cursor: pointer;
     }
-
     .btn-save { background-color: #2ecc71; }
     .btn-edit { background-color: #3498db; }
     .btn-delete { background-color: #e74c3c; }
     .btn-players { background-color: #f39c12; }
     .btn-groups { background-color: #9b59b6; }
-
     .btn-back {
       position: absolute;
       top: 20px;
@@ -55,23 +50,19 @@
       border-radius: 30px;
       color: white;
     }
-
     .message { font-weight: bold; margin-top: 10px; }
     .success { color: green; }
     .error { color: red; }
-
     table {
       width: 100%;
       border-collapse: collapse;
       margin-top: 20px;
     }
-
     th, td {
       border: 1px solid #ccc;
       padding: 10px;
       font-size: 15px;
     }
-
     th { background-color: #3498db; color: white; }
     td { background-color: #fefefe; }
   </style>
@@ -114,7 +105,6 @@
       try {
         const res = await fetch(`/api/teams/${tournamentId}`);
         let data = await res.json();
-        // מיין לפי בית
         data.sort((a, b) => {
           const ga = a.group || '';
           const gb = b.group || '';
@@ -185,7 +175,7 @@
       await fetch(`/api/teams/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ group })
+        body: JSON.stringify({ group, tournamentId })
       });
       message.textContent = '✅ נשמר';
       message.className = 'message success';
@@ -200,7 +190,7 @@
         await fetch(`/api/teams/${teamId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ group })
+          body: JSON.stringify({ group, tournamentId })
         });
       }
       message.textContent = '✅ כל הבתים נשמרו';
