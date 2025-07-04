@@ -13,19 +13,16 @@
       padding: 40px 15px;
       margin: 0;
     }
-
     .top-left {
       position: absolute;
       top: 15px;
       left: 20px;
     }
-
     .logo {
       width: 220px;
       margin-bottom: 20px;
       cursor: pointer;
     }
-
     .box {
       background: #ffffff;
       padding: 30px;
@@ -36,13 +33,11 @@
       max-width: 880px;
       box-sizing: border-box;
     }
-
     h2 {
       font-size: 28px;
       color: #00796b;
       margin-bottom: 20px;
     }
-
     .mode-buttons {
       display: flex;
       flex-wrap: wrap;
@@ -50,7 +45,6 @@
       justify-content: center;
       margin-bottom: 25px;
     }
-
     .mode-buttons button {
       background-color: #00796b;
       color: white;
@@ -61,96 +55,42 @@
       cursor: pointer;
       transition: background-color 0.3s;
     }
-
     .mode-buttons button:hover {
       background-color: #004d40;
     }
-
     .form-section {
       display: none;
       margin-bottom: 20px;
     }
-
     .form-grid {
       display: grid;
       grid-template-columns: 1fr;
       gap: 12px;
       margin-bottom: 15px;
     }
-
     @media(min-width: 600px) {
-      .form-grid {
-        grid-template-columns: 1fr 1fr;
-      }
+      .form-grid { grid-template-columns: 1fr 1fr; }
     }
-
-    label {
-      text-align: right;
-      font-weight: bold;
-    }
-
+    label { text-align: right; font-weight: bold; }
     input, select {
-      width: 100%;
-      padding: 10px;
-      font-size: 16px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
+      width: 100%; padding: 10px; font-size: 16px;
+      border-radius: 6px; border: 1px solid #ccc;
     }
-
-    button {
-      padding: 12px 18px;
-      font-size: 16px;
-      cursor: pointer;
-    }
-
-    .message {
-      font-weight: bold;
-      margin-top: 10px;
-    }
-
-    .success { color: green; }
-    .error { color: red; }
-
+    button { padding: 12px 18px; font-size: 16px; cursor: pointer; }
+    .message { font-weight: bold; margin-top: 10px; }
+    .success { color: green; } .error { color: red; }
     .group-title {
-      background: #00796b;
-      color: white;
-      padding: 10px;
-      border-radius: 8px;
-      margin-top: 30px;
-      font-size: 20px;
+      background: #00796b; color: white; padding: 10px;
+      border-radius: 8px; margin-top: 30px; font-size: 20px;
     }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 10px;
-    }
-
-    th, td {
-      border: 1px solid #ccc;
-      padding: 10px;
-      font-size: 14px;
-    }
-
-    th {
-      background-color: #b2dfdb;
-      color: #004d40;
-    }
-
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { border: 1px solid #ccc; padding: 10px; font-size: 14px; }
+    th { background-color: #b2dfdb; color: #004d40; }
     td button {
-      background-color: #00796b;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      padding: 6px 12px;
-      font-size: 14px;
-      cursor: pointer;
-      margin: 2px;
+      background-color: #00796b; color: white; border: none; border-radius: 5px;
+      padding: 6px 12px; font-size: 14px; cursor: pointer; margin: 2px;
     }
-
-    td button:hover {
-      background-color: #004d40;
-    }
+    td button:hover { background-color: #004d40; }
   </style>
 </head>
 <body>
@@ -158,7 +98,6 @@
   <a href="index.html"><img src="logo.png" class="logo" alt="לוגו" /></a>
   <div class="box">
     <h2>⚽ ניהול משחקים בטורניר</h2>
-
     <div class="mode-buttons">
       <button onclick="showManual()">✍️ יצירה ידנית / עריכה</button>
       <button onclick="autoGenerateGames()">⚙️ יצירה אוטומטית</button>
