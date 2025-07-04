@@ -14,7 +14,7 @@ router.get('/game/:gameId', async (req, res) => {
   }
 });
 
-// ✅ שליפת משחקים לפי טורניר (לדירוג)
+// ✅ שליפת משחקים לפי טורניר (לצפייה ומעקב)
 router.get('/by-tournament', async (req, res) => {
   const { tournamentId } = req.query;
   if (!tournamentId) return res.status(400).json({ error: '❗ חסר מזהה טורניר' });
@@ -67,7 +67,6 @@ router.post('/', async (req, res) => {
 router.post('/create-knockout-auto', async (req, res) => {
   try {
     const { tournamentId, stage, numTeams } = req.body;
-
     if (!tournamentId || !stage || !numTeams) {
       return res.status(400).json({ error: '❗ חסרים נתונים ליצירת שלב נוקאאוט' });
     }
@@ -105,7 +104,7 @@ router.post('/create-knockout-auto', async (req, res) => {
       }
 
       for (const g of groupKeys) {
-        groups[g].sort((a,b) => b.points - a.points);
+        groups[g].sort((a, b) => b.points - a.points);
       }
 
       const g1 = groups[groupKeys[0]];
@@ -117,7 +116,6 @@ router.post('/create-knockout-auto', async (req, res) => {
 
       pairs.push([g1[0].team, g2[1].team]);
       pairs.push([g2[0].team, g1[1].team]);
-
     } else {
       const stats = {};
       allTeams.forEach(t => stats[t._id] = { team: t, points: 0 });
@@ -135,8 +133,7 @@ router.post('/create-knockout-auto', async (req, res) => {
         }
       }
 
-      const sorted = Object.values(stats).sort((a,b)=>b.points - a.points).map(s => s.team);
-
+      const sorted = Object.values(stats).sort((a, b) => b.points - a.points).map(s => s.team);
       for (let i = 0; i < numTeams / 2; i++) {
         pairs.push([sorted[i], sorted[numTeams - 1 - i]]);
       }
@@ -157,14 +154,14 @@ router.post('/create-knockout-auto', async (req, res) => {
       newGames.push(game);
     }
 
-    res.status(201).json({ message: `✅ שלב ${stage} נוצר לפי חוקיות ${hasGroups ? 'בתים' : 'ליגה'}`, games: newGames });
+    res.status(201).json({ message: `✅ שלב ${stage} נוצר בהצלחה`, games: newGames });
 
   } catch (err) {
     res.status(500).json({ error: '❌ שגיאה ביצירת שלב נוקאאוט', details: err.message });
   }
 });
 
-// ✅ עדכון תוצאה כולל שערים, כרטיסים ויצירת גמר אוטומטי
+// ✅ עדכון תוצאה כולל גמר אוטומטי
 router.put('/:gameId', async (req, res) => {
   try {
     const { scoreA, scoreB, goals, cards } = req.body;
@@ -175,20 +172,12 @@ router.put('/:gameId', async (req, res) => {
       { new: true }
     );
 
-    // יצירת גמר אוטומטית אם כל חצי גמר הוזן
     if (updated.knockoutStage === 'חצי גמר') {
-      const semis = await Game.find({
-        tournamentId: updated.tournamentId,
-        knockoutStage: 'חצי גמר'
-      });
-
+      const semis = await Game.find({ tournamentId: updated.tournamentId, knockoutStage: 'חצי גמר' });
       const finished = semis.filter(g => g.scoreA != null && g.scoreB != null);
+
       if (finished.length === 2) {
-        const winners = finished.map(g => {
-          if (g.scoreA > g.scoreB) return g.teamA;
-          if (g.scoreB > g.scoreA) return g.teamB;
-          return null;
-        }).filter(Boolean);
+        const winners = finished.map(g => (g.scoreA > g.scoreB ? g.teamA : g.teamB)).filter(Boolean);
 
         if (winners.length === 2) {
           const existingFinal = await Game.findOne({
@@ -214,7 +203,6 @@ router.put('/:gameId', async (req, res) => {
     }
 
     res.json({ message: '✅ המשחק עודכן', game: updated });
-
   } catch (err) {
     res.status(500).json({ error: '❌ שגיאה בעדכון המשחק', details: err.message });
   }
@@ -230,13 +218,16 @@ router.delete('/:gameId', async (req, res) => {
   }
 });
 
-// ✅ מחיקת כל המשחקים בטורניר
+// ✅ מחיקת כל שלבי נוקאאוט בלבד בלי ליגה
 router.delete('/deleteAll/:tournamentId', async (req, res) => {
   try {
-    await Game.deleteMany({ tournamentId: req.params.tournamentId });
-    res.json({ message: '✅ כל המשחקים נמחקו בהצלחה' });
+    const result = await Game.deleteMany({
+      tournamentId: req.params.tournamentId,
+      knockoutStage: { $ne: null }  // מוחק רק משחקים שיש להם שלב נוקאאוט
+    });
+    res.json({ message: `🗑️ נמחקו ${result.deletedCount} משחקי נוקאאוט בהצלחה` });
   } catch (err) {
-    res.status(500).json({ error: '❌ שגיאה במחיקת כל המשחקים', details: err.message });
+    res.status(500).json({ error: '❌ שגיאה במחיקת שלבי הנוקאאוט', details: err.message });
   }
 });
 
