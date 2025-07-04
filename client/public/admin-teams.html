@@ -11,7 +11,6 @@
       text-align: center;
       padding: 40px;
     }
-
     .box {
       background: rgba(255, 255, 255, 0.95);
       padding: 30px;
@@ -20,58 +19,21 @@
       display: inline-block;
       width: 700px;
     }
-
-    input {
-      width: 100%;
-      margin: 10px 0;
-      padding: 10px;
-      font-size: 16px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-    }
-
+    input { width: 100%; margin: 10px 0; padding: 10px; font-size: 16px; border-radius: 6px; border: 1px solid #ccc; }
     button {
-      padding: 10px 16px;
-      margin: 4px;
-      font-size: 15px;
-      border: none;
-      border-radius: 8px;
-      color: white;
-      cursor: pointer;
+      padding: 10px 16px; margin: 4px; font-size: 15px; border: none; border-radius: 8px;
+      color: white; cursor: pointer;
     }
-
     .btn-save { background-color: #2ecc71; }
     .btn-edit { background-color: #3498db; }
     .btn-delete { background-color: #e74c3c; }
     .btn-players { background-color: #f39c12; }
     .btn-groups { background-color: #9b59b6; }
-
-    .btn-back {
-      position: absolute;
-      top: 20px;
-      left: 20px;
-      background-color: #3498db;
-      padding: 12px 18px;
-      border-radius: 30px;
-      color: white;
-    }
-
+    .btn-back { position: absolute; top: 20px; left: 20px; background-color: #3498db; padding: 12px 18px; border-radius: 30px; color: white; }
     .message { font-weight: bold; margin-top: 10px; }
-    .success { color: green; }
-    .error { color: red; }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 20px;
-    }
-
-    th, td {
-      border: 1px solid #ccc;
-      padding: 10px;
-      font-size: 15px;
-    }
-
+    .success { color: green; } .error { color: red; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { border: 1px solid #ccc; padding: 10px; font-size: 15px; }
     th { background-color: #3498db; color: white; }
     td { background-color: #fefefe; }
   </style>
@@ -103,24 +65,21 @@
     </table>
   </div>
 
- <script>
+<script>
   const tournamentId = new URLSearchParams(window.location.search).get('tournamentId');
   const message = document.getElementById('message');
   const tableBody = document.querySelector('#teamsTable tbody');
   let editId = null;
   let groupsEnabled = false;
+  let teamsData = []; // שומר את כל הקבוצות
 
   async function fetchTeams() {
     try {
       const res = await fetch(`/api/teams/${tournamentId}`);
-      let data = await res.json();
-      data.sort((a, b) => {
-        const ga = a.group || '';
-        const gb = b.group || '';
-        return ga.localeCompare(gb, undefined, { numeric: true });
-      });
+      teamsData = await res.json();
+      teamsData.sort((a, b) => (a.group || '').localeCompare(b.group || '', undefined, { numeric: true }));
       tableBody.innerHTML = '';
-      data.forEach(team => {
+      teamsData.forEach(team => {
         const row = document.createElement('tr');
         row.innerHTML = `
           <td>${team.name}</td>
@@ -133,8 +92,7 @@
             <button class="btn-edit" onclick="editTeam('${team._id}', '${team.name}', '${team.color}')">✏️</button>
             <button class="btn-delete" onclick="deleteTeam('${team._id}', '${team.name}')">🗑️</button>
             <button class="btn-players" onclick="goToPlayers('${team._id}')">👟</button>
-          </td>
-        `;
+          </td>`;
         tableBody.appendChild(row);
       });
     } catch {
@@ -151,9 +109,11 @@
       message.className = 'message error';
       return;
     }
+
     const url = editId ? `/api/teams/${editId}` : `/api/teams`;
     const method = editId ? 'PUT' : 'POST';
     const body = editId ? { name, color } : { name, color, tournamentId };
+
     try {
       const res = await fetch(url, {
         method,
@@ -179,10 +139,18 @@
   }
 
   async function saveSingleGroup(id, group) {
+    const team = teamsData.find(t => t._id === id);
+    if (!team) return;
+
     await fetch(`/api/teams/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ group, tournamentId }) // 👈 הוספתי את tournamentId
+      body: JSON.stringify({
+        name: team.name,
+        color: team.color,
+        group: group.trim(),
+        tournamentId
+      })
     });
     message.textContent = '✅ נשמר';
     message.className = 'message success';
@@ -194,10 +162,18 @@
     for (const input of inputs) {
       const teamId = input.dataset.id;
       const group = input.value.trim();
+      const team = teamsData.find(t => t._id === teamId);
+      if (!team) continue;
+
       await fetch(`/api/teams/${teamId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ group, tournamentId }) // 👈 הוספתי את tournamentId
+        body: JSON.stringify({
+          name: team.name,
+          color: team.color,
+          group,
+          tournamentId
+        })
       });
     }
     message.textContent = '✅ כל הבתים נשמרו';
@@ -207,12 +183,8 @@
 
   function toggleGroups() {
     groupsEnabled = !groupsEnabled;
-    document.querySelectorAll('.group-header').forEach(el => {
-      el.style.display = groupsEnabled ? 'table-cell' : 'none';
-    });
-    document.querySelectorAll('.group-cell').forEach(el => {
-      el.style.display = groupsEnabled ? 'table-cell' : 'none';
-    });
+    document.querySelectorAll('.group-header').forEach(el => el.style.display = groupsEnabled ? 'table-cell' : 'none');
+    document.querySelectorAll('.group-cell').forEach(el => el.style.display = groupsEnabled ? 'table-cell' : 'none');
     document.getElementById('saveGroupsBtn').style.display = groupsEnabled ? 'inline-block' : 'none';
   }
 
