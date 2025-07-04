@@ -105,6 +105,41 @@
       font-weight: bold;
       color: #00796b;
     }
+
+    #bracketContainer {
+  margin-top: 40px;
+}
+
+.bracket-stage {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 30px;
+}
+
+.bracket-match {
+  background: #fff3e0;
+  border: 2px solid #ffb74d;
+  border-radius: 8px;
+  padding: 10px 15px;
+  margin: 10px;
+  min-width: 160px;
+  box-shadow: 2px 2px 8px rgba(0,0,0,0.1);
+  font-size: 14px;
+  position: relative;
+}
+
+.bracket-match span {
+  display: block;
+}
+
+.bracket-connector {
+  width: 2px;
+  background: #ffb74d;
+  height: 30px;
+  margin: auto;
+}
+
   </style>
 </head>
 <body>
@@ -130,6 +165,12 @@
     <h2>📅 לוח משחקים כולל נוקאאוט</h2>
     <div id="gamesList" class="matches-grid"></div>
   </div>
+
+  <div id="bracketContainer" class="section">
+  <h2>🏆 תרשים שלבי נוקאאוט</h2>
+  <div id="bracketContent"></div>
+</div>
+
 
   <div class="footer">
     האתר נבנה על ידי סטיב רבייב | כל הזכויות שמורות ©️
@@ -294,9 +335,49 @@
         console.error(err);
         document.getElementById('error').innerText = '❌ שגיאה בטעינת הנתונים: ' + err.message;
       }
+      function renderBracket(games) {
+  const stages = ['שמינית גמר','רבע גמר','חצי גמר','גמר'];
+  const stageGames = {};
+  stages.forEach(s => stageGames[s] = games.filter(g => g.knockoutStage === s));
+
+  // מזהה מאיזה שלב יש משחקים
+  const startStageIndex = stages.findIndex(s => stageGames[s].length > 0);
+  if (startStageIndex === -1) {
+    document.getElementById('bracketContent').innerHTML = '<p>אין משחקי נוקאאוט</p>';
+    return;
+  }
+
+  let html = '';
+  for (let i = startStageIndex; i < stages.length; i++) {
+    const stage = stages[i];
+    const matches = stageGames[stage];
+    if (matches.length === 0) continue;
+
+    html += `<h3>${stage}</h3><div class="bracket-stage">`;
+    matches.forEach(m => {
+      const score = (m.scoreA != null && m.scoreB != null && (m.scoreA !== 0 || m.scoreB !== 0))
+        ? `${m.scoreA} : ${m.scoreB}` : '';
+      html += `
+        <div class="bracket-match">
+          <span>${m.teamA?.name || '---'}</span>
+          <span>${score}</span>
+          <span>${m.teamB?.name || '---'}</span>
+        </div>
+      `;
+    });
+    html += `</div>`;
+    if (i < stages.length - 1) {
+      html += `<div class="bracket-connector"></div>`;
+    }
+  }
+  document.getElementById('bracketContent').innerHTML = html;
+}
+
     }
 
     loadTournamentData();
+    renderBracket(games);
+
   </script>
 </body>
 </html>
