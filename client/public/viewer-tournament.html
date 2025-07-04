@@ -1,4 +1,3 @@
-<!-- תחילת קוד חדש - הכל כולל הכל -->
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
@@ -69,30 +68,6 @@
       font-size: 14px;
       display: none;
     }
-    .podium {
-      margin-top: 50px;
-    }
-    .podium .winner, .podium .runner-up {
-      display: inline-block;
-      vertical-align: top;
-      width: 40%;
-      padding: 20px;
-      border-radius: 12px;
-      background: #333;
-      color: #fff;
-      margin: 10px;
-    }
-    .podium .winner {
-      font-size: 22px;
-    }
-    .podium .winner:before {
-      content: "🏆 ";
-      font-size: 30px;
-    }
-    .podium .runner-up:before {
-      content: "🥈 ";
-      font-size: 26px;
-    }
     .error { color: red; font-weight: bold; }
     .footer {
       margin-top: 40px;
@@ -156,15 +131,11 @@
     <div id="gamesList" class="matches-grid"></div>
   </div>
 
-  <!-- פודיום מתווסף אוטומטית -->
-  <div id="podiumContainer" class="section"></div>
-
   <div class="footer">
     האתר נבנה על ידי סטיב רבייב | כל הזכויות שמורות ©️
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
   <script>
     const tournamentId = new URLSearchParams(window.location.search).get('id');
     function goHome() { window.location.href = 'index.html'; }
@@ -201,30 +172,130 @@
         const games = await gamesRes.json();
         document.getElementById('tournamentName').innerText = tournament.name || 'טורניר ללא שם';
 
-        // כל מה שעובד נשאר - דירוגים, מלכי שערים, משחקים וכו'
-        // ...
+        const hasHouses = teams.some(team => team.house);
+        const standingsContainer = document.getElementById('standingsContainer');
+        standingsContainer.innerHTML = '';
 
-        // בסוף אחרי gamesList - פודיום אם יש גמר עם תוצאה
-        const final = games.find(g => g.knockoutStage === 'גמר' && g.scoreA != null && g.scoreB != null);
-        if (final) {
-          const winner = final.scoreA > final.scoreB ? final.teamA.name : final.teamB.name;
-          const runnerUp = final.scoreA < final.scoreB ? final.teamA.name : final.teamB.name;
-          const podiumContainer = document.getElementById('podiumContainer');
-          podiumContainer.innerHTML = `
-            <h2>🏅 פודיום האלופים</h2>
-            <div class="podium">
-              <div class="winner">מקום ראשון: ${winner}</div>
-              <div class="runner-up">מקום שני: ${runnerUp}</div>
-            </div>
-          `;
-          confetti();
+        if (hasHouses) {
+          const houses = {};
+          teams.forEach(team => {
+            const house = team.house || 'יפורסמו בהמשך בסיום השלבים הראשויים של הטורניר';
+            if (!houses[house]) houses[house] = [];
+            houses[house].push(team);
+          });
+
+          for (const [houseName, houseTeams] of Object.entries(houses)) {
+            standingsContainer.innerHTML += `<div class="section"><h2 class="house-title">📊 דירוג - בית ${houseName}</h2><table>
+              <thead>
+                <tr><th>קבוצה</th><th>מש</th><th>נצ</th><th>ת</th><th>ה</th><th>נק'</th></tr>
+              </thead><tbody id="standings-${houseName}"></tbody></table></div>`;
+
+            const houseGames = games.filter(g =>
+              houseTeams.some(t => t._id === g.teamA?._id) || houseTeams.some(t => t._id === g.teamB?._id)
+            );
+
+            const houseStats = houseTeams.map(team => {
+              const teamGames = houseGames.filter(g => g.teamA?._id === team._id || g.teamB?._id === team._id);
+              let played = teamGames.length, wins = 0, draws = 0, losses = 0, points = 0;
+              teamGames.forEach(g => {
+                const isA = g.teamA?._id === team._id;
+                const gF = isA ? g.scoreA : g.scoreB;
+                const gA = isA ? g.scoreB : g.scoreA;
+                if (gF > gA) { wins++; points += 3; }
+                else if (gF === gA) { draws++; points += 1; }
+                else { losses++; }
+              });
+              return { name: team.name, played, wins, draws, losses, points };
+            });
+
+            houseStats.sort((a, b) => b.points - a.points);
+            const houseBody = document.getElementById(`standings-${houseName}`);
+            houseStats.forEach(t => {
+              houseBody.innerHTML += `<tr><td>${t.name}</td><td>${t.played}</td><td>${t.wins}</td><td>${t.draws}</td><td>${t.losses}</td><td>${t.points}</td></tr>`;
+            });
+          }
+        } else {
+          standingsContainer.innerHTML += `<div class="section"><h2>📊 טבלת דירוג</h2><table>
+            <thead><tr><th>קבוצה</th><th>מש</th><th>נצ</th><th>ת</th><th>ה</th><th>נק'</th></tr></thead>
+            <tbody id="standingsTable"></tbody></table></div>`;
+
+          const teamStats = teams.map(team => {
+            const teamGames = games.filter(g => g.teamA?._id === team._id || g.teamB?._id === team._id);
+            let played = teamGames.length, wins = 0, draws = 0, losses = 0, points = 0;
+            teamGames.forEach(g => {
+              const isA = g.teamA?._id === team._id;
+              const gF = isA ? g.scoreA : g.scoreB;
+              const gA = isA ? g.scoreB : g.scoreA;
+              if (gF > gA) { wins++; points += 3; }
+              else if (gF === gA) { draws++; points += 1; }
+              else { losses++; }
+            });
+            return { name: team.name, played, wins, draws, losses, points };
+          });
+
+          teamStats.sort((a, b) => b.points - a.points);
+          const standingsBody = document.getElementById('standingsTable');
+          teamStats.forEach(t => {
+            standingsBody.innerHTML += `<tr><td>${t.name}</td><td>${t.played}</td><td>${t.wins}</td><td>${t.draws}</td><td>${t.losses}</td><td>${t.points}</td></tr>`;
+          });
         }
+
+        const scorers = {};
+        games.forEach(g => {
+          for (const goal of g.goals?.teamA || []) {
+            if (!scorers[goal.scorer]) scorers[goal.scorer] = { name: goal.scorer, goals: 0 };
+            scorers[goal.scorer].goals++;
+          }
+          for (const goal of g.goals?.teamB || []) {
+            if (!scorers[goal.scorer]) scorers[goal.scorer] = { name: goal.scorer, goals: 0 };
+            scorers[goal.scorer].goals++;
+          }
+        });
+        const topScorers = Object.values(scorers).sort((a, b) => b.goals - a.goals).slice(0, 5);
+        const scorersBody = document.getElementById('scorersTableBody');
+        topScorers.forEach((s, i) => {
+          scorersBody.innerHTML += `<tr><td>${i+1}</td><td>${s.name}</td><td>${s.goals}</td></tr>`;
+        });
+
+        const gamesList = document.getElementById('gamesList');
+        const allGames = [...games].sort((a,b)=>new Date(a.date)-new Date(b.date));
+        allGames.forEach(g => {
+          const isKnockout = !!g.knockoutStage;
+          const stageLabel = isKnockout ? `🏆 ${g.knockoutStage}` : '';
+          const box = document.createElement('div');
+          box.className = 'match-box' + (isKnockout ? ' knockout' : '');
+          box.innerHTML = `${stageLabel}<br>
+            ${g.teamA?.name || '---'} ${g.scoreA ?? '-'} : ${g.scoreB ?? '-'} ${g.teamB?.name || '---'}<br>
+            📅 ${formatDate(g.date)}
+            <div class="details"></div>`;
+          box.onclick = () => {
+            document.querySelectorAll('.details').forEach(d => d.style.display='none');
+            const details = box.querySelector('.details');
+            let html = '';
+            (g.goals?.teamA || []).forEach(goal => {
+              html += `⚽ ${goal.scorer} - דקה ${goal.minute}<br>`;
+            });
+            (g.goals?.teamB || []).forEach(goal => {
+              html += `⚽ ${goal.scorer} - דקה ${goal.minute}<br>`;
+            });
+            (g.cards?.teamA || []).forEach(card => {
+              html += `${card.color==='yellow'?'🟨':'🟥'} ${card.player} - דקה ${card.minute}<br>`;
+            });
+            (g.cards?.teamB || []).forEach(card => {
+              html += `${card.color==='yellow'?'🟨':'🟥'} ${card.player} - דקה ${card.minute}<br>`;
+            });
+            details.innerHTML = html || 'אין אירועים רשומים';
+            details.style.display = 'block';
+          };
+          gamesList.appendChild(box);
+        });
 
       } catch (err) {
         console.error(err);
         document.getElementById('error').innerText = '❌ שגיאה בטעינת הנתונים: ' + err.message;
       }
     }
+
     loadTournamentData();
   </script>
 </body>
