@@ -185,6 +185,37 @@
   font-size: 50px;
   margin: 0 20px;
 }
+.bracket-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 40px;
+}
+
+.bracket-match {
+  background: #fff3e0;
+  border: 2px solid #ffb74d;
+  border-radius: 8px;
+  padding: 10px 15px;
+  min-width: 120px;
+  text-align: center;
+  position: relative;
+}
+
+.bracket-match::after {
+  content: '';
+  position: absolute;
+  width: 40px;
+  height: 2px;
+  background: #ffb74d;
+  right: -40px;
+  top: 50%;
+}
+
+.bracket-stage:last-child .bracket-match::after {
+  display: none;
+}
+
 
   </style>
 </head>
@@ -386,14 +417,15 @@
   const makeSideHTML = (side) => {
     let html = '';
     stages.forEach(stage => {
+      html += `<div class="bracket-stage"><h4>${stage}</h4>`;
       const matches = side[stage];
       matches.forEach(m => {
         const score = (m.scoreA || m.scoreB) ? `${m.scoreA} : ${m.scoreB}` : '';
-        html += `<div class="bracket-node">
+        html += `<div class="bracket-match">
           ${m.teamA?.name || '---'}<br>${score}<br>${m.teamB?.name || '---'}
-          <div class="bracket-connector-v"></div>
         </div>`;
       });
+      html += `</div>`;
     });
     return html;
   };
@@ -401,6 +433,7 @@
   document.getElementById('leftSide').innerHTML = makeSideHTML(sideL);
   document.getElementById('rightSide').innerHTML = makeSideHTML(sideR);
 }
+
 
 
     loadTournamentData();
