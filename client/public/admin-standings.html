@@ -31,6 +31,12 @@
     .knockout-btn { padding: 10px 20px; background: #9b59b6; color: white; border: none; border-radius: 6px; cursor: pointer; }
     .knockout-btn:hover { background-color: #8e44ad; }
     .action-btn { margin: 0 5px; }
+    select, input[type="number"] {
+      padding: 6px 10px;
+      margin: 5px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
   </style>
 </head>
 <body>
@@ -42,7 +48,18 @@
 
   <div class="knockout-section">
     <h2>🥇 שלבי נוקאאוט</h2>
-    <button class="knockout-btn" onclick="createKnockout()">⚡ צור שלב נוקאאוט אוטומטי</button>
+    <div>
+      <label>בחר שלב נוקאאוט:</label>
+      <select id="knockoutStage">
+        <option value="שמינית גמר">שמינית גמר</option>
+        <option value="רבע גמר">רבע גמר</option>
+        <option value="חצי גמר">חצי גמר</option>
+        <option value="גמר">גמר</option>
+      </select>
+      <label>כמה קבוצות עולות:</label>
+      <input type="number" id="numTeams" min="2" max="16" step="2" value="4" />
+    </div>
+    <button class="knockout-btn" onclick="createKnockout()">⚡ צור שלב נוקאאוט</button>
     <button class="knockout-btn" onclick="deleteAllKnockout()">🗑️ מחק את כל שלבי הנוקאאוט</button>
     <div id="knockoutContainer"></div>
   </div>
@@ -53,44 +70,23 @@
     const tournamentId = new URLSearchParams(window.location.search).get('tournamentId');
 
     async function createKnockout() {
-      const res = await fetch(`/api/teams/${tournamentId}`);
-      const teams = await res.json();
+      const stage = document.getElementById('knockoutStage').value;
+      const numTeams = parseInt(document.getElementById('numTeams').value);
 
-      const groups = {};
-      teams.forEach(t => {
-        const group = t.group || 'ליגה';
-        if (!groups[group]) groups[group] = [];
-        groups[group].push(t);
-      });
-
-      let matches = [];
-      let stage = 'חצי גמר';
-
-      if (Object.keys(groups).length > 1) {
-        const [A, B] = Object.keys(groups);
-        const groupA = groups[A].sort((a,b)=>b.points-a.points);
-        const groupB = groups[B].sort((a,b)=>b.points-a.points);
-        matches = [
-          { teamA: groupA[0]._id, teamB: groupB[1]._id },
-          { teamA: groupB[0]._id, teamB: groupA[1]._id }
-        ];
-      } else {
-        const sorted = teams.sort((a,b)=>b.points-a.points);
-        matches = [
-          { teamA: sorted[0]._id, teamB: sorted[3]._id },
-          { teamA: sorted[1]._id, teamB: sorted[2]._id }
-        ];
+      if (!stage || isNaN(numTeams) || numTeams < 2) {
+        alert('נא לבחור שלב וכמות קבוצות תקינה.');
+        return;
       }
 
       const saveRes = await fetch('/api/games/create-knockout-auto', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tournamentId, stage, numTeams: matches.length * 2 })
+        body: JSON.stringify({ tournamentId, stage, numTeams })
       });
 
       const data = await saveRes.json();
       if (saveRes.ok) {
-        alert('✅ נוקאאוט נוצר');
+        alert(`✅ שלב ${stage} נוצר בהצלחה`);
         loadKnockout();
       } else {
         alert('❌ שגיאה: ' + data.error);
@@ -109,7 +105,7 @@
       });
 
       let html = '';
-      for (const stage of ['רבע גמר','חצי גמר','גמר']) {
+      for (const stage of ['שמינית גמר','רבע גמר','חצי גמר','גמר']) {
         html += `<h3>${stage}</h3>`;
         if (stages[stage]) {
           html += `<table><tr><th>קבוצה א'</th><th>קבוצה ב'</th><th>תוצאה</th><th>ניהול</th></tr>`;
@@ -126,7 +122,7 @@
           });
           html += `</table>`;
         } else {
-          html += `<p>טרם הוגדר</p>`;
+          html += `<p>אין משחקים בשלב זה</p>`;
         }
       }
       document.getElementById('knockoutContainer').innerHTML = html;
@@ -179,7 +175,7 @@
         standingsHTML += `<h3>${group}</h3>`;
         const stats = {};
         groups[group].forEach(t => {
-          stats[t._id] = { name: t.name, games: 0, wins: 0, draws: 0, losses: 0, goalsFor: 0, goalsAgainst: 0, points: t.points ?? 0 };
+          stats[t._id] = { name: t.name, games: 0, wins: 0, draws: 0, losses: 0, points: t.points ?? 0 };
         });
 
         games.forEach(g => {
@@ -187,9 +183,6 @@
           const [ta, tb] = [g.teamA?._id, g.teamB?._id];
           if (!stats[ta] || !stats[tb]) return;
           stats[ta].games++; stats[tb].games++;
-          stats[ta].goalsFor += g.scoreA; stats[ta].goalsAgainst += g.scoreB;
-          stats[tb].goalsFor += g.scoreB; stats[tb].goalsAgainst += g.scoreA;
-
           if (g.scoreA > g.scoreB) { stats[ta].wins++; stats[tb].losses++; stats[ta].points += 3; }
           else if (g.scoreA < g.scoreB) { stats[tb].wins++; stats[ta].losses++; stats[tb].points += 3; }
           else { stats[ta].draws++; stats[tb].draws++; stats[ta].points += 1; stats[tb].points += 1; }
