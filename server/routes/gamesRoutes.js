@@ -231,4 +231,14 @@ router.delete('/deleteAll/:tournamentId', async (req, res) => {
   }
 });
 
+// ✅ מחיקת כל המשחקים בטורניר
+router.delete('/deleteAll/:tournamentId', async (req, res) => {
+  try {
+    await Game.deleteMany({ tournamentId: req.params.tournamentId });
+    res.json({ message: '✅ כל המשחקים נמחקו בהצלחה' });
+  } catch (err) {
+    res.status(500).json({ error: '❌ שגיאה במחיקת כל המשחקים', details: err.message });
+  }
+});
+
 module.exports = router;
