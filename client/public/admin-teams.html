@@ -103,140 +103,138 @@
     </table>
   </div>
 
-  <script>
-    const tournamentId = new URLSearchParams(window.location.search).get('tournamentId');
-    const message = document.getElementById('message');
-    const tableBody = document.querySelector('#teamsTable tbody');
-    let editId = null;
-    let groupsEnabled = false;
+ <script>
+  const tournamentId = new URLSearchParams(window.location.search).get('tournamentId');
+  const message = document.getElementById('message');
+  const tableBody = document.querySelector('#teamsTable tbody');
+  let editId = null;
+  let groupsEnabled = false;
 
-    async function fetchTeams() {
-      try {
-        const res = await fetch(`/api/teams/${tournamentId}`);
-        let data = await res.json();
-        data.sort((a, b) => {
-          const ga = a.group || '';
-          const gb = b.group || '';
-          return ga.localeCompare(gb, undefined, { numeric: true });
-        });
-        tableBody.innerHTML = '';
-        data.forEach(team => {
-          const row = document.createElement('tr');
-          row.innerHTML = `
-            <td>${team.name}</td>
-            <td>${team.color}</td>
-            <td class="group-cell" style="display:${groupsEnabled ? 'table-cell' : 'none'};">
-              <input type="text" value="${team.group || ''}" data-id="${team._id}" placeholder="1, 2, A, B"
-               onkeydown="if(event.key==='Enter'){ saveSingleGroup('${team._id}', this.value); }">
-            </td>
-            <td>
-              <button class="btn-edit" onclick="editTeam('${team._id}', '${team.name}', '${team.color}')">✏️</button>
-              <button class="btn-delete" onclick="deleteTeam('${team._id}', '${team.name}')">🗑️</button>
-              <button class="btn-players" onclick="goToPlayers('${team._id}')">👟</button>
-            </td>
-          `;
-          tableBody.appendChild(row);
-        });
-      } catch {
-        message.textContent = '❌ שגיאה בטעינת קבוצות';
-        message.className = 'message error';
-      }
+  async function fetchTeams() {
+    try {
+      const res = await fetch(`/api/teams/${tournamentId}`);
+      let data = await res.json();
+      data.sort((a, b) => {
+        const ga = a.group || '';
+        const gb = b.group || '';
+        return ga.localeCompare(gb, undefined, { numeric: true });
+      });
+      tableBody.innerHTML = '';
+      data.forEach(team => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${team.name}</td>
+          <td>${team.color}</td>
+          <td class="group-cell" style="display:${groupsEnabled ? 'table-cell' : 'none'};">
+            <input type="text" value="${team.group || ''}" data-id="${team._id}" placeholder="1, 2, A, B"
+             onkeydown="if(event.key==='Enter'){ saveSingleGroup('${team._id}', this.value); }">
+          </td>
+          <td>
+            <button class="btn-edit" onclick="editTeam('${team._id}', '${team.name}', '${team.color}')">✏️</button>
+            <button class="btn-delete" onclick="deleteTeam('${team._id}', '${team.name}')">🗑️</button>
+            <button class="btn-players" onclick="goToPlayers('${team._id}')">👟</button>
+          </td>
+        `;
+        tableBody.appendChild(row);
+      });
+    } catch {
+      message.textContent = '❌ שגיאה בטעינת קבוצות';
+      message.className = 'message error';
     }
+  }
 
-    async function saveTeam() {
-      const name = document.getElementById('name').value.trim();
-      const color = document.getElementById('color').value.trim();
-      if (!name || !color) {
-        message.textContent = '⚠️ נא למלא את כל השדות';
-        message.className = 'message error';
-        return;
-      }
-
-      const url = editId ? `/api/teams/${editId}` : `/api/teams`;
-      const method = editId ? 'PUT' : 'POST';
-      const body = editId ? { name, color } : { name, color, tournamentId };
-
-      try {
-        const res = await fetch(url, {
-          method,
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body)
-        });
-        const data = await res.json();
-        if (res.ok) {
-          message.textContent = `✅ ${editId ? 'עודכן' : 'נוצר'} בהצלחה`;
-          message.className = 'message success';
-          document.getElementById('name').value = '';
-          document.getElementById('color').value = '';
-          editId = null;
-          fetchTeams();
-        } else {
-          message.textContent = '❌ שגיאה: ' + data.error;
-          message.className = 'message error';
-        }
-      } catch {
-        message.textContent = '❌ שגיאה בחיבור לשרת';
-        message.className = 'message error';
-      }
+  async function saveTeam() {
+    const name = document.getElementById('name').value.trim();
+    const color = document.getElementById('color').value.trim();
+    if (!name || !color) {
+      message.textContent = '⚠️ נא למלא את כל השדות';
+      message.className = 'message error';
+      return;
     }
+    const url = editId ? `/api/teams/${editId}` : `/api/teams`;
+    const method = editId ? 'PUT' : 'POST';
+    const body = editId ? { name, color } : { name, color, tournamentId };
+    try {
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      const data = await res.json();
+      if (res.ok) {
+        message.textContent = `✅ ${editId ? 'עודכן' : 'נוצר'} בהצלחה`;
+        message.className = 'message success';
+        document.getElementById('name').value = '';
+        document.getElementById('color').value = '';
+        editId = null;
+        fetchTeams();
+      } else {
+        message.textContent = '❌ שגיאה: ' + data.error;
+        message.className = 'message error';
+      }
+    } catch {
+      message.textContent = '❌ שגיאה בחיבור לשרת';
+      message.className = 'message error';
+    }
+  }
 
-    async function saveSingleGroup(id, group) {
-      await fetch(`/api/teams/${id}`, {
+  async function saveSingleGroup(id, group) {
+    await fetch(`/api/teams/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ group, tournamentId }) // 👈 הוספתי את tournamentId
+    });
+    message.textContent = '✅ נשמר';
+    message.className = 'message success';
+    fetchTeams();
+  }
+
+  async function saveAllGroups() {
+    const inputs = document.querySelectorAll('.group-cell input');
+    for (const input of inputs) {
+      const teamId = input.dataset.id;
+      const group = input.value.trim();
+      await fetch(`/api/teams/${teamId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ group, tournamentId }) // 💪 הוספת tournamentId חובה
+        body: JSON.stringify({ group, tournamentId }) // 👈 הוספתי את tournamentId
       });
-      message.textContent = '✅ נשמר';
-      message.className = 'message success';
-      fetchTeams();
     }
-
-    async function saveAllGroups() {
-      const inputs = document.querySelectorAll('.group-cell input');
-      for (const input of inputs) {
-        const teamId = input.dataset.id;
-        const group = input.value.trim();
-        await fetch(`/api/teams/${teamId}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ group, tournamentId }) // 💪 גם כאן
-        });
-      }
-      message.textContent = '✅ כל הבתים נשמרו';
-      message.className = 'message success';
-      fetchTeams();
-    }
-
-    function toggleGroups() {
-      groupsEnabled = !groupsEnabled;
-      document.querySelectorAll('.group-header').forEach(el => {
-        el.style.display = groupsEnabled ? 'table-cell' : 'none';
-      });
-      document.querySelectorAll('.group-cell').forEach(el => {
-        el.style.display = groupsEnabled ? 'table-cell' : 'none';
-      });
-      document.getElementById('saveGroupsBtn').style.display = groupsEnabled ? 'inline-block' : 'none';
-    }
-
-    function editTeam(id, name, color) {
-      document.getElementById('name').value = name;
-      document.getElementById('color').value = color;
-      editId = id;
-    }
-
-    async function deleteTeam(id, name) {
-      if (!confirm(`למחוק את הקבוצה "${name}"?`)) return;
-      await fetch(`/api/teams/${id}`, { method: 'DELETE' });
-      message.textContent = '🗑️ הקבוצה נמחקה בהצלחה';
-      message.className = 'message success';
-      fetchTeams();
-    }
-
-    function goToPlayers(teamId) {
-      window.location.href = `/admin-players.html?teamId=${teamId}`;
-    }
-
+    message.textContent = '✅ כל הבתים נשמרו';
+    message.className = 'message success';
     fetchTeams();
-  </script>
+  }
+
+  function toggleGroups() {
+    groupsEnabled = !groupsEnabled;
+    document.querySelectorAll('.group-header').forEach(el => {
+      el.style.display = groupsEnabled ? 'table-cell' : 'none';
+    });
+    document.querySelectorAll('.group-cell').forEach(el => {
+      el.style.display = groupsEnabled ? 'table-cell' : 'none';
+    });
+    document.getElementById('saveGroupsBtn').style.display = groupsEnabled ? 'inline-block' : 'none';
+  }
+
+  function editTeam(id, name, color) {
+    document.getElementById('name').value = name;
+    document.getElementById('color').value = color;
+    editId = id;
+  }
+
+  async function deleteTeam(id, name) {
+    if (!confirm(`למחוק את הקבוצה "${name}"?`)) return;
+    await fetch(`/api/teams/${id}`, { method: 'DELETE' });
+    message.textContent = '🗑️ הקבוצה נמחקה בהצלחה';
+    message.className = 'message success';
+    fetchTeams();
+  }
+
+  function goToPlayers(teamId) {
+    window.location.href = `/admin-players.html?teamId=${teamId}`;
+  }
+
+  fetchTeams();
+</script>
 </body>
 </html>
