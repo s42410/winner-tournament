@@ -64,6 +64,7 @@ router.post('/', async (req, res) => {
 });
 
 // ✅ יצירת שלב נוקאאוט אוטומטי עם שלב נבחר ומספר קבוצות
+// ✅ יצירת שלב נוקאאוט אוטומטי לפי דירוג (בתים/ליגה)
 router.post('/create-knockout-auto', async (req, res) => {
   try {
     const { tournamentId, stage, numTeams } = req.body;
@@ -78,6 +79,7 @@ router.post('/create-knockout-auto', async (req, res) => {
     let pairs = [];
 
     if (hasGroups) {
+      // 🔵 מצב בתים קלאסי: שיבוץ מקום 1 מול מקום 2 בבית אחר
       const groups = {};
       allTeams.forEach(t => {
         const g = t.group.trim();
@@ -98,23 +100,24 @@ router.post('/create-knockout-auto', async (req, res) => {
         }
       }
 
-      for (const g in groups) {
+      const groupKeys = Object.keys(groups);
+      if (groupKeys.length < 2) {
+        return res.status(400).json({ error: 'צריך לפחות שני בתים' });
+      }
+
+      for (const g of groupKeys) {
         groups[g].sort((a, b) => b.points - a.points);
       }
 
-      // דוגמה: לקחת מקום ראשון מבית A מול מקום שני מבית B וכן הלאה
-      const keys = Object.keys(groups);
-      if (keys.length < 2) {
-        return res.status(400).json({ error: 'צריך לפחות שני בתים ליצירת שלב בתים' });
-      }
+      // דוגמה לשני בתים:
+      const g1 = groups[groupKeys[0]];
+      const g2 = groups[groupKeys[1]];
 
-      const A = groups[keys[0]];
-      const B = groups[keys[1]];
-      pairs.push([A[0].team, B[1].team]);
-      pairs.push([B[0].team, A[1].team]);
+      pairs.push([g1[0].team, g2[1].team]);
+      pairs.push([g2[0].team, g1[1].team]);
 
     } else {
-      // דירוג כללי לליגה
+      // 🔵 מצב ליגה מלאה
       const stats = {};
       allTeams.forEach(t => stats[t._id] = { team: t, points: 0 });
 
@@ -131,9 +134,18 @@ router.post('/create-knockout-auto', async (req, res) => {
         }
       }
 
-      const sorted = Object.values(stats).sort((a,b)=>b.points - a.points).map(s => s.team);
-      for (let i = 0; i < numTeams / 2; i++) {
-        pairs.push([sorted[i], sorted[numTeams - 1 - i]]);
+      const sorted = Object.values(stats).sort((a, b) => b.points - a.points).map(s => s.team);
+
+      if (numTeams === 6) {
+        // ⚡ מקרה 6 קבוצות: 2 עולות אוטומטית לחצי גמר
+        pairs.push([sorted[2], sorted[5]]); // מקום 3 נגד מקום 6
+        pairs.push([sorted[3], sorted[4]]); // מקום 4 נגד מקום 5
+        // לא יוצרים משחקים לראשונות — הן עולות אוטומטית!
+      } else {
+        // ⚡ כל שאר המצבים: 1 נגד אחרון וכו׳
+        for (let i = 0; i < numTeams / 2; i++) {
+          pairs.push([sorted[i], sorted[numTeams - 1 - i]]);
+        }
       }
     }
 
