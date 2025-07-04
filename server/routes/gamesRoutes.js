@@ -160,6 +160,32 @@ router.post('/create-knockout-auto', async (req, res) => {
     res.status(500).json({ error: '❌ שגיאה ביצירת שלב נוקאאוט', details: err.message });
   }
 });
+// ✅ עדכון משחק מלא (לעריכה ידנית)
+router.put('/:gameId', async (req, res) => {
+  try {
+    const { teamA, teamB, date, time, location, scoreA, scoreB, goals, cards } = req.body;
+
+    const updated = await Game.findByIdAndUpdate(
+      req.params.gameId,
+      {
+        teamA,
+        teamB,
+        date,
+        time,
+        location,
+        scoreA,
+        scoreB,
+        goals,
+        cards
+      },
+      { new: true }
+    );
+
+    res.json({ message: '✅ המשחק עודכן', game: updated });
+  } catch (err) {
+    res.status(500).json({ error: '❌ שגיאה בעדכון המשחק', details: err.message });
+  }
+});
 
 // ✅ עדכון תוצאה כולל גמר אוטומטי
 router.put('/:gameId', async (req, res) => {
