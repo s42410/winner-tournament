@@ -52,9 +52,7 @@
       border-radius: 12px;
       padding: 15px;
       box-shadow: 2px 2px 8px rgba(0,0,0,0.1);
-      transition: transform 0.2s ease;
       cursor: pointer;
-      position: relative;
     }
     .match-box.knockout {
       background: linear-gradient(145deg, #ffe0b2, #ffcc80);
@@ -105,35 +103,29 @@
       font-weight: bold;
       color: #00796b;
     }
-    #bracketContainer {
-      margin-top: 40px;
-    }
-    .bracket-stage {
+
+    /* 🔵 Bracket עץ */
+    #bracketContainer { margin-top: 40px; overflow-x: auto; }
+    .bracket {
       display: flex;
-      justify-content: center;
-      flex-wrap: wrap;
-      margin-bottom: 30px;
+      justify-content: flex-start;
+      align-items: flex-start;
+      gap: 60px;
     }
-    .bracket-match {
+    .stage {
+      display: flex;
+      flex-direction: column;
+      gap: 30px;
+    }
+    .match {
       background: #fff3e0;
       border: 2px solid #ffb74d;
       border-radius: 8px;
-      padding: 10px 15px;
-      margin: 10px;
+      padding: 10px;
       min-width: 160px;
       box-shadow: 2px 2px 8px rgba(0,0,0,0.1);
-      font-size: 14px;
-      position: relative;
     }
-    .bracket-match span {
-      display: block;
-    }
-    .bracket-connector {
-      width: 2px;
-      background: #ffb74d;
-      height: 30px;
-      margin: auto;
-    }
+
   </style>
 </head>
 <body>
@@ -147,12 +139,14 @@
 
   <div id="scorersContainer" class="section">
     <h2>🥇 מלך שערים</h2>
-    <table>
-      <thead>
-        <tr><th>מקום</th><th>שחקן</th><th>שערים</th></tr>
-      </thead>
-      <tbody id="scorersTableBody"></tbody>
-    </table>
+    <table><thead><tr><th>מקום</th><th>שחקן</th><th>שערים</th></tr></thead>
+    <tbody id="scorersTableBody"></tbody></table>
+  </div>
+
+  <!-- 🔵 Bracket לפני לוח המשחקים -->
+  <div id="bracketContainer" class="section">
+    <h2>🏆 תרשים שלבי נוקאאוט</h2>
+    <div id="bracket" class="bracket"></div>
   </div>
 
   <div id="gamesContainer" class="section">
@@ -160,157 +154,48 @@
     <div id="gamesList" class="matches-grid"></div>
   </div>
 
-  <div id="bracketContainer" class="section">
-    <h2>🏆 תרשים שלבי נוקאאוט</h2>
-    <div id="bracketContent"></div>
-  </div>
-
-  <div class="footer">
-    האתר נבנה על ידי סטיב רבייב | כל הזכויות שמורות ©️
-  </div>
+  <div class="footer">האתר נבנה על ידי סטיב רבייב | כל הזכויות שמורות ©️</div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <script>
     const tournamentId = new URLSearchParams(window.location.search).get('id');
     function goHome() { window.location.href = 'index.html'; }
+    function generatePDF() { html2pdf().from(document.body).save(); }
     function formatDate(dateStr) {
       const date = new Date(dateStr);
       return date.toLocaleDateString('he-IL');
     }
-    function generatePDF() {
-      const element = document.body;
-      const opt = {
-        margin: 0.5,
-        filename: 'tournament-view.pdf',
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2 },
-        jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
-      };
-      html2pdf().from(element).set(opt).save();
-    }
 
     async function loadTournamentData() {
       try {
-        const [tournamentRes, teamsRes, gamesRes] = await Promise.all([
+        const [tRes, tmsRes, gmsRes] = await Promise.all([
           fetch(`/api/tournaments/${tournamentId}`),
           fetch(`/api/teams/${tournamentId}`),
           fetch(`/api/games/by-tournament?tournamentId=${tournamentId}`)
         ]);
-        if (!tournamentRes.ok || !teamsRes.ok || !gamesRes.ok) {
-          throw new Error('בעיה בטעינת הנתונים מהשרת');
-        }
+        if (!tRes.ok || !tmsRes.ok || !gmsRes.ok) throw new Error('בעיה בטעינת הנתונים');
 
-        const tournament = await tournamentRes.json();
-        const teams = await teamsRes.json();
-        const games = await gamesRes.json();
-        document.getElementById('tournamentName').innerText = tournament.name || 'טורניר ללא שם';
-
-        const hasGroups = teams.some(team => team.group);
-        const standingsContainer = document.getElementById('standingsContainer');
-        standingsContainer.innerHTML = '';
-
-        if (hasGroups) {
-          const groups = {};
-          teams.forEach(team => {
-            const group = team.group || 'A';
-            if (!groups[group]) groups[group] = [];
-            groups[group].push(team);
-          });
-          for (const [groupName, groupTeams] of Object.entries(groups)) {
-            standingsContainer.innerHTML += `<div class="section"><h2 class="house-title">📊 דירוג - בית ${groupName}</h2><table>
-              <thead><tr><th>קבוצה</th><th>מש</th><th>נצ</th><th>ת</th><th>ה</th><th>נק'</th></tr></thead>
-              <tbody id="standings-${groupName}"></tbody></table></div>`;
-            const groupGames = games.filter(g =>
-              groupTeams.some(t => t._id === g.teamA?._id) || groupTeams.some(t => t._id === g.teamB?._id));
-            const groupStats = groupTeams.map(team => {
-              const teamGames = groupGames.filter(g => g.teamA?._id === team._id || g.teamB?._id === team._id);
-              let played = teamGames.length, wins = 0, draws = 0, losses = 0, points = 0;
-              teamGames.forEach(g => {
-                const isA = g.teamA?._id === team._id;
-                const gF = isA ? g.scoreA : g.scoreB;
-                const gA = isA ? g.scoreB : g.scoreA;
-                if (gF > gA) { wins++; points += 3; }
-                else if (gF === gA) { draws++; points += 1; }
-                else { losses++; }
-              });
-              return { name: team.name, played, wins, draws, losses, points };
-            });
-            groupStats.sort((a, b) => b.points - a.points);
-            const groupBody = document.getElementById(`standings-${groupName}`);
-            groupStats.forEach(t => {
-              groupBody.innerHTML += `<tr><td>${t.name}</td><td>${t.played}</td><td>${t.wins}</td><td>${t.draws}</td><td>${t.losses}</td><td>${t.points}</td></tr>`;
-            });
-          }
-        } else {
-          standingsContainer.innerHTML += `<div class="section"><h2>📊 טבלת דירוג</h2><table>
-            <thead><tr><th>קבוצה</th><th>מש</th><th>נצ</th><th>ת</th><th>ה</th><th>נק'</th></tr></thead>
-            <tbody id="standingsTable"></tbody></table></div>`;
-          const teamStats = teams.map(team => {
-            const teamGames = games.filter(g => g.teamA?._id === team._id || g.teamB?._id === team._id);
-            let played = teamGames.length, wins = 0, draws = 0, losses = 0, points = 0;
-            teamGames.forEach(g => {
-              const isA = g.teamA?._id === team._id;
-              const gF = isA ? g.scoreA : g.scoreB;
-              const gA = isA ? g.scoreB : g.scoreA;
-              if (gF > gA) { wins++; points += 3; }
-              else if (gF === gA) { draws++; points += 1; }
-              else { losses++; }
-            });
-            return { name: team.name, played, wins, draws, losses, points };
-          });
-          teamStats.sort((a, b) => b.points - a.points);
-          const standingsBody = document.getElementById('standingsTable');
-          teamStats.forEach(t => {
-            standingsBody.innerHTML += `<tr><td>${t.name}</td><td>${t.played}</td><td>${t.wins}</td><td>${t.draws}</td><td>${t.losses}</td><td>${t.points}</td></tr>`;
-          });
-        }
+        const tournament = await tRes.json();
+        const teams = await tmsRes.json();
+        const games = await gmsRes.json();
+        document.getElementById('tournamentName').textContent = tournament.name || 'טורניר ללא שם';
 
         const scorers = {};
         games.forEach(g => {
-          for (const goal of g.goals?.teamA || []) {
-            if (!scorers[goal.scorer]) scorers[goal.scorer] = { name: goal.scorer, goals: 0 };
-            scorers[goal.scorer].goals++;
-          }
-          for (const goal of g.goals?.teamB || []) {
-            if (!scorers[goal.scorer]) scorers[goal.scorer] = { name: goal.scorer, goals: 0 };
-            scorers[goal.scorer].goals++;
-          }
+          for (const goal of g.goals?.teamA || []) scorers[goal.scorer]=(scorers[goal.scorer]||0)+1;
+          for (const goal of g.goals?.teamB || []) scorers[goal.scorer]=(scorers[goal.scorer]||0)+1;
         });
-        const topScorers = Object.values(scorers).sort((a, b) => b.goals - a.goals).slice(0, 5);
         const scorersBody = document.getElementById('scorersTableBody');
-        topScorers.forEach((s, i) => {
-          scorersBody.innerHTML += `<tr><td>${i+1}</td><td>${s.name}</td><td>${s.goals}</td></tr>`;
-        });
-
-        const gamesList = document.getElementById('gamesList');
-        const allGames = [...games].sort((a,b)=>new Date(a.date)-new Date(b.date));
-        allGames.forEach(g => {
-          const isKnockout = !!g.knockoutStage;
-          const stageLabel = isKnockout ? `🏆 ${g.knockoutStage}` : '';
-          const box = document.createElement('div');
-          box.className = 'match-box' + (isKnockout ? ' knockout' : '');
-          box.innerHTML = `${stageLabel}<br>
-            ${g.teamA?.name || '---'} ${g.scoreA ?? '-'} : ${g.scoreB ?? '-'} ${g.teamB?.name || '---'}<br>
-            📅 ${formatDate(g.date)}
-            <div class="details"></div>`;
-          box.onclick = () => {
-            document.querySelectorAll('.details').forEach(d => d.style.display='none');
-            const details = box.querySelector('.details');
-            let html = '';
-            (g.goals?.teamA || []).forEach(goal => { html += `⚽ ${goal.scorer} - דקה ${goal.minute}<br>`; });
-            (g.goals?.teamB || []).forEach(goal => { html += `⚽ ${goal.scorer} - דקה ${goal.minute}<br>`; });
-            (g.cards?.teamA || []).forEach(card => { html += `${card.color==='yellow'?'🟨':'🟥'} ${card.player} - דקה ${card.minute}<br>`; });
-            (g.cards?.teamB || []).forEach(card => { html += `${card.color==='yellow'?'🟨':'🟥'} ${card.player} - דקה ${card.minute}<br>`; });
-            details.innerHTML = html || 'אין אירועים רשומים';
-            details.style.display = 'block';
-          };
-          gamesList.appendChild(box);
-        });
+        Object.entries(scorers).sort((a,b)=>b[1]-a[1]).slice(0,5)
+          .forEach(([name, goals],i)=> {
+            scorersBody.innerHTML += `<tr><td>${i+1}</td><td>${name}</td><td>${goals}</td></tr>`;
+          });
 
         renderBracket(games);
+        renderGamesList(games);
       } catch (err) {
         console.error(err);
-        document.getElementById('error').innerText = '❌ שגיאה בטעינת הנתונים: ' + err.message;
+        document.getElementById('error').textContent = '❌ שגיאה: ' + err.message;
       }
     }
 
@@ -318,30 +203,43 @@
       const stages = ['שמינית גמר','רבע גמר','חצי גמר','גמר'];
       const stageGames = {};
       stages.forEach(s => stageGames[s] = games.filter(g => g.knockoutStage === s));
-      const startStageIndex = stages.findIndex(s => stageGames[s].length > 0);
-      if (startStageIndex === -1) {
-        document.getElementById('bracketContent').innerHTML = '<p>אין משחקי נוקאאוט</p>';
+
+      const startIndex = stages.findIndex(s => stageGames[s].length > 0);
+      if (startIndex === -1) {
+        document.getElementById('bracket').innerHTML = '<p>אין משחקי נוקאאוט</p>';
         return;
       }
+
       let html = '';
-      for (let i = startStageIndex; i < stages.length; i++) {
-        const stage = stages[i];
-        const matches = stageGames[stage];
-        if (matches.length === 0) continue;
-        html += `<h3>${stage}</h3><div class="bracket-stage">`;
-        matches.forEach(m => {
-          const score = (m.scoreA != null && m.scoreB != null && (m.scoreA !== 0 || m.scoreB !== 0)) ? `${m.scoreA} : ${m.scoreB}` : '';
-          html += `<div class="bracket-match">
-          <span>${m.teamA?.name || '---'}</span>
-          <span>${score}</span>
-          <span>${m.teamB?.name || '---'}</span></div>`;
+      for (let i=startIndex; i<stages.length; i++) {
+        html += `<div class="stage"><h3>${stages[i]}</h3>`;
+        stageGames[stages[i]].forEach(m => {
+          const score = (m.scoreA!=null && m.scoreB!=null && (m.scoreA!==0 || m.scoreB!==0))
+            ? `${m.scoreA} : ${m.scoreB}` : '';
+          html += `<div class="match">
+            <span>${m.teamA?.name || '---'}</span>
+            <span>${score}</span>
+            <span>${m.teamB?.name || '---'}</span>
+          </div>`;
         });
         html += `</div>`;
-        if (i < stages.length - 1) {
-          html += `<div class="bracket-connector"></div>`;
-        }
       }
-      document.getElementById('bracketContent').innerHTML = html;
+      document.getElementById('bracket').innerHTML = html;
+    }
+
+    function renderGamesList(games) {
+      const gamesList = document.getElementById('gamesList');
+      gamesList.innerHTML = '';
+      games.forEach(g => {
+        const box = document.createElement('div');
+        box.className = 'match-box' + (g.knockoutStage ? ' knockout' : '');
+        box.innerHTML = `
+          ${g.knockoutStage ? `🏆 ${g.knockoutStage}<br>` : ''}
+          ${g.teamA?.name || '---'} ${g.scoreA ?? '-'} : ${g.scoreB ?? '-'} ${g.teamB?.name || '---'}<br>
+          📅 ${formatDate(g.date)}
+        `;
+        gamesList.appendChild(box);
+      });
     }
 
     loadTournamentData();
