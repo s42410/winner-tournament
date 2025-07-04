@@ -68,17 +68,6 @@
       font-size: 14px;
       display: none;
     }
-    .knockout-stage {
-      margin: 30px 0;
-    }
-    .knockout-stage h3 {
-      background: #00796b;
-      color: #fff;
-      display: inline-block;
-      padding: 6px 15px;
-      border-radius: 20px;
-      margin-bottom: 10px;
-    }
     .error { color: red; font-weight: bold; }
     .footer {
       margin-top: 40px;
@@ -95,8 +84,22 @@
       padding: 10px 18px;
       font-size: 16px;
       cursor: pointer;
-      z-index: 10;
+      z-index: 20;
     }
+    .export-pdf-button {
+      position: fixed;
+      top: 15px;
+      right: 15px;
+      background: #4caf50;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 18px;
+      font-size: 16px;
+      cursor: pointer;
+      z-index: 20;
+    }
+    .export-pdf-button:hover { background: #388e3c; }
     .house-title {
       margin-top: 20px;
       font-weight: bold;
@@ -106,6 +109,7 @@
 </head>
 <body>
   <button class="back-button" onclick="history.back()">🔙 חזור</button>
+  <button class="export-pdf-button" onclick="generatePDF()">📄 יצוא PDF</button>
   <img src="logo.png" id="logo" onclick="goHome()" />
   <h1 id="tournamentName">טעינת טורניר...</h1>
   <div id="error" class="error"></div>
@@ -131,12 +135,24 @@
     האתר נבנה על ידי סטיב רבייב | כל הזכויות שמורות ©️
   </div>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <script>
     const tournamentId = new URLSearchParams(window.location.search).get('id');
     function goHome() { window.location.href = 'index.html'; }
     function formatDate(dateStr) {
       const date = new Date(dateStr);
       return date.toLocaleDateString('he-IL');
+    }
+    function generatePDF() {
+      const element = document.body;
+      const opt = {
+        margin: 0.5,
+        filename: 'tournament-view.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+      };
+      html2pdf().from(element).set(opt).save();
     }
 
     async function loadTournamentData() {
@@ -163,7 +179,7 @@
         if (hasHouses) {
           const houses = {};
           teams.forEach(team => {
-            const house = team.house || 'יפורסמו בהמשך - בסיום השלב הראשוני';
+            const house = team.house || 'יפורסמו בהמשך בסיום השלבים הראשויים של הטורניר';
             if (!houses[house]) houses[house] = [];
             houses[house].push(team);
           });
