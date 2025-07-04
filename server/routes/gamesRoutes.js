@@ -63,7 +63,7 @@ router.post('/', async (req, res) => {
   }
 });
 
-// ✅ יצירת שלב נוקאאוט אוטומטי לפי דירוג (ליגה/בתים)
+// ✅ יצירת שלב נוקאאוט אוטומטי עם שלב נבחר ומספר קבוצות
 router.post('/create-knockout-auto', async (req, res) => {
   try {
     const { tournamentId, stage, numTeams } = req.body;
@@ -98,25 +98,23 @@ router.post('/create-knockout-auto', async (req, res) => {
         }
       }
 
-      const groupKeys = Object.keys(groups);
-      if (groupKeys.length < 2) {
-        return res.status(400).json({ error: 'צריך לפחות שני בתים' });
-      }
-
-      for (const g of groupKeys) {
+      for (const g in groups) {
         groups[g].sort((a, b) => b.points - a.points);
       }
 
-      const g1 = groups[groupKeys[0]];
-      const g2 = groups[groupKeys[1]];
-
-      if (g1.length < 2 || g2.length < 2) {
-        return res.status(400).json({ error: 'לא מספיק קבוצות בכל בית' });
+      // דוגמה: לקחת מקום ראשון מבית A מול מקום שני מבית B וכן הלאה
+      const keys = Object.keys(groups);
+      if (keys.length < 2) {
+        return res.status(400).json({ error: 'צריך לפחות שני בתים ליצירת שלב בתים' });
       }
 
-      pairs.push([g1[0].team, g2[1].team]);
-      pairs.push([g2[0].team, g1[1].team]);
+      const A = groups[keys[0]];
+      const B = groups[keys[1]];
+      pairs.push([A[0].team, B[1].team]);
+      pairs.push([B[0].team, A[1].team]);
+
     } else {
+      // דירוג כללי לליגה
       const stats = {};
       allTeams.forEach(t => stats[t._id] = { team: t, points: 0 });
 
@@ -133,7 +131,7 @@ router.post('/create-knockout-auto', async (req, res) => {
         }
       }
 
-      const sorted = Object.values(stats).sort((a, b) => b.points - a.points).map(s => s.team);
+      const sorted = Object.values(stats).sort((a,b)=>b.points - a.points).map(s => s.team);
       for (let i = 0; i < numTeams / 2; i++) {
         pairs.push([sorted[i], sorted[numTeams - 1 - i]]);
       }
@@ -160,34 +158,8 @@ router.post('/create-knockout-auto', async (req, res) => {
     res.status(500).json({ error: '❌ שגיאה ביצירת שלב נוקאאוט', details: err.message });
   }
 });
-// ✅ עדכון משחק מלא (לעריכה ידנית)
-router.put('/:gameId', async (req, res) => {
-  try {
-    const { teamA, teamB, date, time, location, scoreA, scoreB, goals, cards } = req.body;
 
-    const updated = await Game.findByIdAndUpdate(
-      req.params.gameId,
-      {
-        teamA,
-        teamB,
-        date,
-        time,
-        location,
-        scoreA,
-        scoreB,
-        goals,
-        cards
-      },
-      { new: true }
-    );
-
-    res.json({ message: '✅ המשחק עודכן', game: updated });
-  } catch (err) {
-    res.status(500).json({ error: '❌ שגיאה בעדכון המשחק', details: err.message });
-  }
-});
-
-// ✅ עדכון תוצאה כולל גמר אוטומטי
+// ✅ עדכון משחק מלא (כולל תוצאה וגמר אוטומטי)
 router.put('/:gameId', async (req, res) => {
   try {
     const { scoreA, scoreB, goals, cards } = req.body;
@@ -249,13 +221,14 @@ router.delete('/deleteAll/:tournamentId', async (req, res) => {
   try {
     const result = await Game.deleteMany({
       tournamentId: req.params.tournamentId,
-      knockoutStage: { $ne: null }  // מוחק רק משחקים שיש להם שלב נוקאאוט
+      knockoutStage: { $ne: null }
     });
     res.json({ message: `🗑️ נמחקו ${result.deletedCount} משחקי נוקאאוט בהצלחה` });
   } catch (err) {
     res.status(500).json({ error: '❌ שגיאה במחיקת שלבי הנוקאאוט', details: err.message });
   }
 });
+
 // ✅ מחיקת כל משחקי שלב הבתים וגם הליגה
 router.delete('/group-stage/:tournamentId', async (req, res) => {
   try {
@@ -265,6 +238,5 @@ router.delete('/group-stage/:tournamentId', async (req, res) => {
     res.status(500).json({ error: '❌ שגיאה במחיקת המשחקים', details: err.message });
   }
 });
-
 
 module.exports = router;
