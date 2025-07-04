@@ -105,118 +105,39 @@
       font-weight: bold;
       color: #00796b;
     }
-    #bracketContainer {
-      margin-top: 40px;
-    }
-    .bracket-stage {
+
+    .bracket-tree {
       display: flex;
       justify-content: center;
-      flex-wrap: wrap;
-      margin-bottom: 30px;
+      align-items: center;
+      overflow-x: auto;
+      gap: 40px;
+      margin-top: 40px;
     }
-    .bracket-match {
+    .bracket-column {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 40px;
+    }
+    .bracket-node {
       background: #fff3e0;
       border: 2px solid #ffb74d;
       border-radius: 8px;
       padding: 10px 15px;
-      margin: 10px;
-      min-width: 160px;
-      box-shadow: 2px 2px 8px rgba(0,0,0,0.1);
-      font-size: 14px;
+      min-width: 120px;
+      text-align: center;
       position: relative;
     }
-    .bracket-match span {
-      display: block;
-    }
-    .bracket-connector {
+    .bracket-connector-v {
       width: 2px;
+      height: 40px;
       background: #ffb74d;
-      height: 30px;
-      margin: auto;
     }
-    .bracket {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 40px;
-  overflow-x: auto;
-}
-.bracket-column {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-.bracket-center {
-  font-size: 50px;
-}
-.bracket-tree {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  overflow-x: auto;
-  gap: 40px;
-  margin-top: 40px;
-}
-
-.bracket-column {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 40px;
-}
-
-.bracket-node {
-  background: #fff3e0;
-  border: 2px solid #ffb74d;
-  border-radius: 8px;
-  padding: 10px 15px;
-  min-width: 120px;
-  text-align: center;
-  position: relative;
-}
-
-.bracket-connector-v {
-  width: 2px;
-  height: 40px;
-  background: #ffb74d;
-}
-
-.bracket-center {
-  font-size: 50px;
-  margin: 0 20px;
-}
-.bracket-stage {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 40px;
-}
-
-.bracket-match {
-  background: #fff3e0;
-  border: 2px solid #ffb74d;
-  border-radius: 8px;
-  padding: 10px 15px;
-  min-width: 120px;
-  text-align: center;
-  position: relative;
-}
-
-.bracket-match::after {
-  content: '';
-  position: absolute;
-  width: 40px;
-  height: 2px;
-  background: #ffb74d;
-  right: -40px;
-  top: 50%;
-}
-
-.bracket-stage:last-child .bracket-match::after {
-  display: none;
-}
-
-
+    .bracket-center {
+      font-size: 50px;
+      margin: 0 20px;
+    }
   </style>
 </head>
 <body>
@@ -231,29 +152,24 @@
   <div id="scorersContainer" class="section">
     <h2>🥇 מלך שערים</h2>
     <table>
-      <thead>
-        <tr><th>מקום</th><th>שחקן</th><th>שערים</th></tr>
-      </thead>
+      <thead><tr><th>מקום</th><th>שחקן</th><th>שערים</th></tr></thead>
       <tbody id="scorersTableBody"></tbody>
     </table>
   </div>
 
-<div id="bracketContainer" class="section">
-  <h2>🏆 תרשים שלבי נוקאאוט</h2>
-  <div id="bracketTree" class="bracket-tree">
-    <div id="leftSide" class="bracket-column"></div>
-    <div class="bracket-center">🏆</div>
-    <div id="rightSide" class="bracket-column"></div>
+  <div id="bracketContainer" class="section">
+    <h2>🏆 תרשים שלבי נוקאאוט</h2>
+    <div id="bracketTree" class="bracket-tree">
+      <div id="leftSide" class="bracket-column"></div>
+      <div class="bracket-center">🏆</div>
+      <div id="rightSide" class="bracket-column"></div>
+    </div>
   </div>
-</div>
-
-
 
   <div id="gamesContainer" class="section">
     <h2>📅 לוח משחקים כולל נוקאאוט</h2>
     <div id="gamesList" class="matches-grid"></div>
   </div>
-
 
   <div class="footer">
     האתר נבנה על ידי סטיב רבייב | כל הזכויות שמורות ©️
@@ -269,14 +185,7 @@
     }
     function generatePDF() {
       const element = document.body;
-      const opt = {
-        margin: 0.5,
-        filename: 'tournament-view.pdf',
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2 },
-        jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
-      };
-      html2pdf().from(element).set(opt).save();
+      html2pdf().from(element).save();
     }
 
     async function loadTournamentData() {
@@ -295,6 +204,7 @@
         const games = await gamesRes.json();
         document.getElementById('tournamentName').innerText = tournament.name || 'טורניר ללא שם';
 
+        // דירוג בתים
         const hasGroups = teams.some(team => team.group);
         const standingsContainer = document.getElementById('standingsContainer');
         standingsContainer.innerHTML = '';
@@ -331,30 +241,9 @@
               groupBody.innerHTML += `<tr><td>${t.name}</td><td>${t.played}</td><td>${t.wins}</td><td>${t.draws}</td><td>${t.losses}</td><td>${t.points}</td></tr>`;
             });
           }
-        } else {
-          standingsContainer.innerHTML += `<div class="section"><h2>📊 טבלת דירוג</h2><table>
-            <thead><tr><th>קבוצה</th><th>מש</th><th>נצ</th><th>ת</th><th>ה</th><th>נק'</th></tr></thead>
-            <tbody id="standingsTable"></tbody></table></div>`;
-          const teamStats = teams.map(team => {
-            const teamGames = games.filter(g => g.teamA?._id === team._id || g.teamB?._id === team._id);
-            let played = teamGames.length, wins = 0, draws = 0, losses = 0, points = 0;
-            teamGames.forEach(g => {
-              const isA = g.teamA?._id === team._id;
-              const gF = isA ? g.scoreA : g.scoreB;
-              const gA = isA ? g.scoreB : g.scoreA;
-              if (gF > gA) { wins++; points += 3; }
-              else if (gF === gA) { draws++; points += 1; }
-              else { losses++; }
-            });
-            return { name: team.name, played, wins, draws, losses, points };
-          });
-          teamStats.sort((a, b) => b.points - a.points);
-          const standingsBody = document.getElementById('standingsTable');
-          teamStats.forEach(t => {
-            standingsBody.innerHTML += `<tr><td>${t.name}</td><td>${t.played}</td><td>${t.wins}</td><td>${t.draws}</td><td>${t.losses}</td><td>${t.points}</td></tr>`;
-          });
         }
 
+        // מלך שערים
         const scorers = {};
         games.forEach(g => {
           for (const goal of g.goals?.teamA || []) {
@@ -372,14 +261,12 @@
           scorersBody.innerHTML += `<tr><td>${i+1}</td><td>${s.name}</td><td>${s.goals}</td></tr>`;
         });
 
+        // לוח משחקים
         const gamesList = document.getElementById('gamesList');
-        const allGames = [...games].sort((a,b)=>new Date(a.date)-new Date(b.date));
-        allGames.forEach(g => {
-          const isKnockout = !!g.knockoutStage;
-          const stageLabel = isKnockout ? `🏆 ${g.knockoutStage}` : '';
+        games.forEach(g => {
           const box = document.createElement('div');
-          box.className = 'match-box' + (isKnockout ? ' knockout' : '');
-          box.innerHTML = `${stageLabel}<br>
+          box.className = 'match-box' + (g.knockoutStage ? ' knockout' : '');
+          box.innerHTML = `${g.knockoutStage ? `🏆 ${g.knockoutStage}<br>` : ''}
             ${g.teamA?.name || '---'} ${g.scoreA ?? '-'} : ${g.scoreB ?? '-'} ${g.teamB?.name || '---'}<br>
             📅 ${formatDate(g.date)}
             <div class="details"></div>`;
@@ -389,8 +276,6 @@
             let html = '';
             (g.goals?.teamA || []).forEach(goal => { html += `⚽ ${goal.scorer} - דקה ${goal.minute}<br>`; });
             (g.goals?.teamB || []).forEach(goal => { html += `⚽ ${goal.scorer} - דקה ${goal.minute}<br>`; });
-            (g.cards?.teamA || []).forEach(card => { html += `${card.color==='yellow'?'🟨':'🟥'} ${card.player} - דקה ${card.minute}<br>`; });
-            (g.cards?.teamB || []).forEach(card => { html += `${card.color==='yellow'?'🟨':'🟥'} ${card.player} - דקה ${card.minute}<br>`; });
             details.innerHTML = html || 'אין אירועים רשומים';
             details.style.display = 'block';
           };
@@ -400,41 +285,30 @@
         renderBracket(games);
       } catch (err) {
         console.error(err);
-        document.getElementById('error').innerText = '❌ שגיאה בטעינת הנתונים: ' + err.message;
+        document.getElementById('error').innerText = '❌ שגיאה: ' + err.message;
       }
     }
 
-  function renderBracket(games) {
-  const stages = ['שמינית גמר', 'רבע גמר', 'חצי גמר', 'גמר'];
-  const sideL = { 'שמינית גמר': [], 'רבע גמר': [], 'חצי גמר': [], 'גמר': [] };
-  const sideR = { 'שמינית גמר': [], 'רבע גמר': [], 'חצי גמר': [], 'גמר': [] };
-
-  games.forEach(g => {
-    if (g.side === 'L') sideL[g.knockoutStage]?.push(g);
-    else if (g.side === 'R') sideR[g.knockoutStage]?.push(g);
-  });
-
-  const makeSideHTML = (side) => {
-    let html = '';
-    stages.forEach(stage => {
-      html += `<div class="bracket-stage"><h4>${stage}</h4>`;
-      const matches = side[stage];
-      matches.forEach(m => {
-        const score = (m.scoreA || m.scoreB) ? `${m.scoreA} : ${m.scoreB}` : '';
-        html += `<div class="bracket-match">
-          ${m.teamA?.name || '---'}<br>${score}<br>${m.teamB?.name || '---'}
-        </div>`;
+    function renderBracket(games) {
+      const stages = ['שמינית גמר', 'רבע גמר', 'חצי גמר', 'גמר'];
+      const sideL = {}, sideR = {};
+      stages.forEach(s => { sideL[s] = []; sideR[s] = []; });
+      games.forEach(g => {
+        if (g.side === 'L') sideL[g.knockoutStage]?.push(g);
+        if (g.side === 'R') sideR[g.knockoutStage]?.push(g);
       });
-      html += `</div>`;
-    });
-    return html;
-  };
 
-  document.getElementById('leftSide').innerHTML = makeSideHTML(sideL);
-  document.getElementById('rightSide').innerHTML = makeSideHTML(sideR);
-}
-
-
+      const makeSideHTML = side => {
+        return stages.map(stage => side[stage].map(m => `
+          <div class="bracket-node">
+            ${m.teamA?.name || '---'}<br>${m.scoreA ?? '-'}:${m.scoreB ?? '-'}<br>${m.teamB?.name || '---'}
+            <div class="bracket-connector-v"></div>
+          </div>
+        `).join('')).join('');
+      };
+      document.getElementById('leftSide').innerHTML = makeSideHTML(sideL);
+      document.getElementById('rightSide').innerHTML = makeSideHTML(sideR);
+    }
 
     loadTournamentData();
   </script>
