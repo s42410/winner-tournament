@@ -230,14 +230,15 @@ router.delete('/deleteAll/:tournamentId', async (req, res) => {
     res.status(500).json({ error: '❌ שגיאה במחיקת שלבי הנוקאאוט', details: err.message });
   }
 });
-// ✅ מחיקת כל משחקי שלב הבתים בלבד
+// ✅ מחיקת כל משחקי שלב הבתים וגם הליגה
 router.delete('/group-stage/:tournamentId', async (req, res) => {
   try {
-    await Game.deleteMany({ tournamentId: req.params.tournamentId, location: { $regex: '^בית' } });
-    res.json({ message: '✅ משחקי שלב הבתים נמחקו בהצלחה' });
+    await Game.deleteMany({ tournamentId: req.params.tournamentId });
+    res.json({ message: '✅ כל משחקי שלב הבתים והליגה נמחקו בהצלחה' });
   } catch (err) {
-    res.status(500).json({ error: '❌ שגיאה במחיקת משחקי שלב הבתים', details: err.message });
+    res.status(500).json({ error: '❌ שגיאה במחיקת המשחקים', details: err.message });
   }
 });
+
 
 module.exports = router;

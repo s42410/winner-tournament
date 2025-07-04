@@ -392,10 +392,11 @@ async function deleteGame(gameId) {
 }
 
 async function deleteAllGroupStageGames() {
-  if (!confirm('למחוק את כל משחקי שלב הבתים?')) return;
-  await fetch(`/api/games/deleteGroupStage/${tournamentId}`, { method: 'DELETE' });
+  if (!confirm('למחוק את כל משחקי שלב הבתים והליגה?')) return;
+  await fetch(`/api/games/group-stage/${tournamentId}`, { method: 'DELETE' });
   fetchGames();
 }
+
 
 function editGame(gameId) {
   window.location.href = `/admin-edit-game.html?gameId=${gameId}`;
