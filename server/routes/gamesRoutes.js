@@ -230,14 +230,13 @@ router.delete('/deleteAll/:tournamentId', async (req, res) => {
     res.status(500).json({ error: '❌ שגיאה במחיקת שלבי הנוקאאוט', details: err.message });
   }
 });
-
-// ✅ מחיקת כל המשחקים בטורניר
-router.delete('/deleteAll/:tournamentId', async (req, res) => {
+// ✅ מחיקת כל משחקי שלב הבתים בלבד
+router.delete('/group-stage/:tournamentId', async (req, res) => {
   try {
-    await Game.deleteMany({ tournamentId: req.params.tournamentId });
-    res.json({ message: '✅ כל המשחקים נמחקו בהצלחה' });
+    await Game.deleteMany({ tournamentId: req.params.tournamentId, location: { $regex: '^בית' } });
+    res.json({ message: '✅ משחקי שלב הבתים נמחקו בהצלחה' });
   } catch (err) {
-    res.status(500).json({ error: '❌ שגיאה במחיקת כל המשחקים', details: err.message });
+    res.status(500).json({ error: '❌ שגיאה במחיקת משחקי שלב הבתים', details: err.message });
   }
 });
 
