@@ -163,7 +163,7 @@
       <button onclick="showManual()">✍️ יצירה ידנית / עריכה</button>
       <button onclick="autoGenerateGames()">⚙️ יצירה אוטומטית</button>
       <button onclick="autoGenerateGroupStage()">🏆 יצירה אוטומטית שלב בתים</button>
-      <button onclick="deleteAllGames()">🗑️ מחק את כל המשחקים</button>
+      <button onclick="deleteAllGroupStageGames()">🗑️ מחק את כל משחקי שלב הבתים</button>
     </div>
 
     <div id="manualForm" class="form-section">
@@ -391,9 +391,9 @@ async function deleteGame(gameId) {
   fetchGames();
 }
 
-async function deleteAllGames() {
-  if (!confirm('למחוק את כל המשחקים?')) return;
-  await fetch(`/api/games/deleteAll/${tournamentId}`, { method: 'DELETE' });
+async function deleteAllGroupStageGames() {
+  if (!confirm('למחוק את כל משחקי שלב הבתים?')) return;
+  await fetch(`/api/games/deleteGroupStage/${tournamentId}`, { method: 'DELETE' });
   fetchGames();
 }
 
