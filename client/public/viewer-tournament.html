@@ -1,284 +1,71 @@
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>📊 מעקב טורניר</title>
- <style>
-  body {
-    background: linear-gradient(to right, #e0f7fa, #80deea);
-    font-family: 'Segoe UI', sans-serif;
-    text-align: center;
-    padding: 30px;
-    color: #333;
-  }
-
-  #logo {
-    width: 220px;
-    cursor: pointer;
-    margin-bottom: 20px;
-  }
-
-  h1, h2, h3 {
-    color: #00796b;
-    margin: 10px 0;
-  }
-
-  .section {
-    background: #ffffffdd;
-    padding: 20px;
-    border-radius: 12px;
-    margin: 20px auto;
-    width: 95%;
-    max-width: 1100px;
-    box-shadow: 0 0 15px rgba(0,0,0,0.15);
-  }
-
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 10px;
-  }
-
-  th, td {
-    border: 1px solid #bbb;
-    padding: 10px;
-    font-size: 15px;
-  }
-
-  th { background-color: #b2ebf2; }
-
-  .matches-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 20px;
-    margin-top: 20px;
-  }
-
-  .match-box {
-    background: linear-gradient(145deg, #f1f8e9, #dcedc8);
-    border-radius: 12px;
-    padding: 15px;
-    box-shadow: 2px 2px 8px rgba(0,0,0,0.1);
-    transition: transform 0.2s ease;
-    cursor: pointer;
-    position: relative;
-  }
-
-  .match-box.knockout {
-    background: linear-gradient(145deg, #ffe0b2, #ffcc80);
-  }
-
-  .match-box:hover { transform: translateY(-5px); }
-
-  .details {
-    background: #f9fbe7;
-    border-top: 1px solid #cddc39;
-    margin-top: 10px;
-    padding: 10px;
-    font-size: 14px;
-    display: none;
-  }
-
-  .error { color: red; font-weight: bold; }
-
-  .footer {
-    margin-top: 40px;
-    font-size: 14px;
-    color: #555;
-  }
-
-  .back-button {
-    position: fixed;
-    top: 15px;
-    left: 15px;
-    background: #ffcc80;
-    border: none;
-    border-radius: 8px;
-    padding: 10px 18px;
-    font-size: 16px;
-    cursor: pointer;
-    z-index: 20;
-  }
-
-  .export-pdf-button {
-    position: fixed;
-    top: 15px;
-    right: 15px;
-    background: #4caf50;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    padding: 10px 18px;
-    font-size: 16px;
-    cursor: pointer;
-    z-index: 20;
-  }
-
-  .export-pdf-button:hover { background: #388e3c; }
-
-  .house-title {
-    margin-top: 20px;
-    font-weight: bold;
-    color: #00796b;
-  }
-
-  #bracketContainer {
-    margin-top: 40px;
-  }
-
-
+  <style>
     body {
-      background: radial-gradient(circle at center, #000428, #004e92);
-      font-family: Arial, sans-serif;
-      color: #fff;
+      background: linear-gradient(to right, #e0f7fa, #80deea);
+      font-family: 'Segoe UI', sans-serif;
       text-align: center;
-      padding: 40px;
+      padding: 30px;
+      color: #333;
     }
-
-    .bracket {
-      display: flex;
-      flex-direction: row-reverse;
-      justify-content: center;
-      gap: 50px;
+    #logo { width: 220px; cursor: pointer; margin-bottom: 20px; }
+    h1, h2, h3 { color: #00796b; margin: 10px 0; }
+    .section {
+      background: #ffffffdd;
+      padding: 20px;
+      border-radius: 12px;
+      margin: 20px auto;
+      width: 95%;
+      max-width: 1100px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.15);
     }
-
-    .round {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      gap: 50px;
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { border: 1px solid #bbb; padding: 10px; font-size: 15px; }
+    th { background-color: #b2ebf2; }
+    .matches-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+    .match-box {
+      background: linear-gradient(145deg, #f1f8e9, #dcedc8);
+      border-radius: 12px;
+      padding: 15px;
+      box-shadow: 2px 2px 8px rgba(0,0,0,0.1);
+      transition: transform 0.2s ease;
+      cursor: pointer;
       position: relative;
     }
-
-    .match {
-      background: #fff3e0;
-      color: #000;
-      border: 2px solid #ffb74d;
-      border-radius: 8px;
-      padding: 10px 20px;
-      min-width: 140px;
-      text-align: center;
-      position: relative;
-    }
-
-    /* קווים */
-    .match::after {
-      content: "";
-      position: absolute;
-      width: 30px;
-      height: 2px;
-      background: #1e90ff;
-      top: 50%;
-      transform: translateY(-50%);
-    }
-
-    .round:not(:last-child) .match::after {
-      right: -30px; /* ב-RTR מתחבר משמאל לימין */
-    }
-
-    .round:last-child .match::after {
+    .match-box.knockout { background: linear-gradient(145deg, #ffe0b2, #ffcc80); }
+    .match-box:hover { transform: translateY(-5px); }
+    .details {
+      background: #f9fbe7;
+      border-top: 1px solid #cddc39;
+      margin-top: 10px;
+      padding: 10px;
+      font-size: 14px;
       display: none;
     }
-
-    /* קווים אנכיים */
-    .round:not(:last-child)::before {
-      content: "";
-      position: absolute;
-      right: -30px;
-      top: 0;
-      bottom: 0;
-      width: 2px;
-      background: transparent;
+    .error { color: red; font-weight: bold; }
+    .footer { margin-top: 40px; font-size: 14px; color: #555; }
+    .back-button, .export-pdf-button {
+      position: fixed; top: 15px; padding: 10px 18px;
+      border: none; border-radius: 8px; font-size: 16px; cursor: pointer; z-index: 20;
     }
-
-    .connector {
-      position: absolute;
-      right: -30px;
-      width: 30px;
-      height: 50%;
-      border-right: 2px solid #1e90ff;
-    }
-
-    .connector.top {
-      top: 50%;
-      border-bottom: 2px solid #1e90ff;
-    }
-
-    .connector.bottom {
-      bottom: 50%;
-      border-top: 2px solid #1e90ff;
-    }
-
-    .round:last-child {
-      justify-content: center;
-    }
-
-    .final {
-      font-size: 30px;
-    }
-
-    .trophy {
-      font-size: 40px;
-      margin: 20px 0;
-    }
+    .back-button { left: 15px; background: #ffcc80; }
+    .export-pdf-button { right: 15px; background: #4caf50; color: white; }
+    .export-pdf-button:hover { background: #388e3c; }
+    .house-title { margin-top: 20px; font-weight: bold; color: #00796b; }
+    #bracketContainer { margin-top: 50px; overflow-x: auto; }
+    #bracketContainer svg { background: radial-gradient(circle at center, #000428, #004e92); border-radius: 15px; }
+    #bracketContainer text { font-family: Arial, sans-serif; font-weight: bold; }
+    #bracketContainer line { stroke: #1e90ff; stroke-width: 2; }
   </style>
-</head>
-<body>
-
-  <h1>🏆 ברקט טורניר</h1>
-
-  <div class="bracket">
-    <!-- שלב שמינית גמר -->
-    <div class="round">
-      <div class="match">
-        ראשון לציון<br>נס ציונה
-        <div class="connector top"></div>
-      </div>
-      <div class="match">
-        בת ים<br>חולון
-        <div class="connector bottom"></div>
-      </div>
-      <div class="match">
-        כפר סבא<br>הרצליה
-        <div class="connector top"></div>
-      </div>
-      <div class="match">
-        תל אביב<br>פתח תקווה
-        <div class="connector bottom"></div>
-      </div>
-    </div>
-
-    <!-- רבע גמר -->
-    <div class="round">
-      <div class="match">
-        מנצחת 1<br>מנצחת 2
-        <div class="connector top"></div>
-      </div>
-      <div class="match">
-        מנצחת 3<br>מנצחת 4
-        <div class="connector bottom"></div>
-      </div>
-    </div>
-
-    <!-- חצי גמר -->
-    <div class="round">
-      <div class="match">
-        מנצחת רבע 1<br>מנצחת רבע 2
-        <div class="connector"></div>
-      </div>
-    </div>
-
-    <!-- גמר -->
-    <div class="round">
-      <div class="trophy">🏆</div>
-      <div class="match final">
-        גמר
-      </div>
-    </div>
-  </div>
-
-
 </head>
 <body>
   <button class="back-button" onclick="history.back()">🔙 חזור</button>
@@ -286,51 +73,25 @@
   <img src="logo.png" id="logo" onclick="goHome()" />
   <h1 id="tournamentName">טעינת טורניר...</h1>
   <div id="error" class="error"></div>
-
   <div id="standingsContainer"></div>
-
   <div id="scorersContainer" class="section">
     <h2>🥇 מלך שערים</h2>
-    <table>
-      <thead>
-        <tr><th>מקום</th><th>שחקן</th><th>שערים</th></tr>
-      </thead>
-      <tbody id="scorersTableBody"></tbody>
-    </table>
+    <table><thead><tr><th>מקום</th><th>שחקן</th><th>שערים</th></tr></thead><tbody id="scorersTableBody"></tbody></table>
   </div>
-
-<div id="bracketContainer"></div>
-
-
+  <div id="bracketContainer"></div>
   <div id="gamesContainer" class="section">
     <h2>📅 לוח משחקים כולל נוקאאוט</h2>
     <div id="gamesList" class="matches-grid"></div>
   </div>
-
-
-  <div class="footer">
-    האתר נבנה על ידי סטיב רבייב | כל הזכויות שמורות ©️
-  </div>
-
+  <div class="footer">האתר נבנה על ידי סטיב רבייב | כל הזכויות שמורות ©️</div>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <script>
     const tournamentId = new URLSearchParams(window.location.search).get('id');
     function goHome() { window.location.href = 'index.html'; }
     function formatDate(dateStr) {
-      const date = new Date(dateStr);
-      return date.toLocaleDateString('he-IL');
+      const date = new Date(dateStr); return date.toLocaleDateString('he-IL');
     }
-    function generatePDF() {
-      const element = document.body;
-      const opt = {
-        margin: 0.5,
-        filename: 'tournament-view.pdf',
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2 },
-        jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
-      };
-      html2pdf().from(element).set(opt).save();
-    }
+    function generatePDF() { html2pdf().from(document.body).save('tournament-view.pdf'); }
 
     async function loadTournamentData() {
       try {
@@ -339,18 +100,17 @@
           fetch(`/api/teams/${tournamentId}`),
           fetch(`/api/games/by-tournament?tournamentId=${tournamentId}`)
         ]);
-        if (!tournamentRes.ok || !teamsRes.ok || !gamesRes.ok) {
-          throw new Error('בעיה בטעינת הנתונים מהשרת');
-        }
+        if (!tournamentRes.ok || !teamsRes.ok || !gamesRes.ok) throw new Error('בעיה בטעינת הנתונים מהשרת');
 
         const tournament = await tournamentRes.json();
         const teams = await teamsRes.json();
         const games = await gamesRes.json();
         document.getElementById('tournamentName').innerText = tournament.name || 'טורניר ללא שם';
 
-        const hasGroups = teams.some(team => team.group);
         const standingsContainer = document.getElementById('standingsContainer');
         standingsContainer.innerHTML = '';
+
+        const hasGroups = teams.some(team => team.group);
 
         if (hasGroups) {
           const groups = {};
@@ -370,80 +130,45 @@
               let played = teamGames.length, wins = 0, draws = 0, losses = 0, points = 0;
               teamGames.forEach(g => {
                 const isA = g.teamA?._id === team._id;
-                const gF = isA ? g.scoreA : g.scoreB;
-                const gA = isA ? g.scoreB : g.scoreA;
+                const gF = isA ? g.scoreA : g.scoreB, gA = isA ? g.scoreB : g.scoreA;
                 if (gF > gA) { wins++; points += 3; }
                 else if (gF === gA) { draws++; points += 1; }
                 else { losses++; }
               });
               return { name: team.name, played, wins, draws, losses, points };
-            });
-            groupStats.sort((a, b) => b.points - a.points);
+            }).sort((a,b)=>b.points-a.points);
             const groupBody = document.getElementById(`standings-${groupName}`);
             groupStats.forEach(t => {
               groupBody.innerHTML += `<tr><td>${t.name}</td><td>${t.played}</td><td>${t.wins}</td><td>${t.draws}</td><td>${t.losses}</td><td>${t.points}</td></tr>`;
             });
           }
-        } else {
-          standingsContainer.innerHTML += `<div class="section"><h2>📊 טבלת דירוג</h2><table>
-            <thead><tr><th>קבוצה</th><th>מש</th><th>נצ</th><th>ת</th><th>ה</th><th>נק'</th></tr></thead>
-            <tbody id="standingsTable"></tbody></table></div>`;
-          const teamStats = teams.map(team => {
-            const teamGames = games.filter(g => g.teamA?._id === team._id || g.teamB?._id === team._id);
-            let played = teamGames.length, wins = 0, draws = 0, losses = 0, points = 0;
-            teamGames.forEach(g => {
-              const isA = g.teamA?._id === team._id;
-              const gF = isA ? g.scoreA : g.scoreB;
-              const gA = isA ? g.scoreB : g.scoreA;
-              if (gF > gA) { wins++; points += 3; }
-              else if (gF === gA) { draws++; points += 1; }
-              else { losses++; }
-            });
-            return { name: team.name, played, wins, draws, losses, points };
-          });
-          teamStats.sort((a, b) => b.points - a.points);
-          const standingsBody = document.getElementById('standingsTable');
-          teamStats.forEach(t => {
-            standingsBody.innerHTML += `<tr><td>${t.name}</td><td>${t.played}</td><td>${t.wins}</td><td>${t.draws}</td><td>${t.losses}</td><td>${t.points}</td></tr>`;
-          });
         }
 
         const scorers = {};
         games.forEach(g => {
-          for (const goal of g.goals?.teamA || []) {
-            if (!scorers[goal.scorer]) scorers[goal.scorer] = { name: goal.scorer, goals: 0 };
-            scorers[goal.scorer].goals++;
-          }
-          for (const goal of g.goals?.teamB || []) {
-            if (!scorers[goal.scorer]) scorers[goal.scorer] = { name: goal.scorer, goals: 0 };
-            scorers[goal.scorer].goals++;
-          }
+          (g.goals?.teamA || []).forEach(goal => scorers[goal.scorer] = (scorers[goal.scorer] || 0) + 1);
+          (g.goals?.teamB || []).forEach(goal => scorers[goal.scorer] = (scorers[goal.scorer] || 0) + 1);
         });
-        const topScorers = Object.values(scorers).sort((a, b) => b.goals - a.goals).slice(0, 5);
-        const scorersBody = document.getElementById('scorersTableBody');
-        topScorers.forEach((s, i) => {
-          scorersBody.innerHTML += `<tr><td>${i+1}</td><td>${s.name}</td><td>${s.goals}</td></tr>`;
+        Object.entries(scorers).sort((a,b)=>b[1]-a[1]).slice(0,5).forEach(([name, goals], i) => {
+          document.getElementById('scorersTableBody').innerHTML += `<tr><td>${i+1}</td><td>${name}</td><td>${goals}</td></tr>`;
         });
 
         const gamesList = document.getElementById('gamesList');
-        const allGames = [...games].sort((a,b)=>new Date(a.date)-new Date(b.date));
-        allGames.forEach(g => {
-          const isKnockout = !!g.knockoutStage;
-          const stageLabel = isKnockout ? `🏆 ${g.knockoutStage}` : '';
+        games.forEach(g => {
           const box = document.createElement('div');
-          box.className = 'match-box' + (isKnockout ? ' knockout' : '');
-          box.innerHTML = `${stageLabel}<br>
+          box.className = 'match-box' + (g.knockoutStage ? ' knockout' : '');
+          box.innerHTML = `${g.knockoutStage ? `🏆 ${g.knockoutStage}<br>` : ''}
             ${g.teamA?.name || '---'} ${g.scoreA ?? '-'} : ${g.scoreB ?? '-'} ${g.teamB?.name || '---'}<br>
             📅 ${formatDate(g.date)}
             <div class="details"></div>`;
           box.onclick = () => {
-            document.querySelectorAll('.details').forEach(d => d.style.display='none');
+            document.querySelectorAll('.details').forEach(d => d.style.display = 'none');
             const details = box.querySelector('.details');
             let html = '';
-            (g.goals?.teamA || []).forEach(goal => { html += `⚽ ${goal.scorer} - דקה ${goal.minute}<br>`; });
-            (g.goals?.teamB || []).forEach(goal => { html += `⚽ ${goal.scorer} - דקה ${goal.minute}<br>`; });
-            (g.cards?.teamA || []).forEach(card => { html += `${card.color==='yellow'?'🟨':'🟥'} ${card.player} - דקה ${card.minute}<br>`; });
-            (g.cards?.teamB || []).forEach(card => { html += `${card.color==='yellow'?'🟨':'🟥'} ${card.player} - דקה ${card.minute}<br>`; });
+            (g.goals?.teamA || []).forEach(goal => html += `⚽ ${goal.scorer} - דקה ${goal.minute}<br>`);
+            (g.goals?.teamB || []).forEach(goal => html += `⚽ ${goal.scorer} - דקה ${goal.minute}<br>`);
+            (g.cards?.teamA || []).forEach(card => html += `${card.color==='yellow'?'🟨':'🟥'} ${card.player} - דקה ${card.minute}<br>`);
+            (g.cards?.teamB || []).forEach(card => html += `${card.color==='yellow'?'🟨':'🟥'} ${card.player} - דקה ${card.minute}<br>`);
             details.innerHTML = html || 'אין אירועים רשומים';
             details.style.display = 'block';
           };
@@ -452,109 +177,35 @@
 
         renderBracket(games);
       } catch (err) {
-        console.error(err);
         document.getElementById('error').innerText = '❌ שגיאה בטעינת הנתונים: ' + err.message;
       }
     }
-  
- function renderBracket() {
-      const container = document.getElementById('bracketContainer');
-      container.innerHTML = '';
 
+    function renderBracket(games) {
+      const container = document.getElementById('bracketContainer');
       const svgNS = "http://www.w3.org/2000/svg";
       const svg = document.createElementNS(svgNS, "svg");
-      svg.setAttribute("width", "1000");
-      svg.setAttribute("height", "600");
-
-      const matchHeight = 40;
-      const matchGap = 40;
-      const offsetX = 200;
-      const centerX = 500;
-
-      const games = [
-        {_id: "qf1", stage: "רבע גמר", side: "L", y: 100, label: "ראשון לציון vs נס ציונה", next: "sf1"},
-        {_id: "qf2", stage: "רבע גמר", side: "L", y: 250, label: "בת ים vs חולון", next: "sf1"},
-        {_id: "sf1", stage: "חצי גמר", side: "L", y: 175, label: "מנצחת QF1/QF2", next: "final"},
-        {_id: "qf3", stage: "רבע גמר", side: "R", y: 100, label: "כפר סבא vs הרצליה", next: "sf2"},
-        {_id: "qf4", stage: "רבע גמר", side: "R", y: 250, label: "תל אביב vs פתח תקווה", next: "sf2"},
-        {_id: "sf2", stage: "חצי גמר", side: "R", y: 175, label: "מנצחת QF3/QF4", next: "final"},
-        {_id: "final", stage: "גמר", side: "C", y: 175, label: "🏆 גמר"}
-      ];
-
-      const centers = {};
-
-      games.forEach(g => {
-        let x = centerX;
-        if (g.side === "L") x -= offsetX;
-        else if (g.side === "R") x += offsetX;
-
-        if (g.stage === "גמר") {
-          const trophy = document.createElementNS(svgNS, "text");
-          trophy.setAttribute("x", centerX);
-          trophy.setAttribute("y", g.y);
-          trophy.setAttribute("text-anchor", "middle");
-          trophy.setAttribute("font-size", "40");
-          trophy.textContent = "🏆";
-          svg.appendChild(trophy);
-        } else {
-          const rect = document.createElementNS(svgNS, "rect");
-          rect.setAttribute("x", x - 60);
-          rect.setAttribute("y", g.y);
-          rect.setAttribute("width", "120");
-          rect.setAttribute("height", matchHeight);
-          rect.setAttribute("fill", "#fff3e0");
-          rect.setAttribute("stroke", "#ffb74d");
-          svg.appendChild(rect);
-
-          const text = document.createElementNS(svgNS, "text");
-          text.setAttribute("x", x);
-          text.setAttribute("y", g.y + 25);
-          text.setAttribute("text-anchor", "middle");
-          text.textContent = g.label;
-          svg.appendChild(text);
-        }
-
-        centers[g._id] = {x, y: g.y + matchHeight / 2};
+      svg.setAttribute("width", "1200"); svg.setAttribute("height", "800");
+      container.innerHTML = "";
+      const stages = ['רבע גמר','חצי גמר','גמר'];
+      games.filter(g => g.knockoutStage).forEach((g,i) => {
+        const rect = document.createElementNS(svgNS, "rect");
+        rect.setAttribute("x", 100 + (stages.indexOf(g.knockoutStage)*300));
+        rect.setAttribute("y", 50+i*100);
+        rect.setAttribute("width","200");
+        rect.setAttribute("height","50");
+        rect.setAttribute("fill","#fff3e0");
+        rect.setAttribute("stroke","#ffb74d");
+        svg.appendChild(rect);
+        const text = document.createElementNS(svgNS, "text");
+        text.setAttribute("x", 200 + (stages.indexOf(g.knockoutStage)*300));
+        text.setAttribute("y", 80+i*100);
+        text.setAttribute("text-anchor","middle");
+        text.textContent = `${g.teamA?.name} vs ${g.teamB?.name}`;
+        svg.appendChild(text);
       });
-
-      // Draw connectors
-      games.forEach(g => {
-        if (!g.next) return;
-        const from = centers[g._id];
-        const to = centers[g.next];
-        if (!from || !to) return;
-
-        const dir = g.side === "L" ? 1 : -1;
-
-        const lineH = document.createElementNS(svgNS, "line");
-        lineH.setAttribute("x1", from.x);
-        lineH.setAttribute("y1", from.y);
-        lineH.setAttribute("x2", from.x + dir * 40);
-        lineH.setAttribute("y2", from.y);
-        lineH.setAttribute("stroke", "#1e90ff");
-        svg.appendChild(lineH);
-
-        const lineV = document.createElementNS(svgNS, "line");
-        lineV.setAttribute("x1", from.x + dir * 40);
-        lineV.setAttribute("y1", from.y);
-        lineV.setAttribute("x2", from.x + dir * 40);
-        lineV.setAttribute("y2", to.y);
-        lineV.setAttribute("stroke", "#1e90ff");
-        svg.appendChild(lineV);
-
-        const lineH2 = document.createElementNS(svgNS, "line");
-        lineH2.setAttribute("x1", from.x + dir * 40);
-        lineH2.setAttribute("y1", to.y);
-        lineH2.setAttribute("x2", to.x);
-        lineH2.setAttribute("y2", to.y);
-        lineH2.setAttribute("stroke", "#1e90ff");
-        svg.appendChild(lineH2);
-      });
-
       container.appendChild(svg);
     }
-
-
 
     loadTournamentData();
   </script>
