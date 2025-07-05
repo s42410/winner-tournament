@@ -103,7 +103,7 @@
     </table>
   </div>
 
- <script>
+<script>
   const tournamentId = new URLSearchParams(window.location.search).get('tournamentId');
   const message = document.getElementById('message');
   const tableBody = document.querySelector('#teamsTable tbody');
@@ -127,7 +127,7 @@
           <td>${team.color}</td>
           <td class="group-cell" style="display:${groupsEnabled ? 'table-cell' : 'none'};">
             <input type="text" value="${team.group || ''}" data-id="${team._id}" placeholder="1, 2, A, B"
-             onkeydown="if(event.key==='Enter'){ saveSingleGroup('${team._id}', this.value); }">
+              onkeydown="if(event.key==='Enter'){ saveSingleGroup('${team._id}', this.value); }">
           </td>
           <td>
             <button class="btn-edit" onclick="editTeam('${team._id}', '${team.name}', '${team.color}')">✏️</button>
@@ -179,10 +179,20 @@
   }
 
   async function saveSingleGroup(id, group) {
+    // שלב 1: טוען את כל פרטי הקבוצה
+    const res = await fetch(`/api/teams/${id}`);
+    const team = await res.json();
+
+    // שלב 2: שולח PUT עם כל השדות שהשרת מצפה להם
     await fetch(`/api/teams/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ group, tournamentId })
+      body: JSON.stringify({
+        name: team.name,
+        color: team.color,
+        group: group,
+        tournamentId: tournamentId
+      })
     });
     message.textContent = '✅ נשמר';
     message.className = 'message success';
@@ -194,10 +204,19 @@
     for (const input of inputs) {
       const teamId = input.dataset.id;
       const group = input.value.trim();
+
+      const res = await fetch(`/api/teams/${teamId}`);
+      const team = await res.json();
+
       await fetch(`/api/teams/${teamId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ group, tournamentId })
+        body: JSON.stringify({
+          name: team.name,
+          color: team.color,
+          group: group,
+          tournamentId: tournamentId
+        })
       });
     }
     message.textContent = '✅ כל הבתים נשמרו';
