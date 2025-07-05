@@ -134,11 +134,25 @@
       height: 30px;
       margin: auto;
     }
-    .bracket-tree {
+    .bracket {
   display: flex;
-  flex-direction: row; /* מציב את כל העמודות בשורה */
   justify-content: center;
-  align-items: flex-start;
+  align-items: center;
+  gap: 40px;
+  overflow-x: auto;
+}
+.bracket-column {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.bracket-center {
+  font-size: 50px;
+}
+.bracket-tree {
+  display: flex;
+  justify-content: center;
+  align-items: center;
   overflow-x: auto;
   gap: 40px;
   margin-top: 40px;
@@ -149,11 +163,6 @@
   flex-direction: column;
   align-items: center;
   gap: 40px;
-}
-
-.bracket-center {
-  font-size: 50px;
-  margin: 0 20px;
 }
 
 .bracket-node {
@@ -172,10 +181,40 @@
   background: #ffb74d;
 }
 
-.bracket-node + .bracket-connector-v {
-  margin-bottom: 20px;
+.bracket-center {
+  font-size: 50px;
+  margin: 0 20px;
+}
+.bracket-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 40px;
 }
 
+.bracket-match {
+  background: #fff3e0;
+  border: 2px solid #ffb74d;
+  border-radius: 8px;
+  padding: 10px 15px;
+  min-width: 120px;
+  text-align: center;
+  position: relative;
+}
+
+.bracket-match::after {
+  content: '';
+  position: absolute;
+  width: 40px;
+  height: 2px;
+  background: #ffb74d;
+  right: -40px;
+  top: 50%;
+}
+
+.bracket-stage:last-child .bracket-match::after {
+  display: none;
+}
 
 
   </style>
