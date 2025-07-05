@@ -397,15 +397,22 @@ async function deleteAllGroupStageGames() {
   fetchGames();
 }
 
-
 function editGame(gameId) {
   window.location.href = `admin-edit-game.html?gameId=${gameId}&toredirect=games`;
 }
- 
-{if (performance.navigation.type === 2) {
-    location.reload();
-  }
+
+// ✅ מוסיף רענון אם חזרנו אחרי עריכה
+if (new URLSearchParams(window.location.search).get('updated') === '1') {
+  fetchGames();
 }
+
+// ✅ רענון גם אם חוזרים עם back
+window.addEventListener('pageshow', function(event) {
+  if (event.persisted) {
+    fetchGames();
+  }
+});
+
 loadTeams();
 fetchGames();
 </script>
