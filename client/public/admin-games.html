@@ -401,7 +401,11 @@ async function deleteAllGroupStageGames() {
 function editGame(gameId) {
   window.location.href = `admin-edit-game.html?gameId=${gameId}&toredirect=games`;
 }
-
+ 
+{if (performance.navigation.type === 2) {
+    location.reload();
+  }
+}
 loadTeams();
 fetchGames();
 </script>

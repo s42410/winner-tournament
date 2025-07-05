@@ -222,6 +222,11 @@
       document.getElementById('scorersContainer').innerHTML = scorersHTML;
     }
 
+    {if (performance.navigation.type === 2) {
+    location.reload();
+  }
+}
+
     loadStats();
     loadKnockout();
   </script>

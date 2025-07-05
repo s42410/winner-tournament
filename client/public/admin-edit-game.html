@@ -144,7 +144,7 @@
 </head>
 <body>
   <div class="container">
-    <button class="back-button" onclick="saveAndBack()">🔙 שמור וחזור</button>
+    <button onclick="saveAndBack()">🔙 שמור וחזור</button>
     <img src="logo.png" class="logo" alt="לוגו מאמן" />
     <h2>⚙️ עדכון תוצאת משחק</h2>
 
@@ -403,16 +403,7 @@ async function saveChanges() {
 
 async function saveAndBack() {
   await saveChanges();
-
-  const toRedirect = new URLSearchParams(window.location.search).get('toredirect');
-
-  if (toRedirect === 'games') {
-    window.location.href = '/admin-games.html'; // הנתיב שלך לניהול משחקים
-  } else if (toRedirect === 'knockout') {
-    window.location.href = '/admin-standings.html'; // הנתיב שלך לנוקאאוט
-  } else {
-    location.reload(); // fallback אם לא שמו פרמטר
-  }
+  history.back(); // פשוט חוזר אחורה בלי סיבוך
 }
 
 
