@@ -424,22 +424,30 @@
   });
 
   const buildColumn = (side) => {
-    let html = '';
-    stages.forEach(stage => {
-      const matches = side[stage];
-      matches.forEach(match => {
+  let html = '';
+  stages.forEach(stage => {
+    const matches = side[stage];
+    if (matches.length > 0) {
+      html += `<div class="bracket-stage"><h4>${stage}</h4>`;
+      matches.forEach((match, index) => {
         html += `
           <div class="bracket-node">
             ${match.teamA?.name || '---'}<br>
             ${match.scoreA != null && match.scoreB != null ? `${match.scoreA} : ${match.scoreB}` : ''}<br>
             ${match.teamB?.name || '---'}
           </div>
-          <div class="bracket-connector-v"></div>
         `;
+        // הוסף קו מחבר רק אם זה לא האחרון בשלב
+        if (index < matches.length - 1) {
+          html += `<div class="bracket-connector-v"></div>`;
+        }
       });
-    });
-    return html;
-  };
+      html += `</div>`;
+    }
+  });
+  return html;
+};
+
 
   document.getElementById('leftSide').innerHTML = buildColumn(leftSide);
   document.getElementById('rightSide').innerHTML = buildColumn(rightSide);
