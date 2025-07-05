@@ -134,25 +134,11 @@
       height: 30px;
       margin: auto;
     }
-    .bracket {
+    .bracket-tree {
   display: flex;
+  flex-direction: row; /* מציב את כל העמודות בשורה */
   justify-content: center;
-  align-items: center;
-  gap: 40px;
-  overflow-x: auto;
-}
-.bracket-column {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-.bracket-center {
-  font-size: 50px;
-}
-.bracket-tree {
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  align-items: flex-start;
   overflow-x: auto;
   gap: 40px;
   margin-top: 40px;
@@ -163,6 +149,11 @@
   flex-direction: column;
   align-items: center;
   gap: 40px;
+}
+
+.bracket-center {
+  font-size: 50px;
+  margin: 0 20px;
 }
 
 .bracket-node {
@@ -181,40 +172,10 @@
   background: #ffb74d;
 }
 
-.bracket-center {
-  font-size: 50px;
-  margin: 0 20px;
-}
-.bracket-stage {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 40px;
+.bracket-node + .bracket-connector-v {
+  margin-bottom: 20px;
 }
 
-.bracket-match {
-  background: #fff3e0;
-  border: 2px solid #ffb74d;
-  border-radius: 8px;
-  padding: 10px 15px;
-  min-width: 120px;
-  text-align: center;
-  position: relative;
-}
-
-.bracket-match::after {
-  content: '';
-  position: absolute;
-  width: 40px;
-  height: 2px;
-  background: #ffb74d;
-  right: -40px;
-  top: 50%;
-}
-
-.bracket-stage:last-child .bracket-match::after {
-  display: none;
-}
 
 
   </style>
@@ -240,12 +201,16 @@
 
 <div id="bracketContainer" class="section">
   <h2>🏆 תרשים שלבי נוקאאוט</h2>
-  <div id="bracketTree" class="bracket-tree">
-    <div id="leftSide" class="bracket-column"></div>
-    <div class="bracket-center">🏆</div>
-    <div id="rightSide" class="bracket-column"></div>
-  </div>
+  <<div class="bracket-tree">
+  <div class="bracket-column" id="stage-R16"></div>
+  <div class="bracket-column" id="stage-QF"></div>
+  <div class="bracket-column" id="stage-SF"></div>
+  <div class="bracket-column bracket-center">🏆</div>
+  <div class="bracket-column" id="stage-SF-R"></div>
+  <div class="bracket-column" id="stage-QF-R"></div>
+  <div class="bracket-column" id="stage-R16-R"></div>
 </div>
+
 
 
 
@@ -405,54 +370,48 @@
     }
 
 function renderBracket(games) {
-  const stages = ['שמינית גמר', 'רבע גמר', 'חצי גמר', 'גמר'];
-  const leftSide = {};
-  const rightSide = {};
-  stages.forEach(stage => {
-    leftSide[stage] = [];
-    rightSide[stage] = [];
-  });
+  const stages = ['R16', 'QF', 'SF'];
+  const sides = ['L', 'R'];
 
-  // מחלק צדדים אם חסר
-  games.forEach((game, index) => {
-    if (!game.knockoutStage) return; // דלג על ליגה רגילה
-    if (!game.side) {
-      game.side = index % 2 === 0 ? 'L' : 'R';
-    }
-
-    if (game.side === 'L') {
-      leftSide[game.knockoutStage]?.push(game);
-    } else if (game.side === 'R') {
-      rightSide[game.knockoutStage]?.push(game);
-    }
-  });
-
-  const buildColumn = (side) => {
-    let html = '';
-    stages.forEach(stage => {
-      const matches = side[stage];
-      if (matches.length > 0) {
-        html += `<div class="bracket-stage"><h4>${stage}</h4>`;
-        matches.forEach((match, index) => {
-          html += `
-            <div class="bracket-node">
-              ${match.teamA?.name || '---'}<br>
-              ${match.scoreA != null && match.scoreB != null ? `${match.scoreA} : ${match.scoreB}` : ''}<br>
-              ${match.teamB?.name || '---'}
-            </div>
-          `;
-          if (index < matches.length - 1) {
-            html += `<div class="bracket-connector-v"></div>`;
-          }
-        });
-        html += `</div>`;
-      }
-    });
-    return html;
+  const sideMap = {
+    L: { R16: [], QF: [], SF: [] },
+    R: { R16: [], QF: [], SF: [] }
   };
 
-  document.getElementById('leftSide').innerHTML = buildColumn(leftSide);
-  document.getElementById('rightSide').innerHTML = buildColumn(rightSide);
+  games.forEach(game => {
+    if (game.side === 'L') {
+      sideMap.L[game.knockoutStage]?.push(game);
+    } else if (game.side === 'R') {
+      sideMap.R[game.knockoutStage]?.push(game);
+    }
+  });
+
+  stages.forEach(stage => {
+    const leftCol = document.getElementById(`stage-${stage}`);
+    const rightCol = document.getElementById(`stage-${stage}-R`);
+    leftCol.innerHTML = '';
+    rightCol.innerHTML = '';
+
+    sideMap.L[stage].forEach(match => {
+      leftCol.innerHTML += `
+        <div class="bracket-match">
+          ${match.teamA?.name || '---'}<br>
+          ${match.scoreA != null && match.scoreB != null ? `${match.scoreA} : ${match.scoreB}` : ''}<br>
+          ${match.teamB?.name || '---'}
+        </div>
+      `;
+    });
+
+    sideMap.R[stage].forEach(match => {
+      rightCol.innerHTML += `
+        <div class="bracket-match">
+          ${match.teamA?.name || '---'}<br>
+          ${match.scoreA != null && match.scoreB != null ? `${match.scoreA} : ${match.scoreB}` : ''}<br>
+          ${match.teamB?.name || '---'}
+        </div>
+      `;
+    });
+  });
 }
 
 
