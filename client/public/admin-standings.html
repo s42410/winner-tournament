@@ -129,8 +129,8 @@
     }
 
     function editGame(gameId) {
-      window.location.href = `/admin-edit-game.html?gameId=${gameId}`;
-    }
+  window.location.href = `admin-edit-game.html?gameId=${gameId}&toredirect=knockout`;
+  }
 
     async function deleteGame(gameId) {
       if (!confirm('אתה בטוח שאתה רוצה למחוק משחק זה?')) return;
