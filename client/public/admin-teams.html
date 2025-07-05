@@ -182,7 +182,7 @@
     await fetch(`/api/teams/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ group }) // 👈 הוספתי את tournamentId
+      body: JSON.stringify({ group, tournamentId }) // 👈 הוספתי את tournamentId
     });
     message.textContent = '✅ נשמר';
     message.className = 'message success';
