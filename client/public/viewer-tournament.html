@@ -169,6 +169,26 @@
   margin: 0 auto;
 }
 
+#bracketContainer {
+  margin-top: 50px;
+  overflow-x: auto;
+}
+
+#bracketContainer svg {
+  background: radial-gradient(circle at center, #000428, #004e92);
+  border-radius: 15px;
+}
+
+#bracketContainer text {
+  font-family: Arial, sans-serif;
+  font-weight: bold;
+}
+
+#bracketContainer line {
+  stroke: #1e90ff;
+  stroke-width: 2;
+}
+
 
 
   /* השאר לא נוגע בשאר הכפתורים! */
@@ -195,7 +215,7 @@
     </table>
   </div>
 
-<div id="bracketTree" class="bracket-tree">
+<div id="bracketContainer"></div>
   <div class="bracket-column" id="stage-R16"></div>
   <div class="bracket-column" id="stage-QF"></div>
   <div class="bracket-column" id="stage-SF"></div>
@@ -360,61 +380,90 @@
         document.getElementById('error').innerText = '❌ שגיאה בטעינת הנתונים: ' + err.message;
       }
     }
-
 function renderBracket(games) {
-  const stages = ['שמינית גמר', 'רבע גמר', 'חצי גמר'];
-  const leftSide = {};
-  const rightSide = {};
+  const container = document.getElementById('bracketContainer');
+  container.innerHTML = '';
 
-  // מחלק לשלבים ולצדדים
-  stages.forEach(stage => {
-    leftSide[stage] = [];
-    rightSide[stage] = [];
-  });
+  const svgNS = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(svgNS, "svg");
+  svg.setAttribute("width", "1200");
+  svg.setAttribute("height", "700");
 
-  games.forEach((game, index) => {
-    if (!game.knockoutStage) return;
-    if (!game.side) {
-      game.side = index % 2 === 0 ? 'L' : 'R';
+  // שלבים ומיקומים
+  const stages = ['שמינית גמר', 'רבע גמר', 'חצי גמר', 'גמר'];
+  const stageX = [50, 300, 550, 800];
+  const yStep = 50;
+
+  const sideOffsets = { L: 0, R: 0 };
+  const matchPositions = {};
+
+  games.forEach(g => {
+    if (!g.knockoutStage) return;
+
+    const side = g.side || (g.knockoutStage === 'גמר' ? 'C' : (g.side || 'L'));
+    const x = side === 'L'
+      ? stageX[stages.indexOf(g.knockoutStage)]
+      : stageX[stages.indexOf(g.knockoutStage)] + 350;
+
+    if (!matchPositions[g.knockoutStage]) matchPositions[g.knockoutStage] = {};
+    if (!sideOffsets[side]) sideOffsets[side] = 0;
+
+    let y = 100 + (sideOffsets[side] * yStep);
+    sideOffsets[side]++;
+
+    if (g.knockoutStage === 'גמר') {
+      y = 350;
     }
-    if (game.side === 'L') {
-      leftSide[game.knockoutStage]?.push(game);
-    } else {
-      rightSide[game.knockoutStage]?.push(game);
-    }
-  });
 
-  // בונה צד
-  const buildColumn = (side) => {
-    let html = '';
-    stages.forEach(stage => {
-      const matches = side[stage];
-      if (matches.length > 0) {
-        html += `<div class="bracket-stage">`;
-        matches.forEach((match, index) => {
-          html += `<div class="bracket-match">
-            ${match.teamA?.name || '---'}<br>
-            ${match.scoreA != null ? `${match.scoreA} : ${match.scoreB}` : ''}<br>
-            ${match.teamB?.name || '---'}
-          </div>`;
-          if (index < matches.length - 1) {
-            html += `<div class="bracket-connector-v"></div>`;
-          }
-        });
-        html += `</div>`;
+    // Draw team names
+    const teamA = document.createElementNS(svgNS, "text");
+    teamA.setAttribute("x", x);
+    teamA.setAttribute("y", y);
+    teamA.setAttribute("fill", "white");
+    teamA.textContent = g.teamA?.name || "---";
+    svg.appendChild(teamA);
+
+    const teamB = document.createElementNS(svgNS, "text");
+    teamB.setAttribute("x", x);
+    teamB.setAttribute("y", y + 20);
+    teamB.setAttribute("fill", "white");
+    teamB.textContent = g.teamB?.name || "---";
+    svg.appendChild(teamB);
+
+    matchPositions[g._id] = { x, y: y + 10 };
+
+    // Draw lines to next stage (except גמר)
+    if (g.knockoutStage !== 'גמר') {
+      const nextStageIdx = stages.indexOf(g.knockoutStage) + 1;
+      if (nextStageIdx < stages.length) {
+        const nextX = side === 'L'
+          ? stageX[nextStageIdx]
+          : stageX[nextStageIdx] + 350;
+        const nextY = y + (yStep * 2);
+
+        const line = document.createElementNS(svgNS, "line");
+        line.setAttribute("x1", x + 50);
+        line.setAttribute("y1", y + 10);
+        line.setAttribute("x2", nextX);
+        line.setAttribute("y2", nextY);
+        line.setAttribute("stroke", "#1e90ff");
+        line.setAttribute("stroke-width", "2");
+        svg.appendChild(line);
       }
-    });
-    return html;
-  };
+    }
+  });
 
-  const leftHtml = `<div class="bracket-column">${buildColumn(leftSide)}</div>`;
-  const rightHtml = `<div class="bracket-column">${buildColumn(rightSide)}</div>`;
-  const centerHtml = `<div class="bracket-center">🏆</div>`;
+  // Draw trophy
+  const trophy = document.createElementNS(svgNS, "text");
+  trophy.setAttribute("x", 600);
+  trophy.setAttribute("y", 350);
+  trophy.setAttribute("text-anchor", "middle");
+  trophy.setAttribute("font-size", "50");
+  trophy.textContent = "🏆";
+  svg.appendChild(trophy);
 
-document.getElementById('bracketTree').innerHTML = leftHtml + centerHtml + rightHtml;
-
+  container.appendChild(svg);
 }
-
 
     loadTournamentData();
   </script>
