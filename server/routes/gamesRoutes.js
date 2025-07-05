@@ -200,9 +200,7 @@ router.put('/:gameId', async (req, res) => {
   try {
     const { scoreA, scoreB, ...rest } = req.body;
 
-    if (scoreA === scoreB) {
-      return res.status(400).json({ error: '❌ נוקאאוט לא יכול להסתיים בתיקו!' });
-    }
+   
 
     const updated = await Game.findByIdAndUpdate(
       req.params.gameId,
