@@ -109,18 +109,19 @@
   const tableBody = document.querySelector('#teamsTable tbody');
   let editId = null;
   let groupsEnabled = false;
+  let teamsData = []; // ✅ שמירה מקומית של כל הקבוצות
 
   async function fetchTeams() {
     try {
       const res = await fetch(`/api/teams/${tournamentId}`);
-      let data = await res.json();
-      data.sort((a, b) => {
+      teamsData = await res.json();
+      teamsData.sort((a, b) => {
         const ga = a.group || '';
         const gb = b.group || '';
         return ga.localeCompare(gb, undefined, { numeric: true });
       });
       tableBody.innerHTML = '';
-      data.forEach(team => {
+      teamsData.forEach(team => {
         const row = document.createElement('tr');
         row.innerHTML = `
           <td>${team.name}</td>
@@ -179,18 +180,19 @@
   }
 
   async function saveSingleGroup(id, group) {
-    // שלב 1: טוען את כל פרטי הקבוצה
-    const res = await fetch(`/api/teams/${id}`);
-    const team = await res.json();
-
-    // שלב 2: שולח PUT עם כל השדות שהשרת מצפה להם
+    const team = teamsData.find(t => t._id === id);
+    if (!team) {
+      message.textContent = '❌ קבוצה לא נמצאה';
+      message.className = 'message error';
+      return;
+    }
     await fetch(`/api/teams/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         name: team.name,
         color: team.color,
-        group: group,
+        group: group.trim(),
         tournamentId: tournamentId
       })
     });
@@ -204,9 +206,8 @@
     for (const input of inputs) {
       const teamId = input.dataset.id;
       const group = input.value.trim();
-
-      const res = await fetch(`/api/teams/${teamId}`);
-      const team = await res.json();
+      const team = teamsData.find(t => t._id === teamId);
+      if (!team) continue;
 
       await fetch(`/api/teams/${teamId}`, {
         method: 'PUT',
