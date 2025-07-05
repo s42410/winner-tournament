@@ -373,131 +373,102 @@
       }
     }
   
-function renderBracket(games) {
-  const container = document.getElementById('bracketContainer');
-  container.innerHTML = '';
+ function renderBracket() {
+      const container = document.getElementById('bracketContainer');
+      container.innerHTML = '';
 
-  const svgNS = "http://www.w3.org/2000/svg";
-  const svg = document.createElementNS(svgNS, "svg");
-  svg.setAttribute("width", "1600");
-  svg.setAttribute("height", "800");
+      const svgNS = "http://www.w3.org/2000/svg";
+      const svg = document.createElementNS(svgNS, "svg");
+      svg.setAttribute("width", "1000");
+      svg.setAttribute("height", "600");
 
-  const stages = ['רבע גמר', 'חצי גמר', 'גמר'];
-  const centerX = 800;
-  const offsetX = 200;
-  const matchHeight = 40;
-  const matchGap = 40;
+      const matchHeight = 40;
+      const matchGap = 40;
+      const offsetX = 200;
+      const centerX = 500;
 
-  const matchCenters = {};
-  const stageCounts = {};
+      const games = [
+        {_id: "qf1", stage: "רבע גמר", side: "L", y: 100, label: "ראשון לציון vs נס ציונה", next: "sf1"},
+        {_id: "qf2", stage: "רבע גמר", side: "L", y: 250, label: "בת ים vs חולון", next: "sf1"},
+        {_id: "sf1", stage: "חצי גמר", side: "L", y: 175, label: "מנצחת QF1/QF2", next: "final"},
+        {_id: "qf3", stage: "רבע גמר", side: "R", y: 100, label: "כפר סבא vs הרצליה", next: "sf2"},
+        {_id: "qf4", stage: "רבע גמר", side: "R", y: 250, label: "תל אביב vs פתח תקווה", next: "sf2"},
+        {_id: "sf2", stage: "חצי גמר", side: "R", y: 175, label: "מנצחת QF3/QF4", next: "final"},
+        {_id: "final", stage: "גמר", side: "C", y: 175, label: "🏆 גמר"}
+      ];
 
-  games.forEach(g => {
-    const stage = g.knockoutStage;
-    const side = g.side;
-    if (!stageCounts[stage + side]) stageCounts[stage + side] = 0;
+      const centers = {};
 
-    const stageIdx = stages.indexOf(stage);
+      games.forEach(g => {
+        let x = centerX;
+        if (g.side === "L") x -= offsetX;
+        else if (g.side === "R") x += offsetX;
 
-    let x;
-    if (side === 'C') {
-      x = centerX - 60;
-    } else if (side === 'L') {
-      x = centerX - offsetX * (stageIdx + 1);
-    } else if (side === 'R') {
-      x = centerX + offsetX * (stageIdx + 1) - 120;
+        if (g.stage === "גמר") {
+          const trophy = document.createElementNS(svgNS, "text");
+          trophy.setAttribute("x", centerX);
+          trophy.setAttribute("y", g.y);
+          trophy.setAttribute("text-anchor", "middle");
+          trophy.setAttribute("font-size", "40");
+          trophy.textContent = "🏆";
+          svg.appendChild(trophy);
+        } else {
+          const rect = document.createElementNS(svgNS, "rect");
+          rect.setAttribute("x", x - 60);
+          rect.setAttribute("y", g.y);
+          rect.setAttribute("width", "120");
+          rect.setAttribute("height", matchHeight);
+          rect.setAttribute("fill", "#fff3e0");
+          rect.setAttribute("stroke", "#ffb74d");
+          svg.appendChild(rect);
+
+          const text = document.createElementNS(svgNS, "text");
+          text.setAttribute("x", x);
+          text.setAttribute("y", g.y + 25);
+          text.setAttribute("text-anchor", "middle");
+          text.textContent = g.label;
+          svg.appendChild(text);
+        }
+
+        centers[g._id] = {x, y: g.y + matchHeight / 2};
+      });
+
+      // Draw connectors
+      games.forEach(g => {
+        if (!g.next) return;
+        const from = centers[g._id];
+        const to = centers[g.next];
+        if (!from || !to) return;
+
+        const dir = g.side === "L" ? 1 : -1;
+
+        const lineH = document.createElementNS(svgNS, "line");
+        lineH.setAttribute("x1", from.x);
+        lineH.setAttribute("y1", from.y);
+        lineH.setAttribute("x2", from.x + dir * 40);
+        lineH.setAttribute("y2", from.y);
+        lineH.setAttribute("stroke", "#1e90ff");
+        svg.appendChild(lineH);
+
+        const lineV = document.createElementNS(svgNS, "line");
+        lineV.setAttribute("x1", from.x + dir * 40);
+        lineV.setAttribute("y1", from.y);
+        lineV.setAttribute("x2", from.x + dir * 40);
+        lineV.setAttribute("y2", to.y);
+        lineV.setAttribute("stroke", "#1e90ff");
+        svg.appendChild(lineV);
+
+        const lineH2 = document.createElementNS(svgNS, "line");
+        lineH2.setAttribute("x1", from.x + dir * 40);
+        lineH2.setAttribute("y1", to.y);
+        lineH2.setAttribute("x2", to.x);
+        lineH2.setAttribute("y2", to.y);
+        lineH2.setAttribute("stroke", "#1e90ff");
+        svg.appendChild(lineH2);
+      });
+
+      container.appendChild(svg);
     }
-
-    const y = side === 'C'
-      ? 350
-      : 50 + stageCounts[stage + side] * (matchHeight * 2 + matchGap);
-
-    stageCounts[stage + side]++;
-
-    if (stage !== 'גמר') {
-      const rectA = document.createElementNS(svgNS, "rect");
-      rectA.setAttribute("x", x);
-      rectA.setAttribute("y", y);
-      rectA.setAttribute("width", "120");
-      rectA.setAttribute("height", matchHeight);
-      rectA.setAttribute("fill", "#fff3e0");
-      rectA.setAttribute("stroke", "#ffb74d");
-      svg.appendChild(rectA);
-
-      const textA = document.createElementNS(svgNS, "text");
-      textA.setAttribute("x", x + 60);
-      textA.setAttribute("y", y + 25);
-      textA.setAttribute("text-anchor", "middle");
-      textA.textContent = g.teamA?.name || "---";
-      svg.appendChild(textA);
-
-      const rectB = document.createElementNS(svgNS, "rect");
-      rectB.setAttribute("x", x);
-      rectB.setAttribute("y", y + matchHeight);
-      rectB.setAttribute("width", "120");
-      rectB.setAttribute("height", matchHeight);
-      rectB.setAttribute("fill", "#fff3e0");
-      rectB.setAttribute("stroke", "#ffb74d");
-      svg.appendChild(rectB);
-
-      const textB = document.createElementNS(svgNS, "text");
-      textB.setAttribute("x", x + 60);
-      textB.setAttribute("y", y + matchHeight + 25);
-      textB.setAttribute("text-anchor", "middle");
-      textB.textContent = g.teamB?.name || "---";
-      svg.appendChild(textB);
-    } else {
-      const trophy = document.createElementNS(svgNS, "text");
-      trophy.setAttribute("x", x + 60);
-      trophy.setAttribute("y", y + 20);
-      trophy.setAttribute("text-anchor", "middle");
-      trophy.setAttribute("font-size", "50");
-      trophy.textContent = "🏆";
-      svg.appendChild(trophy);
-    }
-
-    matchCenters[g._id] = {
-      x: side === 'L' ? x : x + 120,
-      y: y + matchHeight,
-      side: side
-    };
-  });
-
-  games.forEach(g => {
-    if (!g.nextMatchId) return;
-
-    const from = matchCenters[g._id];
-    const to = matchCenters[g.nextMatchId];
-    if (!from || !to) return;
-
-    const direction = from.side === 'R' ? -1 : 1;
-
-    const lineH = document.createElementNS(svgNS, "line");
-    lineH.setAttribute("x1", from.x);
-    lineH.setAttribute("y1", from.y);
-    lineH.setAttribute("x2", from.x + direction * 40);
-    lineH.setAttribute("y2", from.y);
-    lineH.setAttribute("stroke", "#1e90ff");
-    svg.appendChild(lineH);
-
-    const lineV = document.createElementNS(svgNS, "line");
-    lineV.setAttribute("x1", from.x + direction * 40);
-    lineV.setAttribute("y1", from.y);
-    lineV.setAttribute("x2", from.x + direction * 40);
-    lineV.setAttribute("y2", to.y);
-    lineV.setAttribute("stroke", "#1e90ff");
-    svg.appendChild(lineV);
-
-    const lineH2 = document.createElementNS(svgNS, "line");
-    lineH2.setAttribute("x1", from.x + direction * 40);
-    lineH2.setAttribute("y1", to.y);
-    lineH2.setAttribute("x2", to.x);
-    lineH2.setAttribute("y2", to.y);
-    lineH2.setAttribute("stroke", "#1e90ff");
-    svg.appendChild(lineH2);
-  });
-
-  container.appendChild(svg);
-}
 
 
 
