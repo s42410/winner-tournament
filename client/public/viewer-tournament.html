@@ -375,6 +375,7 @@
 function renderBracket(games) {
   const container = document.getElementById('bracketContainer');
   container.innerHTML = '';
+
   const svgNS = "http://www.w3.org/2000/svg";
   const svg = document.createElementNS(svgNS, "svg");
   svg.setAttribute("width", "1200");
@@ -387,14 +388,16 @@ function renderBracket(games) {
   const sideOffsets = { L: 0, R: 0 };
   const matchPositions = {};
 
-  games.forEach((g, i) => {
+  // מחלק צדדים אוטומטית
+  games.forEach((g, index) => {
     if (!g.knockoutStage) return;
 
     if (!g.side) {
       if (g.knockoutStage === 'גמר') {
-        g.side = 'C';
+        g.side = 'C'; // מרכז
       } else {
-        g.side = (i % 2 === 0) ? 'L' : 'R';
+        // כל משחק זוגי שמאל, אי זוגי ימין
+        g.side = (index % 2 === 0) ? 'L' : 'R';
       }
     }
 
@@ -405,21 +408,27 @@ function renderBracket(games) {
       ? stageX[stages.indexOf(g.knockoutStage)] + 350
       : 600;
 
+    if (!matchPositions[g.knockoutStage]) matchPositions[g.knockoutStage] = {};
     if (!sideOffsets[side]) sideOffsets[side] = 0;
+
     let y = 100 + (sideOffsets[side] * yStep);
     sideOffsets[side]++;
 
-    if (g.knockoutStage === 'גמר') { y = 350; }
+    if (g.knockoutStage === 'גמר') {
+      y = 350;
+    }
 
     const teamA = document.createElementNS(svgNS, "text");
     teamA.setAttribute("x", x);
     teamA.setAttribute("y", y);
+    teamA.setAttribute("fill", "white");
     teamA.textContent = g.teamA?.name || "---";
     svg.appendChild(teamA);
 
     const teamB = document.createElementNS(svgNS, "text");
     teamB.setAttribute("x", x);
     teamB.setAttribute("y", y + 20);
+    teamB.setAttribute("fill", "white");
     teamB.textContent = g.teamB?.name || "---";
     svg.appendChild(teamB);
 
@@ -430,9 +439,7 @@ function renderBracket(games) {
       if (nextStageIdx < stages.length) {
         const nextX = side === 'L'
           ? stageX[nextStageIdx]
-          : side === 'R'
-          ? stageX[nextStageIdx] + 350
-          : 600;
+          : stageX[nextStageIdx] + 350;
         const nextY = y + (yStep * 2);
 
         const line = document.createElementNS(svgNS, "line");
@@ -440,6 +447,8 @@ function renderBracket(games) {
         line.setAttribute("y1", y + 10);
         line.setAttribute("x2", nextX);
         line.setAttribute("y2", nextY);
+        line.setAttribute("stroke", "#1e90ff");
+        line.setAttribute("stroke-width", "2");
         svg.appendChild(line);
       }
     }
@@ -456,6 +465,7 @@ function renderBracket(games) {
   container.appendChild(svg);
 }
 
+    loadTournamentData();
   </script>
 </body>
 </html>
