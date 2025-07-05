@@ -154,7 +154,7 @@
   </style>
 </head>
 <body>
-  <button class="top-left" onclick="history.back()">⬅️ חזור</button>
+  <button class="top-left" onclick="goBackToDashboard()">⬅️ חזור</button>
   <a href="index.html"><img src="logo.png" class="logo" alt="לוגו" /></a>
   <div class="box">
     <h2>⚽ ניהול משחקים בטורניר</h2>
@@ -416,6 +416,16 @@ window.addEventListener('pageshow', function(event) {
 
 loadTeams();
 fetchGames();
+
+function goBackToDashboard() {
+  const adminId = new URLSearchParams(window.location.search).get('adminId');
+  if (adminId) {
+    window.location.href = `admin-dashboard.html?adminId=${adminId}`;
+  } else {
+    window.location.href = `admin-dashboard.html`;
+  }
+}
+
 </script>
 </body>
 </html>

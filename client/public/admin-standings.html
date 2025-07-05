@@ -64,7 +64,7 @@
     <div id="knockoutContainer"></div>
   </div>
 
-  <button class="back-btn" onclick="history.back()">⬅ חזור</button>
+  <button onclick="goBackToDashboard()">⬅️ חזור</button>
 
 <script>
   const params = new URLSearchParams(window.location.search);
@@ -213,6 +213,7 @@
       }
     });
 
+  
     const top = Object.entries(scorers).sort((a,b)=>b[1]-a[1]).slice(0,10);
     let scorersHTML = `<table><tr><th>מקום</th><th>שחקן</th><th>שערים</th></tr>`;
     top.forEach(([name, goals],i)=> {
@@ -229,6 +230,16 @@
   }
   loadStats();
   loadKnockout();
+
+  function goBackToDashboard() {
+  const adminId = new URLSearchParams(window.location.search).get('adminId');
+  if (adminId) {
+    window.location.href = `admin-dashboard.html?adminId=${adminId}`;
+  } else {
+    window.location.href = `admin-dashboard.html`;
+  }
+}
+
 </script>
 </body>
 </html>
