@@ -382,7 +382,7 @@
     {_id: "final", knockoutStage: "גמר", side: "C", teamA: {}, teamB: {}}
   ];
 
-    function renderBracket(games) {
+   function renderBracket(games) {
       const container = document.getElementById('bracketContainer');
       container.innerHTML = '';
 
@@ -506,4 +506,9 @@
       container.appendChild(svg);
     }
 
-    renderBracket(games);
+
+
+    loadTournamentData();
+  </script>
+</body>
+</html>
