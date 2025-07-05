@@ -389,7 +389,7 @@ function renderBracket(games) {
   const svg = document.createElementNS(svgNS, "svg");
   svg.setAttribute("width", "1600");
   svg.setAttribute("height", "800");
-  svg.style.direction = "ltr";
+  svg.style.direction = "ltr"; // חשוב שלא יהפוך את ה־text בעברית
 
   const stages = ['רבע גמר', 'חצי גמר', 'גמר'];
   const centerX = 800;
@@ -407,15 +407,14 @@ function renderBracket(games) {
 
     const stageIdx = stages.indexOf(stage);
 
+    // 🔑 מנגנון RTL: צד ימין מתקדם ימינה מהמרכז, צד שמאל שמאלה
     let x;
     if (side === 'C') {
-      x = centerX;
-    } else if (side === 'R') {
-      // RTL: צד ימין ב־RTL צריך לזוז שמאלה!
-      x = centerX - offsetX * (stageIdx + 1);
+      x = centerX - 60; // הכתר במרכז
     } else if (side === 'L') {
-      // RTL: צד שמאל ב־RTL צריך לזוז ימינה!
-      x = centerX + offsetX * stageIdx;
+      x = centerX - offsetX * (stageIdx + 1);
+    } else if (side === 'R') {
+      x = centerX + offsetX * (stageIdx + 1) - 120; // -120 כי הקופסא נמתחת שמאלה
     }
 
     const y = side === 'C'
@@ -466,13 +465,15 @@ function renderBracket(games) {
       svg.appendChild(trophy);
     }
 
+    // שמור מרכז חיבור עבור קווים
     matchCenters[g._id] = {
-      x: x + 120,
+      x: side === 'R' ? x : x + 120, // ב־R נצא משמאל, ב־L נצא מימין
       y: y + matchHeight,
       side: side
     };
   });
 
+  // 🔑 קווים: מתחשבים בכיוון
   games.forEach(g => {
     if (!g.nextMatchId) return;
 
@@ -480,26 +481,28 @@ function renderBracket(games) {
     const to = matchCenters[g.nextMatchId];
     if (!from || !to) return;
 
+    const direction = from.side === 'R' ? -1 : 1;
+
     const lineH = document.createElementNS(svgNS, "line");
     lineH.setAttribute("x1", from.x);
     lineH.setAttribute("y1", from.y);
-    lineH.setAttribute("x2", from.x + 40);
+    lineH.setAttribute("x2", from.x + direction * 40);
     lineH.setAttribute("y2", from.y);
     lineH.setAttribute("stroke", "#1e90ff");
     svg.appendChild(lineH);
 
     const lineV = document.createElementNS(svgNS, "line");
-    lineV.setAttribute("x1", from.x + 40);
+    lineV.setAttribute("x1", from.x + direction * 40);
     lineV.setAttribute("y1", from.y);
-    lineV.setAttribute("x2", from.x + 40);
+    lineV.setAttribute("x2", from.x + direction * 40);
     lineV.setAttribute("y2", to.y);
     lineV.setAttribute("stroke", "#1e90ff");
     svg.appendChild(lineV);
 
     const lineH2 = document.createElementNS(svgNS, "line");
-    lineH2.setAttribute("x1", from.x + 40);
+    lineH2.setAttribute("x1", from.x + direction * 40);
     lineH2.setAttribute("y1", to.y);
-    lineH2.setAttribute("x2", to.x - 120);
+    lineH2.setAttribute("x2", to.x);
     lineH2.setAttribute("y2", to.y);
     lineH2.setAttribute("stroke", "#1e90ff");
     svg.appendChild(lineH2);
