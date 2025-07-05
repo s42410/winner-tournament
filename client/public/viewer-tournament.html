@@ -127,73 +127,157 @@
     margin-top: 40px;
   }
 
-  /* 🔵 שאר הקוד נשאר אותו דבר — רק החלק של התרשים חדש 🔵 */
 
-.bracket-tree {
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  gap: 40px;
-  overflow-x: auto;
-  margin-top: 40px;
-}
+    body {
+      background: radial-gradient(circle at center, #000428, #004e92);
+      font-family: Arial, sans-serif;
+      color: #fff;
+      text-align: center;
+      padding: 40px;
+    }
 
-.bracket-column {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 40px;
-}
+    .bracket {
+      display: flex;
+      flex-direction: row-reverse;
+      justify-content: center;
+      gap: 50px;
+    }
 
-.bracket-stage {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-bottom: 40px;
-}
+    .round {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 50px;
+      position: relative;
+    }
 
-.bracket-match {
-  background: #fff3e0;
-  border: 2px solid #ffb74d;
-  border-radius: 8px;
-  padding: 10px 15px;
-  min-width: 120px;
-  text-align: center;
-  position: relative;
-}
+    .match {
+      background: #fff3e0;
+      color: #000;
+      border: 2px solid #ffb74d;
+      border-radius: 8px;
+      padding: 10px 20px;
+      min-width: 140px;
+      text-align: center;
+      position: relative;
+    }
 
-.bracket-connector-v {
-  width: 2px;
-  height: 40px;
-  background: #ffb74d;
-  margin: 0 auto;
-}
+    /* קווים */
+    .match::after {
+      content: "";
+      position: absolute;
+      width: 30px;
+      height: 2px;
+      background: #1e90ff;
+      top: 50%;
+      transform: translateY(-50%);
+    }
 
-#bracketContainer {
-  margin-top: 50px;
-  overflow-x: auto;
-}
+    .round:not(:last-child) .match::after {
+      right: -30px; /* ב-RTR מתחבר משמאל לימין */
+    }
 
-#bracketContainer svg {
-  background: radial-gradient(circle at center, #000428, #004e92);
-  border-radius: 15px;
-}
+    .round:last-child .match::after {
+      display: none;
+    }
 
-#bracketContainer text {
-  font-family: Arial, sans-serif;
-  font-weight: bold;
-}
+    /* קווים אנכיים */
+    .round:not(:last-child)::before {
+      content: "";
+      position: absolute;
+      right: -30px;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: transparent;
+    }
 
-#bracketContainer line {
-  stroke: #1e90ff;
-  stroke-width: 2;
-}
+    .connector {
+      position: absolute;
+      right: -30px;
+      width: 30px;
+      height: 50%;
+      border-right: 2px solid #1e90ff;
+    }
 
+    .connector.top {
+      top: 50%;
+      border-bottom: 2px solid #1e90ff;
+    }
 
+    .connector.bottom {
+      bottom: 50%;
+      border-top: 2px solid #1e90ff;
+    }
 
-  /* השאר לא נוגע בשאר הכפתורים! */
+    .round:last-child {
+      justify-content: center;
+    }
 
-</style>
+    .final {
+      font-size: 30px;
+    }
+
+    .trophy {
+      font-size: 40px;
+      margin: 20px 0;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🏆 ברקט טורניר</h1>
+
+  <div class="bracket">
+    <!-- שלב שמינית גמר -->
+    <div class="round">
+      <div class="match">
+        ראשון לציון<br>נס ציונה
+        <div class="connector top"></div>
+      </div>
+      <div class="match">
+        בת ים<br>חולון
+        <div class="connector bottom"></div>
+      </div>
+      <div class="match">
+        כפר סבא<br>הרצליה
+        <div class="connector top"></div>
+      </div>
+      <div class="match">
+        תל אביב<br>פתח תקווה
+        <div class="connector bottom"></div>
+      </div>
+    </div>
+
+    <!-- רבע גמר -->
+    <div class="round">
+      <div class="match">
+        מנצחת 1<br>מנצחת 2
+        <div class="connector top"></div>
+      </div>
+      <div class="match">
+        מנצחת 3<br>מנצחת 4
+        <div class="connector bottom"></div>
+      </div>
+    </div>
+
+    <!-- חצי גמר -->
+    <div class="round">
+      <div class="match">
+        מנצחת רבע 1<br>מנצחת רבע 2
+        <div class="connector"></div>
+      </div>
+    </div>
+
+    <!-- גמר -->
+    <div class="round">
+      <div class="trophy">🏆</div>
+      <div class="match final">
+        גמר
+      </div>
+    </div>
+  </div>
+
 
 </head>
 <body>
