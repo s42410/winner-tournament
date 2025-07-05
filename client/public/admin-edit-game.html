@@ -413,9 +413,19 @@ async function saveChanges() {
 
 async function saveAndBack() {
   await saveChanges();
-  history.back();
-  setTimeout(() => location.reload(), 300);
+  const params = new URLSearchParams(window.location.search);
+  const toredirect = params.get('toredirect') || '';
+  const tournamentId = params.get('tournamentId') || '';
+
+  if (toredirect === 'games') {
+    window.location.href = 'admin-games.html';
+  } else if (toredirect === 'standings' || toredirect === 'knockout') {
+    window.location.href = `admin-standings.html?tournamentId=${tournamentId}&updated=1`;
+  } else {
+    history.back();
+  }
 }
+
 
 document.getElementById('scoreA').oninput = renderScorers;
 document.getElementById('scoreB').oninput = renderScorers;
