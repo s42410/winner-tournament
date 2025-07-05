@@ -418,7 +418,7 @@ async function saveAndBack() {
   const tournamentId = params.get('tournamentId') || '';
 
   if (toredirect === 'games') {
-    window.location.href = 'admin-games.html';
+    window.location.href = `admin-games.html?tournamentId=${tournamentId}&updated=1`;
   } else if (toredirect === 'standings' || toredirect === 'knockout') {
     window.location.href = `admin-standings.html?tournamentId=${tournamentId}&updated=1`;
   } else {

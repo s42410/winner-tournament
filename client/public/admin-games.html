@@ -398,8 +398,9 @@ async function deleteAllGroupStageGames() {
 }
 
 function editGame(gameId) {
-  window.location.href = `admin-edit-game.html?gameId=${gameId}&toredirect=games`;
+  window.location.href = `admin-edit-game.html?gameId=${gameId}&toredirect=games&tournamentId=${tournamentId}`;
 }
+
 
 // ✅ מוסיף רענון אם חזרנו אחרי עריכה
 if (new URLSearchParams(window.location.search).get('updated') === '1') {
