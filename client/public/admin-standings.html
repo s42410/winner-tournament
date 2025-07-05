@@ -67,7 +67,8 @@
   <button class="back-btn" onclick="history.back()">⬅ חזור</button>
 
 <script>
-  const tournamentId = new URLSearchParams(window.location.search).get('tournamentId');
+  const params = new URLSearchParams(window.location.search);
+  const tournamentId = params.get('tournamentId');
 
   async function createKnockout() {
     const stage = document.getElementById('knockoutStage').value;
@@ -97,7 +98,6 @@
     const res = await fetch(`/api/games/by-tournament?tournamentId=${tournamentId}`);
     const games = await res.json();
     const stages = {};
-
     games.forEach(g => {
       if (!g.knockoutStage) return;
       if (!stages[g.knockoutStage]) stages[g.knockoutStage] = [];
@@ -129,7 +129,7 @@
   }
 
   function editGame(gameId) {
-    window.location.href = `admin-edit-game.html?gameId=${gameId}&toredirect=knockout&tournamentId=${tournamentId}`;
+    window.location.href = `admin-edit-game.html?gameId=${gameId}&toredirect=knockout&tournamentId=${tournamentId}&updated=1`;
   }
 
   async function deleteGame(gameId) {
@@ -222,12 +222,11 @@
     document.getElementById('scorersContainer').innerHTML = scorersHTML;
   }
 
-  if (new URLSearchParams(window.location.search).get('updated') === '1') {
-    console.log('ריענון אחרי עדכון');
+  if (params.get('updated') === '1') {
+    console.log('ריענון אוטומטי אחרי עדכון');
     loadStats();
     loadKnockout();
   }
-
   loadStats();
   loadKnockout();
 </script>
