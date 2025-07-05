@@ -392,7 +392,7 @@
     svg.setAttribute("height", "600");
 
     const stages = ['רבע גמר', 'חצי גמר', 'גמר'];
-    const sideX = { L: 100, R: 800 };
+    const sideX = { L: 200, R: 700 };
     const stageOffsetX = 200;
     const matchHeight = 40;
     const matchGap = 40;
@@ -406,7 +406,7 @@
       if (!stageCounts[stage + side]) stageCounts[stage + side] = 0;
 
       const stageIdx = stages.indexOf(stage);
-      const x = side === 'C' ? 550 : sideX[side] + stageIdx * stageOffsetX;
+      const x = side === 'C' ? 500 : sideX[side] + stageIdx * stageOffsetX;
       const y = side === 'C'
         ? 250
         : 50 + stageCounts[stage + side] * (matchHeight * 2 + matchGap);
