@@ -179,75 +179,31 @@
   }
 
   async function saveSingleGroup(id, group) {
-  const res = await fetch(`/api/teams/${id}`);
-  if (!res.ok) {
-    message.textContent = '❌ שגיאה בטעינת פרטי הקבוצה';
-    message.className = 'message error';
-    return;
-  }
-  const team = await res.json();
-
-  const putRes = await fetch(`/api/teams/${id}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      name: team.name,
-      color: team.color,
-      group: group,
-      tournamentId: tournamentId
-    })
-  });
-
-  if (!putRes.ok) {
-    const data = await putRes.json();
-    message.textContent = `❌ שגיאה בשמירה: ${data.error || putRes.status}`;
-    message.className = 'message error';
-    return;
-  }
-
-  message.textContent = '✅ נשמר';
-  message.className = 'message success';
-  fetchTeams();
-}
-
-
-
-async function saveAllGroups() {
-  const inputs = document.querySelectorAll('.group-cell input');
-  for (const input of inputs) {
-    const teamId = input.dataset.id;
-    const group = input.value.trim();
-
-    const res = await fetch(`/api/teams/${teamId}`);
-    if (!res.ok) {
-      console.error(`❌ שגיאה בטעינת קבוצה ${teamId}`);
-      continue; // ממשיך לקבוצה הבאה
-    }
-    const team = await res.json();
-
-    const putRes = await fetch(`/api/teams/${teamId}`, {
+    await fetch(`/api/teams/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name: team.name,
-        color: team.color,
-        group: group,
-        tournamentId: tournamentId
-      })
+      body: JSON.stringify({ group, tournamentId })
     });
-
-    if (!putRes.ok) {
-      const data = await putRes.json();
-      console.error(`❌ שגיאה בשמירה לקבוצה ${teamId}: ${data.error || putRes.status}`);
-      continue; // עובר הלאה ולא עוצר את כל הלולאה
-    }
+    message.textContent = '✅ נשמר';
+    message.className = 'message success';
+    fetchTeams();
   }
 
-  message.textContent = '✅ כל הבתים נשמרו';
-  message.className = 'message success';
-  fetchTeams();
-}
-
+  async function saveAllGroups() {
+    const inputs = document.querySelectorAll('.group-cell input');
+    for (const input of inputs) {
+      const teamId = input.dataset.id;
+      const group = input.value.trim();
+      await fetch(`/api/teams/${teamId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ group, tournamentId })
+      });
+    }
+    message.textContent = '✅ כל הבתים נשמרו';
+    message.className = 'message success';
+    fetchTeams();
+  }
 
   function toggleGroups() {
     groupsEnabled = !groupsEnabled;
