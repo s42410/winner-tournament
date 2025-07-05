@@ -181,31 +181,108 @@
       }
     }
 
-    function renderBracket(games) {
-      const container = document.getElementById('bracketContainer');
-      const svgNS = "http://www.w3.org/2000/svg";
-      const svg = document.createElementNS(svgNS, "svg");
-      svg.setAttribute("width", "1200"); svg.setAttribute("height", "800");
-      container.innerHTML = "";
-      const stages = ['רבע גמר','חצי גמר','גמר'];
-      games.filter(g => g.knockoutStage).forEach((g,i) => {
-        const rect = document.createElementNS(svgNS, "rect");
-        rect.setAttribute("x", 100 + (stages.indexOf(g.knockoutStage)*300));
-        rect.setAttribute("y", 50+i*100);
-        rect.setAttribute("width","200");
-        rect.setAttribute("height","50");
-        rect.setAttribute("fill","#fff3e0");
-        rect.setAttribute("stroke","#ffb74d");
-        svg.appendChild(rect);
-        const text = document.createElementNS(svgNS, "text");
-        text.setAttribute("x", 200 + (stages.indexOf(g.knockoutStage)*300));
-        text.setAttribute("y", 80+i*100);
-        text.setAttribute("text-anchor","middle");
-        text.textContent = `${g.teamA?.name} vs ${g.teamB?.name}`;
-        svg.appendChild(text);
-      });
-      container.appendChild(svg);
+   function renderBracket(games) {
+  const container = document.getElementById('bracketContainer');
+  container.innerHTML = "";
+  const svgNS = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(svgNS, "svg");
+  svg.setAttribute("width", "1000");
+  svg.setAttribute("height", "600");
+
+  const matchHeight = 40;
+  const matchGap = 40;
+  const offsetX = 250;
+  const centerX = 500;
+
+  // דוגמת משחקים אם אין מהשרת
+  const knockoutGames = games.filter(g => g.knockoutStage);
+  if (knockoutGames.length === 0) {
+    knockoutGames.push(
+      {_id:"qf1",stage:"רבע גמר",side:"L",y:100,label:"קבוצה א מול קבוצה ב",next:"sf1"},
+      {_id:"qf2",stage:"רבע גמר",side:"L",y:250,label:"קבוצה ג מול קבוצה ד",next:"sf1"},
+      {_id:"sf1",stage:"חצי גמר",side:"L",y:175,label:"מנצחת רבע גמר",next:"final"},
+      {_id:"qf3",stage:"רבע גמר",side:"R",y:100,label:"קבוצה ה מול קבוצה ו",next:"sf2"},
+      {_id:"qf4",stage:"רבע גמר",side:"R",y:250,label:"קבוצה ז מול קבוצה ח",next:"sf2"},
+      {_id:"sf2",stage:"חצי גמר",side:"R",y:175,label:"מנצחת רבע גמר",next:"final"},
+      {_id:"final",stage:"גמר",side:"C",y:175,label:"🏆 גמר"}
+    );
+  }
+
+  const centers = {};
+
+  // ציור כל שלב
+  knockoutGames.forEach(g => {
+    let x = centerX;
+    if (g.side === "L") x -= offsetX;
+    else if (g.side === "R") x += offsetX;
+
+    if (g.stage === "גמר") {
+      const trophy = document.createElementNS(svgNS, "text");
+      trophy.setAttribute("x", centerX);
+      trophy.setAttribute("y", g.y);
+      trophy.setAttribute("text-anchor", "middle");
+      trophy.setAttribute("font-size", "40");
+      trophy.textContent = "🏆";
+      svg.appendChild(trophy);
+    } else {
+      const rect = document.createElementNS(svgNS, "rect");
+      rect.setAttribute("x", x - 80);
+      rect.setAttribute("y", g.y);
+      rect.setAttribute("width", "160");
+      rect.setAttribute("height", matchHeight);
+      rect.setAttribute("fill", "#fff3e0");
+      rect.setAttribute("stroke", "#ffb74d");
+      rect.setAttribute("rx", "8");
+      svg.appendChild(rect);
+
+      const text = document.createElementNS(svgNS, "text");
+      text.setAttribute("x", x);
+      text.setAttribute("y", g.y + 25);
+      text.setAttribute("text-anchor", "middle");
+      text.textContent = g.label;
+      svg.appendChild(text);
     }
+
+    centers[g._id] = {x, y: g.y + matchHeight / 2};
+  });
+
+  // קווים מחברים
+  knockoutGames.forEach(g => {
+    if (!g.next) return;
+    const from = centers[g._id];
+    const to = centers[g.next];
+    if (!from || !to) return;
+
+    const dir = g.side === "L" ? 1 : -1;
+
+    const lineH = document.createElementNS(svgNS, "line");
+    lineH.setAttribute("x1", from.x);
+    lineH.setAttribute("y1", from.y);
+    lineH.setAttribute("x2", from.x + dir * 40);
+    lineH.setAttribute("y2", from.y);
+    lineH.setAttribute("stroke", "#1e90ff");
+    svg.appendChild(lineH);
+
+    const lineV = document.createElementNS(svgNS, "line");
+    lineV.setAttribute("x1", from.x + dir * 40);
+    lineV.setAttribute("y1", from.y);
+    lineV.setAttribute("x2", from.x + dir * 40);
+    lineV.setAttribute("y2", to.y);
+    lineV.setAttribute("stroke", "#1e90ff");
+    svg.appendChild(lineV);
+
+    const lineH2 = document.createElementNS(svgNS, "line");
+    lineH2.setAttribute("x1", from.x + dir * 40);
+    lineH2.setAttribute("y1", to.y);
+    lineH2.setAttribute("x2", to.x);
+    lineH2.setAttribute("y2", to.y);
+    lineH2.setAttribute("stroke", "#1e90ff");
+    svg.appendChild(lineH2);
+  });
+
+  container.appendChild(svg);
+}
+
 
     loadTournamentData();
   </script>
