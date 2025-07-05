@@ -366,7 +366,7 @@
     }
 
 function renderBracket(games) {
-  const stages = ['שמינית גמר', 'רבע גמר', 'חצי גמר', 'גמר'];
+  const stages = ['שמינית גמר', 'רבע גמר', 'חצי גמר'];
   const leftSide = {};
   const rightSide = {};
   stages.forEach(stage => {
@@ -374,46 +374,41 @@ function renderBracket(games) {
     rightSide[stage] = [];
   });
 
-  // מחלק צדדים אם חסר
   games.forEach((game, index) => {
-    if (!game.knockoutStage) return; // דלג על ליגה רגילה
+    if (!game.knockoutStage) return;
     if (!game.side) {
       game.side = index % 2 === 0 ? 'L' : 'R';
     }
 
     if (game.side === 'L') {
       leftSide[game.knockoutStage]?.push(game);
-    } else if (game.side === 'R') {
+    } else {
       rightSide[game.knockoutStage]?.push(game);
     }
   });
 
-  const buildColumn = (side) => {
+  const buildColumn = (matches) => {
     let html = '';
-    stages.forEach(stage => {
-      const matches = side[stage];
-      if (matches.length > 0) {
-        html += `<div class="bracket-stage"><h4>${stage}</h4>`;
-        matches.forEach((match, index) => {
-          html += `
-            <div class="bracket-node">
-              ${match.teamA?.name || '---'}<br>
-              ${match.scoreA != null && match.scoreB != null ? `${match.scoreA} : ${match.scoreB}` : ''}<br>
-              ${match.teamB?.name || '---'}
-            </div>
-          `;
-          if (index < matches.length - 1) {
-            html += `<div class="bracket-connector-v"></div>`;
-          }
-        });
-        html += `</div>`;
-      }
+    matches.forEach(match => {
+      html += `
+        <div class="bracket-node">
+          ${match.teamA?.name || '---'}<br>
+          ${match.scoreA != null && match.scoreB != null ? `${match.scoreA} : ${match.scoreB}` : ''}<br>
+          ${match.teamB?.name || '---'}
+        </div>
+        <div class="bracket-connector-v"></div>
+      `;
     });
     return html;
   };
 
-  document.getElementById('leftSide').innerHTML = buildColumn(leftSide);
-  document.getElementById('rightSide').innerHTML = buildColumn(rightSide);
+  document.getElementById('stage-R16').innerHTML = buildColumn(leftSide['שמינית גמר']);
+  document.getElementById('stage-QF').innerHTML = buildColumn(leftSide['רבע גמר']);
+  document.getElementById('stage-SF').innerHTML = buildColumn(leftSide['חצי גמר']);
+
+  document.getElementById('stage-SF-R').innerHTML = buildColumn(rightSide['חצי גמר']);
+  document.getElementById('stage-QF-R').innerHTML = buildColumn(rightSide['רבע גמר']);
+  document.getElementById('stage-R16-R').innerHTML = buildColumn(rightSide['שמינית גמר']);
 }
 
 
