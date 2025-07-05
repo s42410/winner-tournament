@@ -389,7 +389,6 @@ function renderBracket(games) {
   const svg = document.createElementNS(svgNS, "svg");
   svg.setAttribute("width", "1600");
   svg.setAttribute("height", "800");
-  svg.style.direction = "ltr"; // חשוב שלא יהפוך את ה־text בעברית
 
   const stages = ['רבע גמר', 'חצי גמר', 'גמר'];
   const centerX = 800;
@@ -400,21 +399,20 @@ function renderBracket(games) {
   const matchCenters = {};
   const stageCounts = {};
 
-  games.forEach((g) => {
+  games.forEach(g => {
     const stage = g.knockoutStage;
     const side = g.side;
     if (!stageCounts[stage + side]) stageCounts[stage + side] = 0;
 
     const stageIdx = stages.indexOf(stage);
 
-    // 🔑 מנגנון RTL: צד ימין מתקדם ימינה מהמרכז, צד שמאל שמאלה
     let x;
     if (side === 'C') {
-      x = centerX - 60; // הכתר במרכז
+      x = centerX - 60;
     } else if (side === 'L') {
       x = centerX - offsetX * (stageIdx + 1);
     } else if (side === 'R') {
-      x = centerX + offsetX * (stageIdx + 1) - 120; // -120 כי הקופסא נמתחת שמאלה
+      x = centerX + offsetX * (stageIdx + 1) - 120;
     }
 
     const y = side === 'C'
@@ -465,15 +463,13 @@ function renderBracket(games) {
       svg.appendChild(trophy);
     }
 
-    // שמור מרכז חיבור עבור קווים
     matchCenters[g._id] = {
-      x: side === 'R' ? x : x + 120, // ב־R נצא משמאל, ב־L נצא מימין
+      x: side === 'L' ? x : x + 120,
       y: y + matchHeight,
       side: side
     };
   });
 
-  // 🔑 קווים: מתחשבים בכיוון
   games.forEach(g => {
     if (!g.nextMatchId) return;
 
@@ -510,6 +506,7 @@ function renderBracket(games) {
 
   container.appendChild(svg);
 }
+
 
 
     loadTournamentData();
