@@ -251,7 +251,11 @@
     fromGames.forEach((g, idx) => {
       const from = g._center;
       const to = toGames[Math.floor(idx / 2)]?._center;
-      if (!to) return;
+if (!to) {
+  console.warn('לא נמצא משחק יעד לחיבור!', fromStage, toStage);
+  return; // לא מחבר כי אין יעד
+}
+
 
       const lineH = document.createElementNS(svgNS, "line");
       lineH.setAttribute("x1", from.x);
