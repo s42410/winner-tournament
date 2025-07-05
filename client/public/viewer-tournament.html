@@ -434,23 +434,47 @@ function renderBracket(games) {
 
     matchPositions[g._id] = { x, y: y + 10 };
 
-    if (g.knockoutStage !== 'גמר') {
-      const nextStageIdx = stages.indexOf(g.knockoutStage) + 1;
-      if (nextStageIdx < stages.length) {
-        const nextX = side === 'L'
-          ? stageX[nextStageIdx]
-          : stageX[nextStageIdx] + 350;
-        const nextY = y + (yStep * 2);
+if (g.knockoutStage !== 'גמר') {
+  const nextStageIdx = stages.indexOf(g.knockoutStage) + 1;
+  if (nextStageIdx < stages.length) {
+    const nextX = side === 'L'
+      ? stageX[nextStageIdx]
+      : side === 'R'
+      ? stageX[nextStageIdx] + 350
+      : 600;
 
-        const line = document.createElementNS(svgNS, "line");
-        line.setAttribute("x1", x + 50);
-        line.setAttribute("y1", y + 10);
-        line.setAttribute("x2", nextX);
-        line.setAttribute("y2", nextY);
-        line.setAttribute("stroke", "#1e90ff");
-        line.setAttribute("stroke-width", "2");
-        svg.appendChild(line);
-      }
+    // חיבור אנכי ראשון
+    const vLine = document.createElementNS(svgNS, "line");
+    vLine.setAttribute("x1", x + 50);
+    vLine.setAttribute("y1", y + 10);
+    vLine.setAttribute("x2", x + 50);
+    vLine.setAttribute("y2", y + 30);
+    vLine.setAttribute("stroke", "#1e90ff");
+    vLine.setAttribute("stroke-width", "2");
+    svg.appendChild(vLine);
+
+    // חיבור אופקי לשלב הבא
+    const hLine = document.createElementNS(svgNS, "line");
+    hLine.setAttribute("x1", x + 50);
+    hLine.setAttribute("y1", y + 30);
+    hLine.setAttribute("x2", nextX);
+    hLine.setAttribute("y2", y + 30);
+    hLine.setAttribute("stroke", "#1e90ff");
+    hLine.setAttribute("stroke-width", "2");
+    svg.appendChild(hLine);
+
+    // קו אנכי חדש שיורד לשלב הבא
+    const nextY = y + 30 + (yStep);
+    const downLine = document.createElementNS(svgNS, "line");
+    downLine.setAttribute("x1", nextX);
+    downLine.setAttribute("y1", y + 30);
+    downLine.setAttribute("x2", nextX);
+    downLine.setAttribute("y2", nextY);
+    downLine.setAttribute("stroke", "#1e90ff");
+    downLine.setAttribute("stroke-width", "2");
+    svg.appendChild(downLine);
+  }
+
     }
   });
 
