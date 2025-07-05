@@ -413,10 +413,8 @@ async function saveChanges() {
 
 async function saveAndBack() {
   await saveChanges();
- const params = new URLSearchParams(window.location.search);
-const toredirect = params.get('toredirect') || '';
-const tournamentId = params.get('tournamentId') || '';
-window.location.href = `admin-standings.html?tournamentId=${tournamentId}&updated=1`;
+  history.back();
+  setTimeout(() => location.reload(), 300);
 }
 
 document.getElementById('scoreA').oninput = renderScorers;
