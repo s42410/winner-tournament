@@ -4,220 +4,177 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>📊 מעקב טורניר</title>
-  <style>
-    body {
-      background: linear-gradient(to right, #e0f7fa, #80deea);
-      font-family: 'Segoe UI', sans-serif;
-      text-align: center;
-      padding: 30px;
-      color: #333;
-    }
-    #logo {
-      width: 220px;
-      cursor: pointer;
-      margin-bottom: 20px;
-    }
-    h1, h2, h3 {
-      color: #00796b;
-      margin: 10px 0;
-    }
-    .section {
-      background: #ffffffdd;
-      padding: 20px;
-      border-radius: 12px;
-      margin: 20px auto;
-      width: 95%;
-      max-width: 1100px;
-      box-shadow: 0 0 15px rgba(0,0,0,0.15);
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 10px;
-    }
-    th, td {
-      border: 1px solid #bbb;
-      padding: 10px;
-      font-size: 15px;
-    }
-    th { background-color: #b2ebf2; }
-    .matches-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-      gap: 20px;
-      margin-top: 20px;
-    }
-    .match-box {
-      background: linear-gradient(145deg, #f1f8e9, #dcedc8);
-      border-radius: 12px;
-      padding: 15px;
-      box-shadow: 2px 2px 8px rgba(0,0,0,0.1);
-      transition: transform 0.2s ease;
-      cursor: pointer;
-      position: relative;
-    }
-    .match-box.knockout {
-      background: linear-gradient(145deg, #ffe0b2, #ffcc80);
-    }
-    .match-box:hover { transform: translateY(-5px); }
-    .details {
-      background: #f9fbe7;
-      border-top: 1px solid #cddc39;
-      margin-top: 10px;
-      padding: 10px;
-      font-size: 14px;
-      display: none;
-    }
-    .error { color: red; font-weight: bold; }
-    .footer {
-      margin-top: 40px;
-      font-size: 14px;
-      color: #555;
-    }
-    .back-button {
-      position: fixed;
-      top: 15px;
-      left: 15px;
-      background: #ffcc80;
-      border: none;
-      border-radius: 8px;
-      padding: 10px 18px;
-      font-size: 16px;
-      cursor: pointer;
-      z-index: 20;
-    }
-    .export-pdf-button {
-      position: fixed;
-      top: 15px;
-      right: 15px;
-      background: #4caf50;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      padding: 10px 18px;
-      font-size: 16px;
-      cursor: pointer;
-      z-index: 20;
-    }
-    .export-pdf-button:hover { background: #388e3c; }
-    .house-title {
-      margin-top: 20px;
-      font-weight: bold;
-      color: #00796b;
-    }
-    #bracketContainer {
-      margin-top: 40px;
-    }
-    .bracket-stage {
-      display: flex;
-      justify-content: center;
-      flex-wrap: wrap;
-      margin-bottom: 30px;
-    }
-    .bracket-match {
-      background: #fff3e0;
-      border: 2px solid #ffb74d;
-      border-radius: 8px;
-      padding: 10px 15px;
-      margin: 10px;
-      min-width: 160px;
-      box-shadow: 2px 2px 8px rgba(0,0,0,0.1);
-      font-size: 14px;
-      position: relative;
-    }
-    .bracket-match span {
-      display: block;
-    }
-    .bracket-connector {
-      width: 2px;
-      background: #ffb74d;
-      height: 30px;
-      margin: auto;
-    }
-    .bracket {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 40px;
-  overflow-x: auto;
-}
-.bracket-column {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-.bracket-center {
-  font-size: 50px;
-}
-.bracket-tree {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  overflow-x: auto;
-  gap: 40px;
-  margin-top: 40px;
-}
+ <style>
+  body {
+    background: linear-gradient(to right, #e0f7fa, #80deea);
+    font-family: 'Segoe UI', sans-serif;
+    text-align: center;
+    padding: 30px;
+    color: #333;
+  }
 
-.bracket-column {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 40px;
-}
+  #logo {
+    width: 220px;
+    cursor: pointer;
+    margin-bottom: 20px;
+  }
 
-.bracket-node {
-  background: #fff3e0;
-  border: 2px solid #ffb74d;
-  border-radius: 8px;
-  padding: 10px 15px;
-  min-width: 120px;
-  text-align: center;
-  position: relative;
-}
+  h1, h2, h3 {
+    color: #00796b;
+    margin: 10px 0;
+  }
 
-.bracket-connector-v {
-  width: 2px;
-  height: 40px;
-  background: #ffb74d;
-}
+  .section {
+    background: #ffffffdd;
+    padding: 20px;
+    border-radius: 12px;
+    margin: 20px auto;
+    width: 95%;
+    max-width: 1100px;
+    box-shadow: 0 0 15px rgba(0,0,0,0.15);
+  }
 
-.bracket-center {
-  font-size: 50px;
-  margin: 0 20px;
-}
-.bracket-stage {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 40px;
-}
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+  }
 
-.bracket-match {
-  background: #fff3e0;
-  border: 2px solid #ffb74d;
-  border-radius: 8px;
-  padding: 10px 15px;
-  min-width: 120px;
-  text-align: center;
-  position: relative;
-}
+  th, td {
+    border: 1px solid #bbb;
+    padding: 10px;
+    font-size: 15px;
+  }
 
-.bracket-match::after {
-  content: '';
-  position: absolute;
-  width: 40px;
-  height: 2px;
-  background: #ffb74d;
-  right: -40px;
-  top: 50%;
-}
+  th { background-color: #b2ebf2; }
 
-.bracket-stage:last-child .bracket-match::after {
-  display: none;
-}
+  .matches-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+  }
 
+  .match-box {
+    background: linear-gradient(145deg, #f1f8e9, #dcedc8);
+    border-radius: 12px;
+    padding: 15px;
+    box-shadow: 2px 2px 8px rgba(0,0,0,0.1);
+    transition: transform 0.2s ease;
+    cursor: pointer;
+    position: relative;
+  }
 
-  </style>
+  .match-box.knockout {
+    background: linear-gradient(145deg, #ffe0b2, #ffcc80);
+  }
+
+  .match-box:hover { transform: translateY(-5px); }
+
+  .details {
+    background: #f9fbe7;
+    border-top: 1px solid #cddc39;
+    margin-top: 10px;
+    padding: 10px;
+    font-size: 14px;
+    display: none;
+  }
+
+  .error { color: red; font-weight: bold; }
+
+  .footer {
+    margin-top: 40px;
+    font-size: 14px;
+    color: #555;
+  }
+
+  .back-button {
+    position: fixed;
+    top: 15px;
+    left: 15px;
+    background: #ffcc80;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 18px;
+    font-size: 16px;
+    cursor: pointer;
+    z-index: 20;
+  }
+
+  .export-pdf-button {
+    position: fixed;
+    top: 15px;
+    right: 15px;
+    background: #4caf50;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 18px;
+    font-size: 16px;
+    cursor: pointer;
+    z-index: 20;
+  }
+
+  .export-pdf-button:hover { background: #388e3c; }
+
+  .house-title {
+    margin-top: 20px;
+    font-weight: bold;
+    color: #00796b;
+  }
+
+  #bracketContainer {
+    margin-top: 40px;
+  }
+
+  /* 🔵 שאר הקוד נשאר אותו דבר — רק החלק של התרשים חדש 🔵 */
+
+  .bracket-tree {
+    display: flex;
+    flex-direction: row; /* הצגה בשורה */
+    justify-content: center;
+    align-items: flex-start;
+    overflow-x: auto;
+    gap: 40px;
+    margin-top: 40px;
+  }
+
+  .bracket-column {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 40px;
+  }
+
+  .bracket-center {
+    font-size: 50px;
+    margin: 0 20px;
+  }
+
+  .bracket-node {
+    background: #fff3e0;
+    border: 2px solid #ffb74d;
+    border-radius: 8px;
+    padding: 10px 15px;
+    min-width: 120px;
+    text-align: center;
+    position: relative;
+  }
+
+  .bracket-connector-v {
+    width: 2px;
+    height: 40px;
+    background: #ffb74d;
+  }
+
+  .bracket-node + .bracket-connector-v {
+    margin-bottom: 20px;
+  }
+
+  /* השאר לא נוגע בשאר הכפתורים! */
+
+</style>
+
 </head>
 <body>
   <button class="back-button" onclick="history.back()">🔙 חזור</button>
@@ -409,48 +366,54 @@
     }
 
 function renderBracket(games) {
-  const stages = ['R16', 'QF', 'SF'];
-  const sides = ['L', 'R'];
+  const stages = ['שמינית גמר', 'רבע גמר', 'חצי גמר', 'גמר'];
+  const leftSide = {};
+  const rightSide = {};
+  stages.forEach(stage => {
+    leftSide[stage] = [];
+    rightSide[stage] = [];
+  });
 
-  const sideMap = {
-    L: { R16: [], QF: [], SF: [] },
-    R: { R16: [], QF: [], SF: [] }
-  };
+  // מחלק צדדים אם חסר
+  games.forEach((game, index) => {
+    if (!game.knockoutStage) return; // דלג על ליגה רגילה
+    if (!game.side) {
+      game.side = index % 2 === 0 ? 'L' : 'R';
+    }
 
-  games.forEach(game => {
     if (game.side === 'L') {
-      sideMap.L[game.knockoutStage]?.push(game);
+      leftSide[game.knockoutStage]?.push(game);
     } else if (game.side === 'R') {
-      sideMap.R[game.knockoutStage]?.push(game);
+      rightSide[game.knockoutStage]?.push(game);
     }
   });
 
-  stages.forEach(stage => {
-    const leftCol = document.getElementById(`stage-${stage}`);
-    const rightCol = document.getElementById(`stage-${stage}-R`);
-    leftCol.innerHTML = '';
-    rightCol.innerHTML = '';
-
-    sideMap.L[stage].forEach(match => {
-      leftCol.innerHTML += `
-        <div class="bracket-match">
-          ${match.teamA?.name || '---'}<br>
-          ${match.scoreA != null && match.scoreB != null ? `${match.scoreA} : ${match.scoreB}` : ''}<br>
-          ${match.teamB?.name || '---'}
-        </div>
-      `;
+  const buildColumn = (side) => {
+    let html = '';
+    stages.forEach(stage => {
+      const matches = side[stage];
+      if (matches.length > 0) {
+        html += `<div class="bracket-stage"><h4>${stage}</h4>`;
+        matches.forEach((match, index) => {
+          html += `
+            <div class="bracket-node">
+              ${match.teamA?.name || '---'}<br>
+              ${match.scoreA != null && match.scoreB != null ? `${match.scoreA} : ${match.scoreB}` : ''}<br>
+              ${match.teamB?.name || '---'}
+            </div>
+          `;
+          if (index < matches.length - 1) {
+            html += `<div class="bracket-connector-v"></div>`;
+          }
+        });
+        html += `</div>`;
+      }
     });
+    return html;
+  };
 
-    sideMap.R[stage].forEach(match => {
-      rightCol.innerHTML += `
-        <div class="bracket-match">
-          ${match.teamA?.name || '---'}<br>
-          ${match.scoreA != null && match.scoreB != null ? `${match.scoreA} : ${match.scoreB}` : ''}<br>
-          ${match.teamB?.name || '---'}
-        </div>
-      `;
-    });
-  });
+  document.getElementById('leftSide').innerHTML = buildColumn(leftSide);
+  document.getElementById('rightSide').innerHTML = buildColumn(rightSide);
 }
 
 
