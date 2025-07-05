@@ -405,14 +405,13 @@ async function saveAndBack() {
   await saveChanges();
 
   const toRedirect = new URLSearchParams(window.location.search).get('toredirect');
-  const tournamentId = new URLSearchParams(window.location.search).get('tournamentId');
 
   if (toRedirect === 'games') {
-    window.location.href = `/admin-games.html?tournamentId=${tournamentId}`;
+    window.location.href = '/admin-games.html'; // הנתיב שלך לניהול משחקים
   } else if (toRedirect === 'knockout') {
-    window.location.href = `/admin-standings.html?tournamentId=${tournamentId}`;
+    window.location.href = '/admin-standings.html'; // הנתיב שלך לנוקאאוט
   } else {
-    history.back();
+    location.reload(); // fallback אם לא שמו פרמטר
   }
 }
 

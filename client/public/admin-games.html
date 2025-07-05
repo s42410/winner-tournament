@@ -323,7 +323,7 @@ async function fetchGames() {
               <td>${game.location || '--'}</td>
               <td>${game.scoreA ?? 0} : ${game.scoreB ?? 0}</td>
               <td>
-                <button onclick="editGame('GAMEID', 'TOURNAMENTID', 'games')">🎯 תוצאה</button>
+                <button onclick="editGame('${game._id}')">🎯 תוצאה</button>
                 <button onclick="fillEditForm('${game._id}')">⚙️ ערוך</button>
                 <button onclick="deleteGame('${game._id}')">🗑️ מחק</button>
               </td>
@@ -398,9 +398,9 @@ async function deleteAllGroupStageGames() {
 }
 
 
- function editGame(gameId, tournamentId, toRedirect) {
-    window.location.href = `/admin-edit-game.html?gameId=${gameId}&toredirect=${toRedirect}&tournamentId=${tournamentId}`;
-  }
+function editGame(gameId) {
+  window.location.href = `admin-edit-game.html?gameId=${gameId}&toredirect=games`;
+}
 
 loadTeams();
 fetchGames();
