@@ -41,10 +41,7 @@ router.get('/:tournamentId', async (req, res) => {
 router.post('/', async (req, res) => {
   try {
     const { tournamentId, teamA, teamB, date, time, location, knockoutStage } = req.body;
-
-    if (teamA === teamB) {
-      return res.status(400).json({ error: 'לא ניתן ליצור משחק בין אותה קבוצה' });
-    }
+    if (teamA === teamB) return res.status(400).json({ error: 'לא ניתן ליצור משחק בין אותה קבוצה' });
 
     const newGame = new Game({
       tournamentId,
@@ -63,63 +60,45 @@ router.post('/', async (req, res) => {
   }
 });
 
-// ✅ עדכון תוצאה ויצירת שלב נוקאאוט הבא אוטומטי - מבוסס על תוצאות בפועל בלבד
-router.put('/:gameId', async (req, res) => {
-  try {
-    const { teamA, teamB, date, time, location, scoreA, scoreB, goals, cards } = req.body;
+// ✅ פונקציה פנימית להגרלה חכמה
+async function smartPairing(groups, stage) {
+  let pairs = [];
+  let positions = Object.keys(groups).length;
 
-    if (scoreA === scoreB) {
-      return res.status(400).json({ error: '❌ בשלב נוקאאוט אין תוצאת תיקו. חייבת להיות הכרעה!' });
-    }
+  // לבנות סל לפי מיקומים
+  const slots = {};
+  Object.entries(groups).forEach(([groupName, teams]) => {
+    teams.forEach((team, index) => {
+      const pos = index + 1;
+      if (!slots[pos]) slots[pos] = [];
+      slots[pos].push({ ...team, group: groupName });
+    });
+  });
 
-    const updated = await Game.findByIdAndUpdate(
-      req.params.gameId,
-      { teamA, teamB, date, time, location, scoreA, scoreB, goals, cards },
-      { new: true }
-    );
+  // לדוגמה שמינית גמר: מקום 1 מול מקום אחרון וכו׳
+  const half = Object.keys(slots).length / 2;
 
-    const stages = ['שמינית גמר', 'רבע גמר', 'חצי גמר'];
-    if (stages.includes(updated.knockoutStage)) {
-      const allStageGames = await Game.find({
-        tournamentId: updated.tournamentId,
-        knockoutStage: updated.knockoutStage
-      });
+  for (let i = 1; i <= half; i++) {
+    const slotA = slots[i];
+    const slotB = slots[Object.keys(slots).length + 1 - i];
 
-      const finished = allStageGames.filter(g => g.scoreA != null && g.scoreB != null);
-      if (finished.length === allStageGames.length) {
-        const winners = finished.map(g => (g.scoreA > g.scoreB ? g.teamA : g.teamB)).filter(Boolean);
-
-        let nextStage = '';
-        if (updated.knockoutStage === 'שמינית גמר') nextStage = 'רבע גמר';
-        else if (updated.knockoutStage === 'רבע גמר') nextStage = 'חצי גמר';
-        else if (updated.knockoutStage === 'חצי גמר') nextStage = 'גמר';
-
-        const exist = await Game.findOne({ tournamentId: updated.tournamentId, knockoutStage: nextStage });
-        if (!exist && winners.length >= 2) {
-          for (let i = 0; i < winners.length / 2; i++) {
-            const game = new Game({
-              tournamentId: updated.tournamentId,
-              teamA: winners[i],
-              teamB: winners[winners.length - 1 - i],
-              date: new Date(),
-              time: '12:00',
-              location: `מגרש ${nextStage}`,
-              knockoutStage: nextStage
-            });
-            await game.save();
-          }
-          console.log(`🎉 ${nextStage} נוצר אוטומטית לאחר עדכון תוצאות`);
-        }
+    while (slotA.length && slotB.length) {
+      const teamA = slotA.shift();
+      let opponentIndex = slotB.findIndex(t => t.group !== teamA.group);
+      if (opponentIndex === -1) {
+        // לא נמצא יריב חוקי, להחזיר לקופה ולנסות שוב
+        slotA.push(teamA);
+        continue;
       }
+      const teamB = slotB.splice(opponentIndex, 1)[0];
+      pairs.push([teamA.team, teamB.team]);
     }
-
-    res.json({ message: '✅ המשחק עודכן בהצלחה', game: updated });
-  } catch (err) {
-    res.status(500).json({ error: '❌ שגיאה בעדכון המשחק', details: err.message });
   }
-});
 
-// ✅ יצירת שלב נוקאאוט אוטומטי - יוצר רק את השלב המבוקש לפי הדירוג הנכון
+  return pairs;
+}
+
+// ✅ יצירת שלב נוקאאוט אוטומטי עם הגרלה חכמה
 router.post('/create-knockout-auto', async (req, res) => {
   try {
     const { tournamentId, stage, numTeams } = req.body;
@@ -139,11 +118,11 @@ router.post('/create-knockout-auto', async (req, res) => {
 
     const allTeams = await Team.find({ tournamentId });
     const allGames = await Game.find({ tournamentId }).populate('teamA teamB');
+
     const hasGroups = allTeams.some(t => t.group && t.group.trim() !== '');
     let pairs = [];
 
     if (hasGroups) {
-      // דרוג קבוצות לפי בתים
       const groups = {};
       allTeams.forEach(t => {
         const g = t.group.trim();
@@ -171,23 +150,9 @@ router.post('/create-knockout-auto', async (req, res) => {
         groups[g].sort((a, b) => b.points - a.points || b.goalsDiff - a.goalsDiff || b.goalsFor - a.goalsFor);
       }
 
-      const ranked = [];
-      if (stage === 'שמינית גמר') {
-        for (const g of Object.keys(groups)) ranked.push(...groups[g].slice(0, 4));
-      } else if (stage === 'רבע גמר') {
-        for (const g of Object.keys(groups)) ranked.push(...groups[g].slice(0, 2));
-      } else {
-        ranked.push(...Object.values(groups).flat().slice(0, numTeams));
-      }
-
-      ranked.sort((a, b) => b.points - a.points || b.goalsDiff - a.goalsDiff || b.goalsFor - a.goalsFor);
-      const half = ranked.length / 2;
-      for (let i = 0; i < half; i++) {
-        pairs.push([ranked[i].team, ranked[ranked.length - 1 - i].team]);
-      }
+      pairs = await smartPairing(groups, stage);
 
     } else {
-      // ליגה רגילה
       const stats = {};
       allTeams.forEach(t => stats[t._id] = { team: t, points: 0, goalsDiff: 0, goalsFor: 0 });
 
@@ -222,7 +187,7 @@ router.post('/create-knockout-auto', async (req, res) => {
         teamB: teamB._id,
         date: new Date(),
         time: '12:00',
-        location: `מגרש ${stage}`,
+        location: 'מגרש נוקאאוט',
         knockoutStage: stage
       });
       await game.save();
@@ -230,8 +195,65 @@ router.post('/create-knockout-auto', async (req, res) => {
     }
 
     res.status(201).json({ message: `✅ שלב ${stage} נוצר בהצלחה`, games: newGames });
+
   } catch (err) {
     res.status(500).json({ error: '❌ שגיאה ביצירת שלב נוקאאוט', details: err.message });
+  }
+});
+
+// ✅ עדכון תוצאה ויצירת שלב הבא *רק על מנצחות*
+router.put('/:gameId', async (req, res) => {
+  try {
+    const { scoreA, scoreB, ...rest } = req.body;
+
+    if (scoreA === scoreB) {
+      return res.status(400).json({ error: '❌ נוקאאוט לא יכול להסתיים בתיקו' });
+    }
+
+    const updated = await Game.findByIdAndUpdate(
+      req.params.gameId,
+      { ...rest, scoreA, scoreB },
+      { new: true }
+    );
+
+    const stages = ['שמינית גמר', 'רבע גמר', 'חצי גמר'];
+    if (stages.includes(updated.knockoutStage)) {
+      const allStageGames = await Game.find({
+        tournamentId: updated.tournamentId,
+        knockoutStage: updated.knockoutStage
+      });
+
+      const finished = allStageGames.filter(g => g.scoreA != null && g.scoreB != null);
+      if (finished.length === allStageGames.length) {
+        const winners = finished.map(g => (g.scoreA > g.scoreB ? g.teamA : g.teamB));
+
+        let nextStage = '';
+        if (updated.knockoutStage === 'שמינית גמר') nextStage = 'רבע גמר';
+        else if (updated.knockoutStage === 'רבע גמר') nextStage = 'חצי גמר';
+        else if (updated.knockoutStage === 'חצי גמר') nextStage = 'גמר';
+
+        const exist = await Game.findOne({ tournamentId: updated.tournamentId, knockoutStage: nextStage });
+        if (!exist && winners.length >= 2) {
+          for (let i = 0; i < winners.length / 2; i++) {
+            const game = new Game({
+              tournamentId: updated.tournamentId,
+              teamA: winners[i],
+              teamB: winners[winners.length - 1 - i],
+              date: new Date(),
+              time: '12:00',
+              location: `מגרש ${nextStage}`,
+              knockoutStage: nextStage
+            });
+            await game.save();
+          }
+          console.log(`🎉 ${nextStage} נוצר אוטומטית`);
+        }
+      }
+    }
+
+    res.json({ message: '✅ המשחק עודכן', game: updated });
+  } catch (err) {
+    res.status(500).json({ error: '❌ שגיאה בעדכון המשחק', details: err.message });
   }
 });
 
