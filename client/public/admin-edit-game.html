@@ -403,15 +403,14 @@ async function saveChanges() {
 
 async function saveAndBack() {
   await saveChanges();
-
   const toRedirect = new URLSearchParams(window.location.search).get('toredirect');
 
   if (toRedirect === 'games') {
-    window.location.href = '/admin-games.html'; // הנתיב שלך לניהול משחקים
+    window.location.href = '/admin-games.html';
   } else if (toRedirect === 'knockout') {
-    window.location.href = '/admin-standings.html'; // הנתיב שלך לנוקאאוט
+    window.location.href = '/admin-standings.html';
   } else {
-    location.reload(); // fallback אם לא שמו פרמטר
+    location.reload();
   }
 }
 
