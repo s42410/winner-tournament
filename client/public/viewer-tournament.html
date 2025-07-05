@@ -381,38 +381,25 @@ function renderBracket(games) {
   svg.setAttribute("width", "1200");
   svg.setAttribute("height", "600");
 
-  // מיקומים ברורים - כל שלב בנפרד
-  const stageX = {
-    'רבע גמר': 50,
-    'חצי גמר': 450,
-    'גמר': 850
-  };
-
-  const stageY = {
-    'רבע גמר': [50, 150, 250, 350],
-    'חצי גמר': [100, 300],
-    'גמר': [200]
-  };
+  const stageX = { 'רבע גמר': 50, 'חצי גמר': 450, 'גמר': 850 };
+  const stageY = { 'רבע גמר': [50, 150, 250, 350], 'חצי גמר': [100, 300], 'גמר': [200] };
 
   const rectWidth = 180;
   const rectHeight = 50;
-
   const matchCenters = {};
 
-  // צייר ריבועים מסודרים
+  // ריבועים
   games.forEach((g, i) => {
-    if (!g.knockoutStage) return;
+    if (!g.knockoutStage || !g._id) return;
 
     const stage = g.knockoutStage;
-    if (!stageX[stage]) return; // מדלג על שמינית!
+    if (!stageX[stage]) return;
 
-    // סדר לפי אינדקס ידני
     const idx = (stage === 'רבע גמר') ? i % 4 : (stage === 'חצי גמר') ? i % 2 : 0;
 
     const x = stageX[stage];
     const y = stageY[stage][idx];
 
-    // קופסה
     const rect = document.createElementNS(svgNS, "rect");
     rect.setAttribute("x", x);
     rect.setAttribute("y", y);
@@ -423,7 +410,6 @@ function renderBracket(games) {
     rect.setAttribute("stroke-width", "2");
     svg.appendChild(rect);
 
-    // שם קבוצה A
     const teamA = document.createElementNS(svgNS, "text");
     teamA.setAttribute("x", x + rectWidth / 2);
     teamA.setAttribute("y", y + 18);
@@ -432,7 +418,6 @@ function renderBracket(games) {
     teamA.textContent = g.teamA?.name || "---";
     svg.appendChild(teamA);
 
-    // שם קבוצה B
     const teamB = document.createElementNS(svgNS, "text");
     teamB.setAttribute("x", x + rectWidth / 2);
     teamB.setAttribute("y", y + 38);
@@ -441,28 +426,23 @@ function renderBracket(games) {
     teamB.textContent = g.teamB?.name || "---";
     svg.appendChild(teamB);
 
-    matchCenters[g._id] = {
-      x: x + rectWidth,
-      y: y + rectHeight / 2,
-      stage: stage
-    };
+    matchCenters[g._id] = { x: x + rectWidth, y: y + rectHeight / 2, stage: stage };
   });
 
-  // קווים מחברים כל שלב
+  // קווים
   games.forEach(g => {
-    if (!g.knockoutStage || g.knockoutStage === 'גמר') return;
+    if (!g.knockoutStage || !g._id || g.knockoutStage === 'גמר') return;
 
     const from = matchCenters[g._id];
-    let nextStage = '';
+    if (!from) return;
 
-    if (g.knockoutStage === 'רבע גמר') nextStage = 'חצי גמר';
-    else if (g.knockoutStage === 'חצי גמר') nextStage = 'גמר';
-
+    let nextStage = g.knockoutStage === 'רבע גמר' ? 'חצי גמר' : 'גמר';
     const toMatches = games.filter(m => m.knockoutStage === nextStage);
     if (!toMatches.length) return;
 
-    const idx = (g.knockoutStage === 'רבע גמר') ? Math.floor(g.matchIndex / 2) : 0;
-    const to = matchCenters[toMatches[idx]._id];
+    const idx = (g.knockoutStage === 'רבע גמר') ? Math.floor((g.matchIndex ?? 0) / 2) : 0;
+    const to = matchCenters[toMatches[idx]?._id];
+    if (!to) return;
 
     const lineH = document.createElementNS(svgNS, "line");
     lineH.setAttribute("x1", from.x);
@@ -492,7 +472,6 @@ function renderBracket(games) {
     svg.appendChild(lineH2);
   });
 
-  // גביע במרכז
   const trophy = document.createElementNS(svgNS, "text");
   trophy.setAttribute("x", stageX['גמר'] + rectWidth + 50);
   trophy.setAttribute("y", stageY['גמר'][0] + rectHeight / 2);
@@ -503,6 +482,7 @@ function renderBracket(games) {
 
   container.appendChild(svg);
 }
+
 
     loadTournamentData();
   </script>
