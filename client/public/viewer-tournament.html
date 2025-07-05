@@ -443,39 +443,41 @@ if (g.knockoutStage !== 'גמר') {
       ? stageX[nextStageIdx] + 350
       : 600;
 
-    // חיבור אנכי ראשון
+    // ננסה למצוא את המשחק הבא באותו צד
+    const nextStage = stages[nextStageIdx];
+    const nextMatch = games.find(m => m.knockoutStage === nextStage && m.side === side);
+    let nextY;
+
+    if (nextMatch && matchPositions[nextMatch._id]) {
+      // אם כבר שמרנו את המיקום של המשחק הבא — נשתמש בו
+      nextY = matchPositions[nextMatch._id].y;
+    } else {
+      // אחרת — נניח מיקום משוער כדי שלא יישבר
+      nextY = y + (yStep * 2);
+    }
+
+    // קו אנכי קצר מהמשחק הזה למרכז הקו
     const vLine = document.createElementNS(svgNS, "line");
     vLine.setAttribute("x1", x + 50);
     vLine.setAttribute("y1", y + 10);
     vLine.setAttribute("x2", x + 50);
-    vLine.setAttribute("y2", y + 30);
+    vLine.setAttribute("y2", nextY);
     vLine.setAttribute("stroke", "#1e90ff");
     vLine.setAttribute("stroke-width", "2");
     svg.appendChild(vLine);
 
-    // חיבור אופקי לשלב הבא
+    // קו אופקי מהקצה לקצה
     const hLine = document.createElementNS(svgNS, "line");
     hLine.setAttribute("x1", x + 50);
-    hLine.setAttribute("y1", y + 30);
+    hLine.setAttribute("y1", nextY);
     hLine.setAttribute("x2", nextX);
-    hLine.setAttribute("y2", y + 30);
+    hLine.setAttribute("y2", nextY);
     hLine.setAttribute("stroke", "#1e90ff");
     hLine.setAttribute("stroke-width", "2");
     svg.appendChild(hLine);
-
-    // קו אנכי חדש שיורד לשלב הבא
-    const nextY = y + 30 + (yStep);
-    const downLine = document.createElementNS(svgNS, "line");
-    downLine.setAttribute("x1", nextX);
-    downLine.setAttribute("y1", y + 30);
-    downLine.setAttribute("x2", nextX);
-    downLine.setAttribute("y2", nextY);
-    downLine.setAttribute("stroke", "#1e90ff");
-    downLine.setAttribute("stroke-width", "2");
-    svg.appendChild(downLine);
   }
+}
 
-    }
   });
 
   const trophy = document.createElementNS(svgNS, "text");
