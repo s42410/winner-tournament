@@ -63,135 +63,14 @@ router.post('/', async (req, res) => {
   }
 });
 
-// ✅ יצירת שלב נוקאאוט אוטומטי עם בדיקות מלאות
-router.post('/create-knockout-auto', async (req, res) => {
-  try {
-    const { tournamentId, stage, numTeams } = req.body;
-    if (!tournamentId || !stage || !numTeams) {
-      return res.status(400).json({ error: '❗ חסרים נתונים ליצירת שלב נוקאאוט' });
-    }
-
-    // בקרה שמספר קבוצות תואם לשלב שבחרו
-    let expected = 0;
-    if (stage === 'שמינית גמר') expected = 16;
-    else if (stage === 'רבע גמר') expected = 8;
-    else if (stage === 'חצי גמר') expected = 4;
-    else if (stage === 'גמר') expected = 2;
-
-    if (numTeams !== expected) {
-      return res.status(400).json({ error: `❗ מספר קבוצות לא תואם לשלב ${stage}. נדרש ${expected}` });
-    }
-
-    const allTeams = await Team.find({ tournamentId });
-    const allGames = await Game.find({ tournamentId }).populate('teamA teamB');
-
-    const hasGroups = allTeams.some(t => t.group && t.group.trim() !== '');
-    let pairs = [];
-
-    if (hasGroups) {
-      // מצב בתים: דרוג קבוצות לפי בית
-      const groups = {};
-      allTeams.forEach(t => {
-        const g = t.group.trim();
-        if (!groups[g]) groups[g] = [];
-        groups[g].push({ team: t, points: 0, goalsDiff: 0, goalsFor: 0 });
-      });
-
-      for (const game of allGames) {
-        if (!game.knockoutStage) {
-          const ta = groups[game.teamA.group].find(x => x.team._id.equals(game.teamA._id));
-          const tb = groups[game.teamB.group].find(x => x.team._id.equals(game.teamB._id));
-          if (ta && tb) {
-            ta.goalsFor += game.scoreA || 0;
-            tb.goalsFor += game.scoreB || 0;
-            ta.goalsDiff += (game.scoreA || 0) - (game.scoreB || 0);
-            tb.goalsDiff += (game.scoreB || 0) - (game.scoreA || 0);
-            if (game.scoreA > game.scoreB) ta.points += 3;
-            else if (game.scoreA < game.scoreB) tb.points += 3;
-            else { ta.points += 1; tb.points += 1; }
-          }
-        }
-      }
-
-      for (const g of Object.keys(groups)) {
-        groups[g].sort((a, b) => b.points - a.points || b.goalsDiff - a.goalsDiff || b.goalsFor - a.goalsFor);
-      }
-
-      // מכינים רשימה משולבת
-      const ranked = [];
-      if (stage === 'שמינית גמר') {
-        for (const g of Object.keys(groups)) ranked.push(...groups[g].slice(0, 4));
-      } else if (stage === 'רבע גמר') {
-        for (const g of Object.keys(groups)) ranked.push(...groups[g].slice(0, 2));
-      } else {
-        ranked.push(...Object.values(groups).flat().slice(0, numTeams));
-      }
-
-      ranked.sort((a, b) => b.points - a.points || b.goalsDiff - a.goalsDiff || b.goalsFor - a.goalsFor);
-      const half = ranked.length / 2;
-      for (let i = 0; i < half; i++) {
-        pairs.push([ranked[i].team, ranked[ranked.length - 1 - i].team]);
-      }
-
-    } else {
-      // מצב ליגה רגיל
-      const stats = {};
-      allTeams.forEach(t => stats[t._id] = { team: t, points: 0, goalsDiff: 0, goalsFor: 0 });
-
-      for (const game of allGames) {
-        if (!game.knockoutStage) {
-          const ta = stats[game.teamA._id];
-          const tb = stats[game.teamB._id];
-          ta.goalsFor += game.scoreA || 0;
-          tb.goalsFor += game.scoreB || 0;
-          ta.goalsDiff += (game.scoreA || 0) - (game.scoreB || 0);
-          tb.goalsDiff += (game.scoreB || 0) - (game.scoreA || 0);
-          if (game.scoreA > game.scoreB) ta.points += 3;
-          else if (game.scoreA < game.scoreB) tb.points += 3;
-          else { ta.points += 1; tb.points += 1; }
-        }
-      }
-
-      const sorted = Object.values(stats).sort((a, b) =>
-        b.points - a.points || b.goalsDiff - a.goalsDiff || b.goalsFor - a.goalsFor
-      ).map(x => x.team);
-
-      if (numTeams === 6) {
-        pairs.push([sorted[2], sorted[5]]);
-        pairs.push([sorted[3], sorted[4]]);
-      } else {
-        for (let i = 0; i < numTeams / 2; i++) {
-          pairs.push([sorted[i], sorted[numTeams - 1 - i]]);
-        }
-      }
-    }
-
-    const newGames = [];
-    for (const [teamA, teamB] of pairs) {
-      const game = new Game({
-        tournamentId,
-        teamA: teamA._id,
-        teamB: teamB._id,
-        date: new Date(),
-        time: '12:00',
-        location: 'מגרש נוקאאוט',
-        knockoutStage: stage
-      });
-      await game.save();
-      newGames.push(game);
-    }
-
-    res.status(201).json({ message: `✅ שלב ${stage} נוצר בהצלחה`, games: newGames });
-
-  } catch (err) {
-    res.status(500).json({ error: '❌ שגיאה ביצירת שלב נוקאאוט', details: err.message });
-  }
-});
-
-// ✅ עדכון תוצאה ויצירת שלב הבא אוטומטית
+// ✅ עדכון תוצאה ויצירת שלב נוקאאוט הבא אוטומטי - מבוסס על תוצאות בפועל בלבד
 router.put('/:gameId', async (req, res) => {
   try {
     const { teamA, teamB, date, time, location, scoreA, scoreB, goals, cards } = req.body;
+
+    if (scoreA === scoreB) {
+      return res.status(400).json({ error: '❌ בשלב נוקאאוט אין תוצאת תיקו. חייבת להיות הכרעה!' });
+    }
 
     const updated = await Game.findByIdAndUpdate(
       req.params.gameId,
@@ -229,18 +108,134 @@ router.put('/:gameId', async (req, res) => {
             });
             await game.save();
           }
-          console.log(`🎉 ${nextStage} נוצר אוטומטית`);
+          console.log(`🎉 ${nextStage} נוצר אוטומטית לאחר עדכון תוצאות`);
         }
       }
     }
 
-    res.json({ message: '✅ המשחק עודכן', game: updated });
+    res.json({ message: '✅ המשחק עודכן בהצלחה', game: updated });
   } catch (err) {
     res.status(500).json({ error: '❌ שגיאה בעדכון המשחק', details: err.message });
   }
 });
 
-// ✅ מחיקת משחק בודד
+// ✅ יצירת שלב נוקאאוט אוטומטי - יוצר רק את השלב המבוקש לפי הדירוג הנכון
+router.post('/create-knockout-auto', async (req, res) => {
+  try {
+    const { tournamentId, stage, numTeams } = req.body;
+    if (!tournamentId || !stage || !numTeams) {
+      return res.status(400).json({ error: '❗ חסרים נתונים ליצירת שלב נוקאאוט' });
+    }
+
+    let expected = 0;
+    if (stage === 'שמינית גמר') expected = 16;
+    else if (stage === 'רבע גמר') expected = 8;
+    else if (stage === 'חצי גמר') expected = 4;
+    else if (stage === 'גמר') expected = 2;
+
+    if (numTeams !== expected) {
+      return res.status(400).json({ error: `❗ מספר קבוצות לא תואם לשלב ${stage}. נדרש ${expected}` });
+    }
+
+    const allTeams = await Team.find({ tournamentId });
+    const allGames = await Game.find({ tournamentId }).populate('teamA teamB');
+    const hasGroups = allTeams.some(t => t.group && t.group.trim() !== '');
+    let pairs = [];
+
+    if (hasGroups) {
+      // דרוג קבוצות לפי בתים
+      const groups = {};
+      allTeams.forEach(t => {
+        const g = t.group.trim();
+        if (!groups[g]) groups[g] = [];
+        groups[g].push({ team: t, points: 0, goalsDiff: 0, goalsFor: 0 });
+      });
+
+      for (const game of allGames) {
+        if (!game.knockoutStage) {
+          const ta = groups[game.teamA.group].find(x => x.team._id.equals(game.teamA._id));
+          const tb = groups[game.teamB.group].find(x => x.team._id.equals(game.teamB._id));
+          if (ta && tb) {
+            ta.goalsFor += game.scoreA || 0;
+            tb.goalsFor += game.scoreB || 0;
+            ta.goalsDiff += (game.scoreA || 0) - (game.scoreB || 0);
+            tb.goalsDiff += (game.scoreB || 0) - (game.scoreA || 0);
+            if (game.scoreA > game.scoreB) ta.points += 3;
+            else if (game.scoreA < game.scoreB) tb.points += 3;
+            else { ta.points += 1; tb.points += 1; }
+          }
+        }
+      }
+
+      for (const g of Object.keys(groups)) {
+        groups[g].sort((a, b) => b.points - a.points || b.goalsDiff - a.goalsDiff || b.goalsFor - a.goalsFor);
+      }
+
+      const ranked = [];
+      if (stage === 'שמינית גמר') {
+        for (const g of Object.keys(groups)) ranked.push(...groups[g].slice(0, 4));
+      } else if (stage === 'רבע גמר') {
+        for (const g of Object.keys(groups)) ranked.push(...groups[g].slice(0, 2));
+      } else {
+        ranked.push(...Object.values(groups).flat().slice(0, numTeams));
+      }
+
+      ranked.sort((a, b) => b.points - a.points || b.goalsDiff - a.goalsDiff || b.goalsFor - a.goalsFor);
+      const half = ranked.length / 2;
+      for (let i = 0; i < half; i++) {
+        pairs.push([ranked[i].team, ranked[ranked.length - 1 - i].team]);
+      }
+
+    } else {
+      // ליגה רגילה
+      const stats = {};
+      allTeams.forEach(t => stats[t._id] = { team: t, points: 0, goalsDiff: 0, goalsFor: 0 });
+
+      for (const game of allGames) {
+        if (!game.knockoutStage) {
+          const ta = stats[game.teamA._id];
+          const tb = stats[game.teamB._id];
+          ta.goalsFor += game.scoreA || 0;
+          tb.goalsFor += game.scoreB || 0;
+          ta.goalsDiff += (game.scoreA || 0) - (game.scoreB || 0);
+          tb.goalsDiff += (game.scoreB || 0) - (game.scoreA || 0);
+          if (game.scoreA > game.scoreB) ta.points += 3;
+          else if (game.scoreA < game.scoreB) tb.points += 3;
+          else { ta.points += 1; tb.points += 1; }
+        }
+      }
+
+      const sorted = Object.values(stats).sort((a, b) =>
+        b.points - a.points || b.goalsDiff - a.goalsDiff || b.goalsFor - a.goalsFor
+      ).map(x => x.team);
+
+      for (let i = 0; i < numTeams / 2; i++) {
+        pairs.push([sorted[i], sorted[numTeams - 1 - i]]);
+      }
+    }
+
+    const newGames = [];
+    for (const [teamA, teamB] of pairs) {
+      const game = new Game({
+        tournamentId,
+        teamA: teamA._id,
+        teamB: teamB._id,
+        date: new Date(),
+        time: '12:00',
+        location: `מגרש ${stage}`,
+        knockoutStage: stage
+      });
+      await game.save();
+      newGames.push(game);
+    }
+
+    res.status(201).json({ message: `✅ שלב ${stage} נוצר בהצלחה`, games: newGames });
+  } catch (err) {
+    res.status(500).json({ error: '❌ שגיאה ביצירת שלב נוקאאוט', details: err.message });
+  }
+});
+
+// ✅ מחיקות
 router.delete('/:gameId', async (req, res) => {
   try {
     await Game.findByIdAndDelete(req.params.gameId);
@@ -250,7 +245,6 @@ router.delete('/:gameId', async (req, res) => {
   }
 });
 
-// ✅ מחיקת כל שלבי נוקאאוט בלבד
 router.delete('/deleteAll/:tournamentId', async (req, res) => {
   try {
     const result = await Game.deleteMany({
@@ -263,7 +257,6 @@ router.delete('/deleteAll/:tournamentId', async (req, res) => {
   }
 });
 
-// ✅ מחיקת כל משחקי ליגה ובתים
 router.delete('/group-stage/:tournamentId', async (req, res) => {
   try {
     await Game.deleteMany({ tournamentId: req.params.tournamentId });
