@@ -403,7 +403,7 @@ async function saveChanges() {
 
 async function saveAndBack() {
   await saveChanges();
-  location.reload();
+  await loadGame();
 }
 
 document.getElementById('scoreA').oninput = renderScorers;
