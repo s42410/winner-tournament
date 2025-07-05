@@ -179,15 +179,27 @@
   }
 
   async function saveSingleGroup(id, group) {
-    await fetch(`/api/teams/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ group, tournamentId }) // 👈 הוספתי את tournamentId
-    });
-    message.textContent = '✅ נשמר';
-    message.className = 'message success';
-    fetchTeams();
-  }
+  // שלב 1: טען את פרטי הקבוצה הקיימת מהשרת
+  const res = await fetch(`/api/teams/${id}`);
+  const team = await res.json();
+
+  // שלב 2: שלח עדכון עם כל השדות הנדרשים
+  await fetch(`/api/teams/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      name: team.name,
+      color: team.color,
+      group: group,
+      tournamentId: tournamentId
+    })
+  });
+
+  message.textContent = '✅ נשמר';
+  message.className = 'message success';
+  fetchTeams();
+}
+
 
   async function saveAllGroups() {
     const inputs = document.querySelectorAll('.group-cell input');
