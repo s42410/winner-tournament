@@ -403,14 +403,16 @@ async function saveChanges() {
 
 async function saveAndBack() {
   await saveChanges();
+
   const toRedirect = new URLSearchParams(window.location.search).get('toredirect');
+  const tournamentId = new URLSearchParams(window.location.search).get('tournamentId');
 
   if (toRedirect === 'games') {
-    window.location.href = '/admin-games.html';
+    window.location.href = `/admin-games.html?tournamentId=${tournamentId}`;
   } else if (toRedirect === 'knockout') {
-    window.location.href = '/admin-standings.html';
+    window.location.href = `/admin-standings.html?tournamentId=${tournamentId}`;
   } else {
-    location.reload();
+    history.back();
   }
 }
 
