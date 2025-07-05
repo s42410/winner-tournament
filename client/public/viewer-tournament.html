@@ -195,9 +195,14 @@
     </table>
   </div>
 
-<div id="bracketContainer" class="section">
-  <h2>🏆 תרשים שלבי נוקאאוט</h2>
-  <div id="bracketTree" class="bracket-tree"></div>
+<div id="bracketTree" class="bracket-tree">
+  <div class="bracket-column" id="stage-R16"></div>
+  <div class="bracket-column" id="stage-QF"></div>
+  <div class="bracket-column" id="stage-SF"></div>
+  <div class="bracket-center">🏆</div>
+  <div class="bracket-column" id="stage-SF-R"></div>
+  <div class="bracket-column" id="stage-QF-R"></div>
+  <div class="bracket-column" id="stage-R16-R"></div>
 </div>
 
 
@@ -406,7 +411,8 @@ function renderBracket(games) {
   const rightHtml = `<div class="bracket-column">${buildColumn(rightSide)}</div>`;
   const centerHtml = `<div class="bracket-center">🏆</div>`;
 
-  document.getElementById('bracketTree').innerHTML = leftHtml + centerHtml + rightHtml;
+document.getElementById('bracketTree').innerHTML = leftHtml + centerHtml + rightHtml;
+
 }
 
 
