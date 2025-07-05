@@ -372,15 +372,7 @@
         document.getElementById('error').innerText = '❌ שגיאה בטעינת הנתונים: ' + err.message;
       }
     }
-  const games = [
-    {_id: "qf1", knockoutStage: "רבע גמר", side: "L", teamA: {name: "ראשון לציון"}, teamB: {name: "נס ציונה"}, nextMatchId: "sf1"},
-    {_id: "qf2", knockoutStage: "רבע גמר", side: "L", teamA: {name: "בת ים"}, teamB: {name: "חולון"}, nextMatchId: "sf1"},
-    {_id: "qf3", knockoutStage: "רבע גמר", side: "R", teamA: {name: "כפר סבא"}, teamB: {name: "הרצליה"}, nextMatchId: "sf2"},
-    {_id: "qf4", knockoutStage: "רבע גמר", side: "R", teamA: {name: "תל אביב"}, teamB: {name: "פתח תקווה"}, nextMatchId: "sf2"},
-    {_id: "sf1", knockoutStage: "חצי גמר", side: "L", teamA: {}, teamB: {}, nextMatchId: "final"},
-    {_id: "sf2", knockoutStage: "חצי גמר", side: "R", teamA: {}, teamB: {}, nextMatchId: "final"},
-    {_id: "final", knockoutStage: "גמר", side: "C", teamA: {}, teamB: {}}
-  ];
+  
 function renderBracket(games) {
   const container = document.getElementById('bracketContainer');
   container.innerHTML = '';
