@@ -403,8 +403,18 @@ async function saveChanges() {
 
 async function saveAndBack() {
   await saveChanges();
-  await loadGame();
+
+  const toRedirect = new URLSearchParams(window.location.search).get('toredirect');
+
+  if (toRedirect === 'games') {
+    window.location.href = '/admin-games.html'; // הנתיב שלך לניהול משחקים
+  } else if (toRedirect === 'knockout') {
+    window.location.href = '/admin-standings.html'; // הנתיב שלך לנוקאאוט
+  } else {
+    location.reload(); // fallback אם לא שמו פרמטר
+  }
 }
+
 
 document.getElementById('scoreA').oninput = renderScorers;
 document.getElementById('scoreB').oninput = renderScorers;
