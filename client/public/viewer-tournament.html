@@ -404,10 +404,8 @@
       }
     }
 
- function renderBracket(games) {
+function renderBracket(games) {
   const stages = ['שמינית גמר', 'רבע גמר', 'חצי גמר', 'גמר'];
-
-  // חלק את המשחקים לצדדים
   const leftSide = {};
   const rightSide = {};
   stages.forEach(stage => {
@@ -415,7 +413,13 @@
     rightSide[stage] = [];
   });
 
-  games.forEach(game => {
+  // מחלק צדדים אם חסר
+  games.forEach((game, index) => {
+    if (!game.knockoutStage) return; // דלג על ליגה רגילה
+    if (!game.side) {
+      game.side = index % 2 === 0 ? 'L' : 'R';
+    }
+
     if (game.side === 'L') {
       leftSide[game.knockoutStage]?.push(game);
     } else if (game.side === 'R') {
@@ -424,34 +428,33 @@
   });
 
   const buildColumn = (side) => {
-  let html = '';
-  stages.forEach(stage => {
-    const matches = side[stage];
-    if (matches.length > 0) {
-      html += `<div class="bracket-stage"><h4>${stage}</h4>`;
-      matches.forEach((match, index) => {
-        html += `
-          <div class="bracket-node">
-            ${match.teamA?.name || '---'}<br>
-            ${match.scoreA != null && match.scoreB != null ? `${match.scoreA} : ${match.scoreB}` : ''}<br>
-            ${match.teamB?.name || '---'}
-          </div>
-        `;
-        // הוסף קו מחבר רק אם זה לא האחרון בשלב
-        if (index < matches.length - 1) {
-          html += `<div class="bracket-connector-v"></div>`;
-        }
-      });
-      html += `</div>`;
-    }
-  });
-  return html;
-};
-
+    let html = '';
+    stages.forEach(stage => {
+      const matches = side[stage];
+      if (matches.length > 0) {
+        html += `<div class="bracket-stage"><h4>${stage}</h4>`;
+        matches.forEach((match, index) => {
+          html += `
+            <div class="bracket-node">
+              ${match.teamA?.name || '---'}<br>
+              ${match.scoreA != null && match.scoreB != null ? `${match.scoreA} : ${match.scoreB}` : ''}<br>
+              ${match.teamB?.name || '---'}
+            </div>
+          `;
+          if (index < matches.length - 1) {
+            html += `<div class="bracket-connector-v"></div>`;
+          }
+        });
+        html += `</div>`;
+      }
+    });
+    return html;
+  };
 
   document.getElementById('leftSide').innerHTML = buildColumn(leftSide);
   document.getElementById('rightSide').innerHTML = buildColumn(rightSide);
 }
+
 
 
 
