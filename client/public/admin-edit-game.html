@@ -401,6 +401,11 @@ async function saveChanges() {
   document.getElementById('message').textContent = res.ok ? '✅ נשמר בהצלחה' : '❌ שגיאה: ' + data.error;
 }
 
+async function saveAndBack() {
+  await saveChanges();
+  location.reload();
+}
+
 document.getElementById('scoreA').oninput = renderScorers;
 document.getElementById('scoreB').oninput = renderScorers;
 
