@@ -372,125 +372,133 @@
         document.getElementById('error').innerText = '❌ שגיאה בטעינת הנתונים: ' + err.message;
       }
     }
-    const games = [
-      { _id: "qf1", knockoutStage: "רבע גמר", side: "L", teamA: {name: "ראשון לציון"}, teamB: {name: "נס ציונה"}, nextMatchId: "sf1" },
-      { _id: "qf2", knockoutStage: "רבע גמר", side: "L", teamA: {name: "בת ים"}, teamB: {name: "חולון"}, nextMatchId: "sf1" },
-      { _id: "qf3", knockoutStage: "רבע גמר", side: "R", teamA: {name: "כפר סבא"}, teamB: {name: "הרצליה"}, nextMatchId: "sf2" },
-      { _id: "qf4", knockoutStage: "רבע גמר", side: "R", teamA: {name: "תל אביב"}, teamB: {name: "פתח תקווה"}, nextMatchId: "sf2" },
-      { _id: "sf1", knockoutStage: "חצי גמר", side: "L", teamA: {}, teamB: {}, nextMatchId: "final" },
-      { _id: "sf2", knockoutStage: "חצי גמר", side: "R", teamA: {}, teamB: {}, nextMatchId: "final" },
-      { _id: "final", knockoutStage: "גמר", side: "C", teamA: {}, teamB: {} }
-    ];
+  const games = [
+    {_id: "qf1", knockoutStage: "רבע גמר", side: "L", teamA: {name: "ראשון לציון"}, teamB: {name: "נס ציונה"}, nextMatchId: "sf1"},
+    {_id: "qf2", knockoutStage: "רבע גמר", side: "L", teamA: {name: "בת ים"}, teamB: {name: "חולון"}, nextMatchId: "sf1"},
+    {_id: "qf3", knockoutStage: "רבע גמר", side: "R", teamA: {name: "כפר סבא"}, teamB: {name: "הרצליה"}, nextMatchId: "sf2"},
+    {_id: "qf4", knockoutStage: "רבע גמר", side: "R", teamA: {name: "תל אביב"}, teamB: {name: "פתח תקווה"}, nextMatchId: "sf2"},
+    {_id: "sf1", knockoutStage: "חצי גמר", side: "L", teamA: {}, teamB: {}, nextMatchId: "final"},
+    {_id: "sf2", knockoutStage: "חצי גמר", side: "R", teamA: {}, teamB: {}, nextMatchId: "final"},
+    {_id: "final", knockoutStage: "גמר", side: "C", teamA: {}, teamB: {}}
+  ];
 
-    function renderBracket(games) {
-      const container = document.getElementById('bracketContainer');
-      container.innerHTML = '';
+  function renderBracket(games) {
+    const container = document.getElementById('bracketContainer');
+    container.innerHTML = '';
 
-      const svgNS = "http://www.w3.org/2000/svg";
-      const svg = document.createElementNS(svgNS, "svg");
-      svg.setAttribute("width", "1200");
-      svg.setAttribute("height", "600");
+    const svgNS = "http://www.w3.org/2000/svg";
+    const svg = document.createElementNS(svgNS, "svg");
+    svg.setAttribute("width", "1200");
+    svg.setAttribute("height", "600");
 
-      const stages = ['רבע גמר', 'חצי גמר', 'גמר'];
-      const sideX = { L: 50, R: 750 };
-      const stageOffsetX = 200;
-      const matchHeight = 40;
-      const matchGap = 40;
+    const stages = ['רבע גמר', 'חצי גמר', 'גמר'];
+    const sideX = { L: 100, R: 800 };
+    const stageOffsetX = 200;
+    const matchHeight = 40;
+    const matchGap = 40;
 
-      const matchCenters = {};
-      const stageCounts = {};
+    const matchCenters = {};
+    const stageCounts = {};
 
-      games.forEach((g) => {
-        const stage = g.knockoutStage;
-        const side = g.side;
-        if (!stageCounts[stage + side]) stageCounts[stage + side] = 0;
+    games.forEach((g) => {
+      const stage = g.knockoutStage;
+      const side = g.side;
+      if (!stageCounts[stage + side]) stageCounts[stage + side] = 0;
 
-        const stageIdx = stages.indexOf(stage);
-        const x = side === 'C' ? 600 : sideX[side] + stageIdx * stageOffsetX;
-        const y = side === 'C' ? 250 : 50 + stageCounts[stage + side] * (matchHeight * 2 + matchGap);
+      const stageIdx = stages.indexOf(stage);
+      const x = side === 'C' ? 550 : sideX[side] + stageIdx * stageOffsetX;
+      const y = side === 'C'
+        ? 250
+        : 50 + stageCounts[stage + side] * (matchHeight * 2 + matchGap);
 
-        stageCounts[stage + side]++;
+      stageCounts[stage + side]++;
 
-        if (stage !== 'גמר') {
-          // קבוצה A
-          const rectA = document.createElementNS(svgNS, "rect");
-          rectA.setAttribute("x", x);
-          rectA.setAttribute("y", y);
-          rectA.setAttribute("width", "120");
-          rectA.setAttribute("height", matchHeight);
-          svg.appendChild(rectA);
+      if (stage !== 'גמר') {
+        const rectA = document.createElementNS(svgNS, "rect");
+        rectA.setAttribute("x", x);
+        rectA.setAttribute("y", y);
+        rectA.setAttribute("width", "120");
+        rectA.setAttribute("height", matchHeight);
+        rectA.setAttribute("fill", "#fff3e0");
+        rectA.setAttribute("stroke", "#ffb74d");
+        svg.appendChild(rectA);
 
-          const textA = document.createElementNS(svgNS, "text");
-          textA.setAttribute("x", x + 60);
-          textA.setAttribute("y", y + 25);
-          textA.setAttribute("text-anchor", "middle");
-          textA.textContent = g.teamA?.name || "---";
-          svg.appendChild(textA);
+        const textA = document.createElementNS(svgNS, "text");
+        textA.setAttribute("x", x + 60);
+        textA.setAttribute("y", y + 25);
+        textA.setAttribute("text-anchor", "middle");
+        textA.textContent = g.teamA?.name || "---";
+        svg.appendChild(textA);
 
-          // קבוצה B
-          const rectB = document.createElementNS(svgNS, "rect");
-          rectB.setAttribute("x", x);
-          rectB.setAttribute("y", y + matchHeight);
-          rectB.setAttribute("width", "120");
-          rectB.setAttribute("height", matchHeight);
-          svg.appendChild(rectB);
+        const rectB = document.createElementNS(svgNS, "rect");
+        rectB.setAttribute("x", x);
+        rectB.setAttribute("y", y + matchHeight);
+        rectB.setAttribute("width", "120");
+        rectB.setAttribute("height", matchHeight);
+        rectB.setAttribute("fill", "#fff3e0");
+        rectB.setAttribute("stroke", "#ffb74d");
+        svg.appendChild(rectB);
 
-          const textB = document.createElementNS(svgNS, "text");
-          textB.setAttribute("x", x + 60);
-          textB.setAttribute("y", y + matchHeight + 25);
-          textB.setAttribute("text-anchor", "middle");
-          textB.textContent = g.teamB?.name || "---";
-          svg.appendChild(textB);
-        } else {
-          // גמר גביע
-          const trophy = document.createElementNS(svgNS, "text");
-          trophy.setAttribute("x", x);
-          trophy.setAttribute("y", y);
-          trophy.setAttribute("text-anchor", "middle");
-          trophy.setAttribute("font-size", "50");
-          trophy.textContent = "🏆";
-          svg.appendChild(trophy);
-        }
+        const textB = document.createElementNS(svgNS, "text");
+        textB.setAttribute("x", x + 60);
+        textB.setAttribute("y", y + matchHeight + 25);
+        textB.setAttribute("text-anchor", "middle");
+        textB.textContent = g.teamB?.name || "---";
+        svg.appendChild(textB);
+      } else {
+        const trophy = document.createElementNS(svgNS, "text");
+        trophy.setAttribute("x", x + 60);
+        trophy.setAttribute("y", y + 20);
+        trophy.setAttribute("text-anchor", "middle");
+        trophy.setAttribute("font-size", "50");
+        trophy.textContent = "🏆";
+        svg.appendChild(trophy);
+      }
 
-        matchCenters[g._id] = {
-          x: x + 120,
-          y: y + matchHeight,
-          side: side
-        };
-      });
+      matchCenters[g._id] = {
+        x: x + 120,
+        y: y + matchHeight,
+        side: side
+      };
+    });
 
-      games.forEach(g => {
-        if (!g.nextMatchId) return;
-        const from = matchCenters[g._id];
-        const to = matchCenters[g.nextMatchId];
-        if (!from || !to) return;
+    games.forEach(g => {
+      if (!g.nextMatchId) return;
 
-        const lineH = document.createElementNS(svgNS, "line");
-        lineH.setAttribute("x1", from.x);
-        lineH.setAttribute("y1", from.y);
-        lineH.setAttribute("x2", from.x + 40);
-        lineH.setAttribute("y2", from.y);
-        svg.appendChild(lineH);
+      const from = matchCenters[g._id];
+      const to = matchCenters[g.nextMatchId];
+      if (!from || !to) return;
 
-        const lineV = document.createElementNS(svgNS, "line");
-        lineV.setAttribute("x1", from.x + 40);
-        lineV.setAttribute("y1", from.y);
-        lineV.setAttribute("x2", from.x + 40);
-        lineV.setAttribute("y2", to.y);
-        svg.appendChild(lineV);
+      const lineH = document.createElementNS(svgNS, "line");
+      lineH.setAttribute("x1", from.x);
+      lineH.setAttribute("y1", from.y);
+      lineH.setAttribute("x2", from.x + 40);
+      lineH.setAttribute("y2", from.y);
+      lineH.setAttribute("stroke", "#1e90ff");
+      svg.appendChild(lineH);
 
-        const lineH2 = document.createElementNS(svgNS, "line");
-        lineH2.setAttribute("x1", from.x + 40);
-        lineH2.setAttribute("y1", to.y);
-        lineH2.setAttribute("x2", to.x - 120);
-        lineH2.setAttribute("y2", to.y);
-        svg.appendChild(lineH2);
-      });
+      const lineV = document.createElementNS(svgNS, "line");
+      lineV.setAttribute("x1", from.x + 40);
+      lineV.setAttribute("y1", from.y);
+      lineV.setAttribute("x2", from.x + 40);
+      lineV.setAttribute("y2", to.y);
+      lineV.setAttribute("stroke", "#1e90ff");
+      svg.appendChild(lineV);
 
-      container.appendChild(svg);
-    }
+      const lineH2 = document.createElementNS(svgNS, "line");
+      lineH2.setAttribute("x1", from.x + 40);
+      lineH2.setAttribute("y1", to.y);
+      lineH2.setAttribute("x2", to.x - 120);
+      lineH2.setAttribute("y2", to.y);
+      lineH2.setAttribute("stroke", "#1e90ff");
+      svg.appendChild(lineH2);
+    });
 
-    renderBracket(games);
+    container.appendChild(svg);
+  }
+
+
+    loadTournamentData();
   </script>
 </body>
 </html>
