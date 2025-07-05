@@ -14,7 +14,7 @@ router.get('/game/:gameId', async (req, res) => {
   }
 });
 
-// ✅ שליפת משחקים לפי טורניר (לצפייה ומעקב)
+// ✅ שליפת משחקים לצפייה
 router.get('/by-tournament', async (req, res) => {
   const { tournamentId } = req.query;
   if (!tournamentId) return res.status(400).json({ error: '❗ חסר מזהה טורניר' });
@@ -27,7 +27,7 @@ router.get('/by-tournament', async (req, res) => {
   }
 });
 
-// ✅ שליפת משחקים לפי מזהה טורניר (ניהול)
+// ✅ שליפת משחקים לניהול
 router.get('/:tournamentId', async (req, res) => {
   try {
     const games = await Game.find({ tournamentId: req.params.tournamentId }).populate('teamA teamB');
@@ -60,12 +60,10 @@ router.post('/', async (req, res) => {
   }
 });
 
-// ✅ פונקציה פנימית להגרלה חכמה
+// ✅ פונקציה חכמה לשיבוץ — נשארת כמו שהייתה
 async function smartPairing(groups, stage) {
   let pairs = [];
-  let positions = Object.keys(groups).length;
-
-  // לבנות סל לפי מיקומים
+  const positions = Object.keys(groups).length;
   const slots = {};
   Object.entries(groups).forEach(([groupName, teams]) => {
     teams.forEach((team, index) => {
@@ -75,18 +73,15 @@ async function smartPairing(groups, stage) {
     });
   });
 
-  // לדוגמה שמינית גמר: מקום 1 מול מקום אחרון וכו׳
   const half = Object.keys(slots).length / 2;
-
   for (let i = 1; i <= half; i++) {
     const slotA = slots[i];
-    const slotB = slots[Object.keys(slots).length + 1 - i];
+    const slotB = slots[positions + 1 - i];
 
     while (slotA.length && slotB.length) {
       const teamA = slotA.shift();
       let opponentIndex = slotB.findIndex(t => t.group !== teamA.group);
       if (opponentIndex === -1) {
-        // לא נמצא יריב חוקי, להחזיר לקופה ולנסות שוב
         slotA.push(teamA);
         continue;
       }
@@ -94,16 +89,15 @@ async function smartPairing(groups, stage) {
       pairs.push([teamA.team, teamB.team]);
     }
   }
-
   return pairs;
 }
 
-// ✅ יצירת שלב נוקאאוט אוטומטי עם הגרלה חכמה
+// ✅ יצירת שלב נוקאאוט אוטומטי עם smartPairing ושדה side
 router.post('/create-knockout-auto', async (req, res) => {
   try {
     const { tournamentId, stage, numTeams } = req.body;
     if (!tournamentId || !stage || !numTeams) {
-      return res.status(400).json({ error: '❗ חסרים נתונים ליצירת שלב נוקאאוט' });
+      return res.status(400).json({ error: '❗ חסרים נתונים' });
     }
 
     let expected = 0;
@@ -113,12 +107,11 @@ router.post('/create-knockout-auto', async (req, res) => {
     else if (stage === 'גמר') expected = 2;
 
     if (numTeams !== expected) {
-      return res.status(400).json({ error: `❗ מספר קבוצות לא תואם לשלב ${stage}. נדרש ${expected}` });
+      return res.status(400).json({ error: `❗ נדרש ${expected} קבוצות לשלב ${stage}` });
     }
 
     const allTeams = await Team.find({ tournamentId });
     const allGames = await Game.find({ tournamentId }).populate('teamA teamB');
-
     const hasGroups = allTeams.some(t => t.group && t.group.trim() !== '');
     let pairs = [];
 
@@ -151,7 +144,6 @@ router.post('/create-knockout-auto', async (req, res) => {
       }
 
       pairs = await smartPairing(groups, stage);
-
     } else {
       const stats = {};
       allTeams.forEach(t => stats[t._id] = { team: t, points: 0, goalsDiff: 0, goalsFor: 0 });
@@ -180,7 +172,8 @@ router.post('/create-knockout-auto', async (req, res) => {
     }
 
     const newGames = [];
-    for (const [teamA, teamB] of pairs) {
+    for (let i = 0; i < pairs.length; i++) {
+      const [teamA, teamB] = pairs[i];
       const game = new Game({
         tournamentId,
         teamA: teamA._id,
@@ -188,26 +181,27 @@ router.post('/create-knockout-auto', async (req, res) => {
         date: new Date(),
         time: '12:00',
         location: 'מגרש נוקאאוט',
-        knockoutStage: stage
+        knockoutStage: stage,
+        side: i < pairs.length / 2 ? 'L' : 'R'
       });
       await game.save();
       newGames.push(game);
     }
 
-    res.status(201).json({ message: `✅ שלב ${stage} נוצר בהצלחה`, games: newGames });
+    res.status(201).json({ message: `✅ ${stage} נוצר`, games: newGames });
 
   } catch (err) {
-    res.status(500).json({ error: '❌ שגיאה ביצירת שלב נוקאאוט', details: err.message });
+    res.status(500).json({ error: '❌ שגיאה ביצירת נוקאאוט', details: err.message });
   }
 });
 
-// ✅ עדכון תוצאה ויצירת שלב הבא *רק על מנצחות*
+// ✅ עדכון תוצאה ויצירת שלב הבא לפי מנצחות בלבד
 router.put('/:gameId', async (req, res) => {
   try {
     const { scoreA, scoreB, ...rest } = req.body;
 
     if (scoreA === scoreB) {
-      return res.status(400).json({ error: '❌ נוקאאוט לא יכול להסתיים בתיקו' });
+      return res.status(400).json({ error: '❌ נוקאאוט לא יכול להסתיים בתיקו!' });
     }
 
     const updated = await Game.findByIdAndUpdate(
@@ -223,10 +217,9 @@ router.put('/:gameId', async (req, res) => {
         knockoutStage: updated.knockoutStage
       });
 
-      const finished = allStageGames.filter(g => g.scoreA != null && g.scoreB != null);
+      const finished = allStageGames.filter(g => g.scoreA != null && g.scoreB != null && g.scoreA !== g.scoreB);
       if (finished.length === allStageGames.length) {
         const winners = finished.map(g => (g.scoreA > g.scoreB ? g.teamA : g.teamB));
-
         let nextStage = '';
         if (updated.knockoutStage === 'שמינית גמר') nextStage = 'רבע גמר';
         else if (updated.knockoutStage === 'רבע גמר') nextStage = 'חצי גמר';
@@ -242,11 +235,12 @@ router.put('/:gameId', async (req, res) => {
               date: new Date(),
               time: '12:00',
               location: `מגרש ${nextStage}`,
-              knockoutStage: nextStage
+              knockoutStage: nextStage,
+              side: i < winners.length / 2 ? 'L' : 'R'
             });
             await game.save();
           }
-          console.log(`🎉 ${nextStage} נוצר אוטומטית`);
+          console.log(`🎉 ${nextStage} נוצר`);
         }
       }
     }
@@ -263,7 +257,7 @@ router.delete('/:gameId', async (req, res) => {
     await Game.findByIdAndDelete(req.params.gameId);
     res.json({ message: '🗑️ המשחק נמחק בהצלחה' });
   } catch (err) {
-    res.status(500).json({ error: '❌ שגיאה במחיקת המשחק', details: err.message });
+    res.status(500).json({ error: '❌ שגיאה במחיקה', details: err.message });
   }
 });
 
@@ -273,9 +267,9 @@ router.delete('/deleteAll/:tournamentId', async (req, res) => {
       tournamentId: req.params.tournamentId,
       knockoutStage: { $ne: null }
     });
-    res.json({ message: `🗑️ נמחקו ${result.deletedCount} משחקי נוקאאוט בהצלחה` });
+    res.json({ message: `🗑️ נמחקו ${result.deletedCount} משחקי נוקאאוט` });
   } catch (err) {
-    res.status(500).json({ error: '❌ שגיאה במחיקת שלבי הנוקאאוט', details: err.message });
+    res.status(500).json({ error: '❌ שגיאה במחיקה', details: err.message });
   }
 });
 
@@ -284,7 +278,7 @@ router.delete('/group-stage/:tournamentId', async (req, res) => {
     await Game.deleteMany({ tournamentId: req.params.tournamentId });
     res.json({ message: '✅ כל משחקי שלב הבתים והליגה נמחקו בהצלחה' });
   } catch (err) {
-    res.status(500).json({ error: '❌ שגיאה במחיקת המשחקים', details: err.message });
+    res.status(500).json({ error: '❌ שגיאה במחיקה', details: err.message });
   }
 });
 
