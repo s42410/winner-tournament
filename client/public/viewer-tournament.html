@@ -131,12 +131,23 @@
 
 .bracket-tree {
   display: flex;
+  flex-direction: row;
+  justify-content: center;
+  gap: 40px;
+  overflow-x: auto;
+  margin-top: 40px;
+}
+
+.bracket-column {
+  display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
+  gap: 40px;
 }
 
 .bracket-stage {
   display: flex;
+  flex-direction: column;
   align-items: center;
   margin-bottom: 40px;
 }
@@ -146,15 +157,9 @@
   border: 2px solid #ffb74d;
   border-radius: 8px;
   padding: 10px 15px;
-  min-width: 140px;
+  min-width: 120px;
   text-align: center;
   position: relative;
-}
-
-.bracket-connector-h {
-  width: 40px;
-  height: 2px;
-  background: #ffb74d;
 }
 
 .bracket-connector-v {
@@ -163,6 +168,7 @@
   background: #ffb74d;
   margin: 0 auto;
 }
+
 
 
   /* השאר לא נוגע בשאר הכפתורים! */
@@ -191,27 +197,8 @@
 
 <div id="bracketContainer" class="section">
   <h2>🏆 תרשים שלבי נוקאאוט</h2>
-  <div class="bracket-tree">
-    <!-- שמינית גמר -->
-    <div class="bracket-stage">
-      <div class="bracket-match">קבוצה A<br>2 : 1<br>קבוצה B</div>
-      <div class="bracket-connector-h"></div>
-      <div class="bracket-match">קבוצה C<br>3 : 0<br>קבוצה D</div>
-    </div>
-    <!-- רבע גמר -->
-    <div class="bracket-stage">
-      <div class="bracket-connector-v"></div>
-      <div class="bracket-match">מנצחת שמינית<br>2 : 1<br>מנצחת שמינית</div>
-    </div>
-    <!-- חצי גמר -->
-    <div class="bracket-stage">
-      <div class="bracket-connector-v"></div>
-      <div class="bracket-match">מנצחת רבע<br>1 : 0<br>מנצחת רבע</div>
-    </div>
-  </div>
+  <div id="bracketTree" class="bracket-tree"></div>
 </div>
-
-
 
 
   <div id="gamesContainer" class="section">
@@ -373,6 +360,8 @@ function renderBracket(games) {
   const stages = ['שמינית גמר', 'רבע גמר', 'חצי גמר'];
   const leftSide = {};
   const rightSide = {};
+
+  // מחלק לשלבים ולצדדים
   stages.forEach(stage => {
     leftSide[stage] = [];
     rightSide[stage] = [];
@@ -383,7 +372,6 @@ function renderBracket(games) {
     if (!game.side) {
       game.side = index % 2 === 0 ? 'L' : 'R';
     }
-
     if (game.side === 'L') {
       leftSide[game.knockoutStage]?.push(game);
     } else {
@@ -391,28 +379,34 @@ function renderBracket(games) {
     }
   });
 
-  const buildColumn = (matches) => {
+  // בונה צד
+  const buildColumn = (side) => {
     let html = '';
-    matches.forEach(match => {
-      html += `
-        <div class="bracket-node">
-          ${match.teamA?.name || '---'}<br>
-          ${match.scoreA != null && match.scoreB != null ? `${match.scoreA} : ${match.scoreB}` : ''}<br>
-          ${match.teamB?.name || '---'}
-        </div>
-        <div class="bracket-connector-v"></div>
-      `;
+    stages.forEach(stage => {
+      const matches = side[stage];
+      if (matches.length > 0) {
+        html += `<div class="bracket-stage">`;
+        matches.forEach((match, index) => {
+          html += `<div class="bracket-match">
+            ${match.teamA?.name || '---'}<br>
+            ${match.scoreA != null ? `${match.scoreA} : ${match.scoreB}` : ''}<br>
+            ${match.teamB?.name || '---'}
+          </div>`;
+          if (index < matches.length - 1) {
+            html += `<div class="bracket-connector-v"></div>`;
+          }
+        });
+        html += `</div>`;
+      }
     });
     return html;
   };
 
-  document.getElementById('stage-R16').innerHTML = buildColumn(leftSide['שמינית גמר']);
-  document.getElementById('stage-QF').innerHTML = buildColumn(leftSide['רבע גמר']);
-  document.getElementById('stage-SF').innerHTML = buildColumn(leftSide['חצי גמר']);
+  const leftHtml = `<div class="bracket-column">${buildColumn(leftSide)}</div>`;
+  const rightHtml = `<div class="bracket-column">${buildColumn(rightSide)}</div>`;
+  const centerHtml = `<div class="bracket-center">🏆</div>`;
 
-  document.getElementById('stage-SF-R').innerHTML = buildColumn(rightSide['חצי גמר']);
-  document.getElementById('stage-QF-R').innerHTML = buildColumn(rightSide['רבע גמר']);
-  document.getElementById('stage-R16-R').innerHTML = buildColumn(rightSide['שמינית גמר']);
+  document.getElementById('bracketTree').innerHTML = leftHtml + centerHtml + rightHtml;
 }
 
 
