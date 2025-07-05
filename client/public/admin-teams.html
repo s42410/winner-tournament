@@ -202,20 +202,32 @@
 
 
   async function saveAllGroups() {
-    const inputs = document.querySelectorAll('.group-cell input');
-    for (const input of inputs) {
-      const teamId = input.dataset.id;
-      const group = input.value.trim();
-      await fetch(`/api/teams/${teamId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ group, tournamentId }) // 👈 הוספתי את tournamentId
-      });
-    }
-    message.textContent = '✅ כל הבתים נשמרו';
-    message.className = 'message success';
-    fetchTeams();
+  const inputs = document.querySelectorAll('.group-cell input');
+  for (const input of inputs) {
+    const teamId = input.dataset.id;
+    const group = input.value.trim();
+
+    // שלב 1: טען את פרטי הקבוצה הקיימת
+    const res = await fetch(`/api/teams/${teamId}`);
+    const team = await res.json();
+
+    // שלב 2: שלח PUT עם כל השדות
+    await fetch(`/api/teams/${teamId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: team.name,
+        color: team.color,
+        group: group,
+        tournamentId: tournamentId
+      })
+    });
   }
+
+  message.textContent = '✅ כל הבתים נשמרו';
+  message.className = 'message success';
+  fetchTeams();
+}
 
   function toggleGroups() {
     groupsEnabled = !groupsEnabled;
