@@ -388,17 +388,13 @@ function renderBracket(games) {
   const matchGap = 40;
 
   const matchCenters = {};
+  const stageCounts = {};
 
-  // 🟢 הוסף מזהה וצד אם חסר
   games.forEach((g, i) => {
     if (!g.knockoutStage) return;
     if (!g._id) g._id = `match${i}`;
     if (!g.side) g.side = i % 2 === 0 ? 'L' : 'R';
-  });
 
-  // 🎯 צייר קופסאות
-  const stageCounts = {};
-  games.filter(g => g.knockoutStage).forEach(g => {
     const stage = g.knockoutStage;
     const side = g.side;
     if (!stageCounts[stage + side]) stageCounts[stage + side] = 0;
@@ -409,7 +405,7 @@ function renderBracket(games) {
 
     stageCounts[stage + side]++;
 
-    // קופסה A
+    // Box A
     const rectA = document.createElementNS(svgNS, "rect");
     rectA.setAttribute("x", x);
     rectA.setAttribute("y", y);
@@ -426,7 +422,7 @@ function renderBracket(games) {
     textA.textContent = g.teamA?.name || "---";
     svg.appendChild(textA);
 
-    // קופסה B
+    // Box B
     const rectB = document.createElementNS(svgNS, "rect");
     rectB.setAttribute("x", x);
     rectB.setAttribute("y", y + matchHeight);
@@ -446,27 +442,17 @@ function renderBracket(games) {
     matchCenters[g._id] = {
       x: x + 120,
       y: y + matchHeight,
-      side: side,
-      stage: stage
+      side: side
     };
   });
 
-  // 🟢 קווים בין שלבים
+  // Connect lines
   games.forEach(g => {
-    if (!g.knockoutStage || g.knockoutStage === 'גמר') return;
+    if (!g.nextMatchId) return;
 
     const from = matchCenters[g._id];
-    if (!from) return;
-
-    let nextStage = '';
-    if (g.knockoutStage === 'רבע גמר') nextStage = 'חצי גמר';
-    else if (g.knockoutStage === 'חצי גמר') nextStage = 'גמר';
-
-    const nextMatch = games.find(m => m.knockoutStage === nextStage && m.side === from.side);
-    if (!nextMatch) return;
-
-    const to = matchCenters[nextMatch._id];
-    if (!to) return;
+    const to = matchCenters[g.nextMatchId];
+    if (!from || !to) return;
 
     const lineH = document.createElementNS(svgNS, "line");
     lineH.setAttribute("x1", from.x);
@@ -493,7 +479,7 @@ function renderBracket(games) {
     svg.appendChild(lineH2);
   });
 
-  // 🏆 גביע
+  // Trophy
   const trophy = document.createElementNS(svgNS, "text");
   trophy.setAttribute("x", 600);
   trophy.setAttribute("y", 400);
