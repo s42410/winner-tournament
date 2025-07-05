@@ -66,169 +66,170 @@
 
   <button class="back-btn" onclick="history.back()">⬅ חזור</button>
 
-  <script>
-    const tournamentId = new URLSearchParams(window.location.search).get('tournamentId');
+<script>
+  const tournamentId = new URLSearchParams(window.location.search).get('tournamentId');
 
-    async function createKnockout() {
-      const stage = document.getElementById('knockoutStage').value;
-      const numTeams = parseInt(document.getElementById('numTeams').value);
+  async function createKnockout() {
+    const stage = document.getElementById('knockoutStage').value;
+    const numTeams = parseInt(document.getElementById('numTeams').value);
 
-      if (!stage || isNaN(numTeams) || numTeams < 2) {
-        alert('נא לבחור שלב וכמות קבוצות תקינה.');
-        return;
-      }
-
-      const saveRes = await fetch('/api/games/create-knockout-auto', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tournamentId, stage, numTeams })
-      });
-
-      const data = await saveRes.json();
-      if (saveRes.ok) {
-        alert(`✅ שלב ${stage} נוצר בהצלחה`);
-        loadKnockout();
-      } else {
-        alert('❌ שגיאה: ' + data.error);
-      }
+    if (!stage || isNaN(numTeams) || numTeams < 2) {
+      alert('נא לבחור שלב וכמות קבוצות תקינה.');
+      return;
     }
 
-    async function loadKnockout() {
-      const res = await fetch(`/api/games/by-tournament?tournamentId=${tournamentId}`);
-      const games = await res.json();
-      const stages = {};
+    const saveRes = await fetch('/api/games/create-knockout-auto', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tournamentId, stage, numTeams })
+    });
 
-      games.forEach(g => {
-        if (!g.knockoutStage) return;
-        if (!stages[g.knockoutStage]) stages[g.knockoutStage] = [];
-        stages[g.knockoutStage].push(g);
-      });
-
-      let html = '';
-      for (const stage of ['שמינית גמר','רבע גמר','חצי גמר','גמר']) {
-        html += `<h3>${stage}</h3>`;
-        if (stages[stage]) {
-          html += `<table><tr><th>קבוצה א'</th><th>קבוצה ב'</th><th>תוצאה</th><th>ניהול</th></tr>`;
-          stages[stage].forEach(g => {
-            html += `<tr>
-              <td>${g.teamA?.name || '---'}</td>
-              <td>${g.teamB?.name || '---'}</td>
-              <td>${g.scoreA ?? '-'} : ${g.scoreB ?? '-'}</td>
-              <td>
-                <button class="action-btn" onclick="editGame('${g._id}')">✏️ ערוך</button>
-                <button class="action-btn" onclick="deleteGame('${g._id}')">🗑️ מחק</button>
-              </td>
-            </tr>`;
-          });
-          html += `</table>`;
-        } else {
-          html += `<p>אין משחקים בשלב זה</p>`;
-        }
-      }
-      document.getElementById('knockoutContainer').innerHTML = html;
+    const data = await saveRes.json();
+    if (saveRes.ok) {
+      alert(`✅ שלב ${stage} נוצר בהצלחה`);
+      loadKnockout();
+    } else {
+      alert('❌ שגיאה: ' + data.error);
     }
-
-    function editGame(gameId) {
-  window.location.href = `admin-edit-game.html?gameId=${gameId}&toredirect=knockout`;
   }
 
-    async function deleteGame(gameId) {
-      if (!confirm('אתה בטוח שאתה רוצה למחוק משחק זה?')) return;
-      const res = await fetch(`/api/games/${gameId}`, { method: 'DELETE' });
-      if (res.ok) {
-        alert('🗑️ המשחק נמחק');
-        loadKnockout();
-      } else {
-        alert('❌ שגיאה במחיקת משחק');
-      }
-    }
+  async function loadKnockout() {
+    const res = await fetch(`/api/games/by-tournament?tournamentId=${tournamentId}`);
+    const games = await res.json();
+    const stages = {};
 
-    async function deleteAllKnockout() {
-      if (!confirm('למחוק את כל שלבי הנוקאאוט?')) return;
-      const res = await fetch(`/api/games/deleteAll/${tournamentId}`, { method: 'DELETE' });
-      if (res.ok) {
-        alert('🗑️ כל שלבי הנוקאאוט נמחקו');
-        loadKnockout();
-      } else {
-        alert('❌ שגיאה במחיקה');
-      }
-    }
+    games.forEach(g => {
+      if (!g.knockoutStage) return;
+      if (!stages[g.knockoutStage]) stages[g.knockoutStage] = [];
+      stages[g.knockoutStage].push(g);
+    });
 
-    async function loadStats() {
-      const [gamesRes, teamsRes] = await Promise.all([
-        fetch(`/api/games/by-tournament?tournamentId=${tournamentId}`),
-        fetch(`/api/teams/${tournamentId}`)
-      ]);
-
-      const games = await gamesRes.json();
-      const teams = await teamsRes.json();
-
-      const groups = {};
-      teams.forEach(t => {
-        const group = t.group || 'ליגה';
-        if (!groups[group]) groups[group] = [];
-        groups[group].push(t);
-      });
-
-      let standingsHTML = '';
-      for (const group in groups) {
-        standingsHTML += `<h3>${group}</h3>`;
-        const stats = {};
-        groups[group].forEach(t => {
-          stats[t._id] = { name: t.name, games: 0, wins: 0, draws: 0, losses: 0, points: t.points ?? 0 };
-        });
-
-        games.forEach(g => {
-          if (g.knockoutStage) return;
-          const [ta, tb] = [g.teamA?._id, g.teamB?._id];
-          if (!stats[ta] || !stats[tb]) return;
-          stats[ta].games++; stats[tb].games++;
-          if (g.scoreA > g.scoreB) { stats[ta].wins++; stats[tb].losses++; stats[ta].points += 3; }
-          else if (g.scoreA < g.scoreB) { stats[tb].wins++; stats[ta].losses++; stats[tb].points += 3; }
-          else { stats[ta].draws++; stats[tb].draws++; stats[ta].points += 1; stats[tb].points += 1; }
-        });
-
-        const sorted = Object.values(stats).sort((a,b)=>b.points-a.points);
-        standingsHTML += `<table><tr><th>מקום</th><th>קבוצה</th><th>מש</th><th>נ</th><th>ת</th><th>ה</th><th>נק'</th></tr>`;
-        sorted.forEach((t,i) => {
-          standingsHTML += `<tr>
-            <td>${i+1}</td><td>${t.name}</td><td>${t.games}</td>
-            <td>${t.wins}</td><td>${t.draws}</td><td>${t.losses}</td>
-            <td>${t.points}</td>
+    let html = '';
+    for (const stage of ['שמינית גמר','רבע גמר','חצי גמר','גמר']) {
+      html += `<h3>${stage}</h3>`;
+      if (stages[stage]) {
+        html += `<table><tr><th>קבוצה א'</th><th>קבוצה ב'</th><th>תוצאה</th><th>ניהול</th></tr>`;
+        stages[stage].forEach(g => {
+          html += `<tr>
+            <td>${g.teamA?.name || '---'}</td>
+            <td>${g.teamB?.name || '---'}</td>
+            <td>${g.scoreA ?? '-'} : ${g.scoreB ?? '-'}</td>
+            <td>
+              <button class="action-btn" onclick="editGame('${g._id}')">✏️ ערוך</button>
+              <button class="action-btn" onclick="deleteGame('${g._id}')">🗑️ מחק</button>
+            </td>
           </tr>`;
         });
-        standingsHTML += `</table>`;
+        html += `</table>`;
+      } else {
+        html += `<p>אין משחקים בשלב זה</p>`;
       }
-      document.getElementById('standingsContainer').innerHTML = standingsHTML;
-
-      const scorers = {};
-      games.forEach(g => {
-        for (const goal of g.goals?.teamA || []) {
-          if (!scorers[goal.scorer]) scorers[goal.scorer] = 0;
-          scorers[goal.scorer]++;
-        }
-        for (const goal of g.goals?.teamB || []) {
-          if (!scorers[goal.scorer]) scorers[goal.scorer] = 0;
-          scorers[goal.scorer]++;
-        }
-      });
-
-      const top = Object.entries(scorers).sort((a,b)=>b[1]-a[1]).slice(0,10);
-      let scorersHTML = `<table><tr><th>מקום</th><th>שחקן</th><th>שערים</th></tr>`;
-      top.forEach(([name, goals],i)=> {
-        scorersHTML += `<tr><td>${i+1}</td><td>${name}</td><td>${goals}</td></tr>`;
-      });
-      scorersHTML += `</table>`;
-      document.getElementById('scorersContainer').innerHTML = scorersHTML;
     }
-
-    {if (performance.navigation.type === 2) {
-    location.reload();
+    document.getElementById('knockoutContainer').innerHTML = html;
   }
-}
 
+  function editGame(gameId) {
+    window.location.href = `admin-edit-game.html?gameId=${gameId}&toredirect=knockout&tournamentId=${tournamentId}`;
+  }
+
+  async function deleteGame(gameId) {
+    if (!confirm('אתה בטוח שאתה רוצה למחוק משחק זה?')) return;
+    const res = await fetch(`/api/games/${gameId}`, { method: 'DELETE' });
+    if (res.ok) {
+      alert('🗑️ המשחק נמחק');
+      loadKnockout();
+    } else {
+      alert('❌ שגיאה במחיקת משחק');
+    }
+  }
+
+  async function deleteAllKnockout() {
+    if (!confirm('למחוק את כל שלבי הנוקאאוט?')) return;
+    const res = await fetch(`/api/games/deleteAll/${tournamentId}`, { method: 'DELETE' });
+    if (res.ok) {
+      alert('🗑️ כל שלבי הנוקאאוט נמחקו');
+      loadKnockout();
+    } else {
+      alert('❌ שגיאה במחיקה');
+    }
+  }
+
+  async function loadStats() {
+    const [gamesRes, teamsRes] = await Promise.all([
+      fetch(`/api/games/by-tournament?tournamentId=${tournamentId}`),
+      fetch(`/api/teams/${tournamentId}`)
+    ]);
+
+    const games = await gamesRes.json();
+    const teams = await teamsRes.json();
+
+    const groups = {};
+    teams.forEach(t => {
+      const group = t.group || 'ליגה';
+      if (!groups[group]) groups[group] = [];
+      groups[group].push(t);
+    });
+
+    let standingsHTML = '';
+    for (const group in groups) {
+      standingsHTML += `<h3>${group}</h3>`;
+      const stats = {};
+      groups[group].forEach(t => {
+        stats[t._id] = { name: t.name, games: 0, wins: 0, draws: 0, losses: 0, points: t.points ?? 0 };
+      });
+
+      games.forEach(g => {
+        if (g.knockoutStage) return;
+        const [ta, tb] = [g.teamA?._id, g.teamB?._id];
+        if (!stats[ta] || !stats[tb]) return;
+        stats[ta].games++; stats[tb].games++;
+        if (g.scoreA > g.scoreB) { stats[ta].wins++; stats[tb].losses++; stats[ta].points += 3; }
+        else if (g.scoreA < g.scoreB) { stats[tb].wins++; stats[ta].losses++; stats[tb].points += 3; }
+        else { stats[ta].draws++; stats[tb].draws++; stats[ta].points += 1; stats[tb].points += 1; }
+      });
+
+      const sorted = Object.values(stats).sort((a,b)=>b.points-a.points);
+      standingsHTML += `<table><tr><th>מקום</th><th>קבוצה</th><th>מש</th><th>נ</th><th>ת</th><th>ה</th><th>נק'</th></tr>`;
+      sorted.forEach((t,i) => {
+        standingsHTML += `<tr>
+          <td>${i+1}</td><td>${t.name}</td><td>${t.games}</td>
+          <td>${t.wins}</td><td>${t.draws}</td><td>${t.losses}</td>
+          <td>${t.points}</td>
+        </tr>`;
+      });
+      standingsHTML += `</table>`;
+    }
+    document.getElementById('standingsContainer').innerHTML = standingsHTML;
+
+    const scorers = {};
+    games.forEach(g => {
+      for (const goal of g.goals?.teamA || []) {
+        if (!scorers[goal.scorer]) scorers[goal.scorer] = 0;
+        scorers[goal.scorer]++;
+      }
+      for (const goal of g.goals?.teamB || []) {
+        if (!scorers[goal.scorer]) scorers[goal.scorer] = 0;
+        scorers[goal.scorer]++;
+      }
+    });
+
+    const top = Object.entries(scorers).sort((a,b)=>b[1]-a[1]).slice(0,10);
+    let scorersHTML = `<table><tr><th>מקום</th><th>שחקן</th><th>שערים</th></tr>`;
+    top.forEach(([name, goals],i)=> {
+      scorersHTML += `<tr><td>${i+1}</td><td>${name}</td><td>${goals}</td></tr>`;
+    });
+    scorersHTML += `</table>`;
+    document.getElementById('scorersContainer').innerHTML = scorersHTML;
+  }
+
+  if (new URLSearchParams(window.location.search).get('updated') === '1') {
+    console.log('ריענון אחרי עדכון');
     loadStats();
     loadKnockout();
-  </script>
+  }
+
+  loadStats();
+  loadKnockout();
+</script>
 </body>
 </html>
