@@ -14,7 +14,7 @@
   }
 
   #logo {
-    width: 280px; /* הגדלתי את הלוגו */
+    width: 280px;
     cursor: pointer;
     margin-bottom: 30px;
     transition: transform 0.3s ease;
@@ -44,16 +44,19 @@
     border-collapse: collapse;
     margin-top: 10px;
     color: #fff;
+    border: 2px solid #000;
+    border-radius: 8px;
   }
 
   th, td {
-    border: 1px solid #90caf9;
+    border: 1px solid #333;
     padding: 10px;
     font-size: 15px;
   }
 
   th {
-    background-color: #1565c0;
+    background-color: #0d47a1;
+    color: #fff;
   }
 
   .matches-grid {
@@ -65,12 +68,21 @@
 
   .match-box {
     background: linear-gradient(145deg, #42a5f5, #1e88e5);
+    border: 1px solid #000; /* פס שחור דק מסביב */
     border-radius: 12px;
     padding: 15px;
     box-shadow: 0 4px 15px rgba(0,0,0,0.2);
     transition: transform 0.2s ease;
     cursor: pointer;
     color: #fff;
+  }
+
+  .match-box::after {
+    content: "⚽ סיום משחק";
+    display: block;
+    margin-top: 10px;
+    font-size: 12px;
+    color: #eee;
   }
 
   .match-box.knockout {
@@ -141,6 +153,26 @@
     overflow-x: auto;
   }
 
+  #scorersContainer {
+    border: 2px solid #000;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.05);
+    box-shadow: 0 0 10px rgba(0,0,0,0.3);
+  }
+
+  #scorersContainer h2::before {
+    content: "👑 ";
+  }
+
+  #scorersContainer table {
+    border: 2px solid #000;
+  }
+
+  #scorersContainer th {
+    background: #0d47a1;
+    color: #fff;
+  }
+
   .knockout-wrapper {
     background: rgba(13, 71, 161, 0.8);
     padding: 30px;
@@ -186,8 +218,8 @@
     padding: 10px;
     border-radius: 6px;
   }
-
 </style>
+
 
 </head>
 <body>
@@ -347,16 +379,18 @@ function renderBracket(games) {
   });
 
   // פתיחה/סגירה של אירועים
-  document.querySelectorAll('.knockout-card').forEach(card => {
-    card.addEventListener('click', (e) => {
-      e.stopPropagation();
-      document.querySelectorAll('.knockout-details').forEach(d => d.style.display = 'none');
-      const details = card.querySelector('.knockout-details');
-      details.style.display = 'block';
-    });
+ document.querySelectorAll('.knockout-card').forEach(card => {
+  card.addEventListener('click', (e) => {
+    e.stopPropagation();
+    // סגור את כולם קודם
+    document.querySelectorAll('.knockout-details').forEach(d => d.style.display = 'none');
+    // פתח את האירועים של המשחק הנבחר
+    const details = card.querySelector('.knockout-details');
+    details.style.display = 'block';
   });
-}
+});
 
+ }
 
 
     loadTournamentData();
