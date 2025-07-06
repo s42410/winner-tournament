@@ -78,7 +78,7 @@
   }
 
   .match-box::after {
-    content: "⚽ סיום משחק";
+    content: "⚽ לחץ לצפייה בפרטי המשחק";
     display: block;
     margin-top: 10px;
     font-size: 12px;
@@ -218,6 +218,20 @@
     padding: 10px;
     border-radius: 6px;
   }
+
+  @media (max-width: 600px) {
+  .matches-grid {
+    grid-template-columns: 1fr;
+  }
+  #logo {
+    width: 200px;
+  }
+  .back-button, .export-pdf-button {
+    font-size: 14px;
+    padding: 10px 16px;
+  }
+}
+
 </style>
 
 
@@ -351,13 +365,14 @@ function renderBracket(games) {
     if (stageGames.length > 0) {
       let stageHTML = `<details><summary>${stageName} - לחץ כדי לראות משחקים</summary>`;
       stageGames.forEach(g => {
+        // פרטי המשחק בלי אירועים פתוחים
         const goalsA = (g.goals?.teamA || []).map(goal => `⚽ ${goal.scorer} דקה ${goal.minute}`).join('<br>');
         const goalsB = (g.goals?.teamB || []).map(goal => `⚽ ${goal.scorer} דקה ${goal.minute}`).join('<br>');
         const cardsA = (g.cards?.teamA || []).map(card => `${card.color==='yellow'?'🟨':'🟥'} ${card.player} דקה ${card.minute}`).join('<br>');
         const cardsB = (g.cards?.teamB || []).map(card => `${card.color==='yellow'?'🟨':'🟥'} ${card.player} דקה ${card.minute}`).join('<br>');
 
         const eventsHtml = `
-          <div class="knockout-details">
+          <div class="knockout-details" style="display: none;">
             <strong>אירועים:</strong><br>
             ${goalsA ? '<u>' + g.teamA?.name + '</u><br>' + goalsA + '<br>' : ''}
             ${cardsA ? cardsA + '<br>' : ''}
@@ -379,18 +394,16 @@ function renderBracket(games) {
   });
 
   // פתיחה/סגירה של אירועים
- document.querySelectorAll('.knockout-card').forEach(card => {
-  card.addEventListener('click', (e) => {
-    e.stopPropagation();
-    // סגור את כולם קודם
-    document.querySelectorAll('.knockout-details').forEach(d => d.style.display = 'none');
-    // פתח את האירועים של המשחק הנבחר
-    const details = card.querySelector('.knockout-details');
-    details.style.display = 'block';
+  document.querySelectorAll('.knockout-card').forEach(card => {
+    card.addEventListener('click', (e) => {
+      e.stopPropagation();
+      document.querySelectorAll('.knockout-details').forEach(d => d.style.display = 'none');
+      const details = card.querySelector('.knockout-details');
+      details.style.display = 'block';
+    });
   });
-});
+}
 
- }
 
 
     loadTournamentData();
