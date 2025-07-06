@@ -60,6 +60,10 @@
       <input type="number" id="numTeams" min="2" max="16" step="2" value="4" />
     </div>
     <button class="knockout-btn" onclick="createKnockout()">⚡ צור שלב נוקאאוט</button>
+    <p style="color: #e74c3c; font-weight: bold;">
+⚠️ אם כמות הקבוצות לא עומדת בתנאים — יש ליצור משחקים ידנית!
+</p>
+
     <button class="knockout-btn" onclick="deleteAllKnockout()">🗑️ מחק את כל שלבי הנוקאאוט</button>
     <div id="knockoutContainer"></div>
   </div>
@@ -79,23 +83,11 @@
       return;
     }
 
-    // בדיקה בסיסית לפני ששולחים לשרת
+   // בדיקה משופרת: מונעת לולאות כבדות
 if (numTeams > 16 || numTeams % 2 !== 0) {
-  alert('⚠️ כמות קבוצות לא חוקית לנוקאאוט (רק מספר זוגי עד 16)');
+  alert('⚠️ כמות קבוצות לא חוקית לנוקאאוט (רק מספר זוגי עד 16).\nבבקשה צור משחקים ידנית.');
   return;
 }
-
-
-if (numTeams > 32) {
-  alert('⚠️ כמות קבוצות גדולה מדי - הפעולה עלולה לקרוס את הדף.');
-  return;
-}
-
-const controller = new AbortController();
-const timeout = setTimeout(() => {
-  controller.abort();
-  alert('⏰ הבקשה בוטלה כי היא נמשכה יותר מדי זמן.');
-}, 10000); // למשל 10 שניות
 
 
     const saveRes = await fetch('/api/games/create-knockout-auto', {
@@ -105,6 +97,7 @@ const timeout = setTimeout(() => {
   signal: controller.signal // ← זה החדש
 });
 
+clearTimeout(timeout);
 
     const data = await saveRes.json();
     if (saveRes.ok) {
