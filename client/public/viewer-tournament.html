@@ -181,112 +181,34 @@
       }
     }
 
-   function renderBracket(games) {
+function renderBracket(games) {
   const container = document.getElementById('bracketContainer');
-  container.innerHTML = ''; // נקה קודם
-  const svgNS = "http://www.w3.org/2000/svg";
-  const svg = document.createElementNS(svgNS, "svg");
-  svg.setAttribute("width", "1200");
-  svg.setAttribute("height", "600");
+  container.innerHTML = '<div class="section"><h2>🏆 שלבי נוקאאוט</h2></div>';
 
-  const stages = ['רבע גמר', 'חצי גמר', 'גמר'];
-  const positions = {
-    'רבע גמר': { x: 100 },
-    'חצי גמר': { x: 500 },
-    'גמר': { x: 900 }
-  };
+  const knockoutGames = games.filter(g => g.knockoutStage);
 
-  const matchHeight = 50;
-  const matchWidth = 200;
-  const matchGap = 80;
+  if (knockoutGames.length === 0) {
+    container.innerHTML += '<p>אין משחקי נוקאאוט להצגה.</p>';
+    return;
+  }
 
-  let yOffsets = {
-    'רבע גמר': 50,
-    'חצי גמר': 100,
-    'גמר': 200
-  };
-
-  // צייר משחקים
-  games.filter(g => g.knockoutStage).forEach(g => {
-    const stage = g.knockoutStage;
-    const x = positions[stage].x;
-    const y = yOffsets[stage];
-
-    // תיבה
-    const rect = document.createElementNS(svgNS, "rect");
-    rect.setAttribute("x", x);
-    rect.setAttribute("y", y);
-    rect.setAttribute("width", matchWidth);
-    rect.setAttribute("height", matchHeight);
-    rect.setAttribute("fill", "#fff3e0");
-    rect.setAttribute("stroke", "#ffb74d");
-    rect.setAttribute("rx", "8");
-    svg.appendChild(rect);
-
-    // טקסט
-    const text = document.createElementNS(svgNS, "text");
-    text.setAttribute("x", x + matchWidth / 2);
-    text.setAttribute("y", y + matchHeight / 2);
-    text.setAttribute("text-anchor", "middle");
-    text.setAttribute("dominant-baseline", "middle");
-    text.textContent = `${g.teamA?.name || '---'} ${g.scoreA ?? '-'} : ${g.scoreB ?? '-'} ${g.teamB?.name || '---'}`;
-    svg.appendChild(text);
-
-    // שמור מרכז לחיבור
-    g._center = { x: x + matchWidth, y: y + matchHeight / 2 };
-
-    yOffsets[stage] += matchHeight + matchGap;
+  knockoutGames.forEach(g => {
+    container.innerHTML += `
+      <div style="
+        background: linear-gradient(145deg, #ffe0b2, #ffcc80);
+        margin: 10px auto;
+        padding: 15px;
+        border-radius: 10px;
+        width: 300px;
+        box-shadow: 0 0 8px rgba(0,0,0,0.1);
+        ">
+        <strong>שלב: ${g.knockoutStage}</strong><br/>
+        ${g.teamA?.name || '---'} ${g.scoreA ?? '-'} : ${g.scoreB ?? '-'} ${g.teamB?.name || '---'}
+      </div>
+    `;
   });
-
-  // חיבורים בין שלבים
-  const stagesConnections = [
-    ['רבע גמר', 'חצי גמר'],
-    ['חצי גמר', 'גמר']
-  ];
-
-  stagesConnections.forEach(([fromStage, toStage]) => {
-    const fromGames = games.filter(g => g.knockoutStage === fromStage);
-    const toGames = games.filter(g => g.knockoutStage === toStage);
-
-    fromGames.forEach((g, idx) => {
-      const from = g._center;
-      const to = toGames[Math.floor(idx / 2)]?._center;
-if (!to) {
-  console.warn('לא נמצא משחק יעד לחיבור!', fromStage, toStage);
-  return; // לא מחבר כי אין יעד
 }
 
-
-      const lineH = document.createElementNS(svgNS, "line");
-      lineH.setAttribute("x1", from.x);
-      lineH.setAttribute("y1", from.y);
-      lineH.setAttribute("x2", from.x + 50);
-      lineH.setAttribute("y2", from.y);
-      lineH.setAttribute("stroke", "#1e90ff");
-      svg.appendChild(lineH);
-
-      const lineV = document.createElementNS(svgNS, "line");
-      lineV.setAttribute("x1", from.x + 50);
-      lineV.setAttribute("y1", from.y);
-      lineV.setAttribute("x2", from.x + 50);
-      lineV.setAttribute("y2", to.y);
-      lineV.setAttribute("stroke", "#1e90ff");
-      svg.appendChild(lineV);
-
-      const lineH2 = document.createElementNS(svgNS, "line");
-      lineH2.setAttribute("x1", from.x + 50);
-      lineH2.setAttribute("y1", to.y);
-      lineH2.setAttribute("x2", to.x);
-      lineH2.setAttribute("y2", to.y);
-      lineH2.setAttribute("stroke", "#1e90ff");
-      svg.appendChild(lineH2);
-    });
-  });
-  console.log('משחקי נוקאאוט:', games.filter(g => g.knockoutStage));
-
-
-  container.appendChild(svg);
-}
 
 
 
