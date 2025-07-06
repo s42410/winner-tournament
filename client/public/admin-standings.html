@@ -25,10 +25,26 @@
     th { background-color: #3498db; color: white; }
     tr:nth-child(even) { background-color: #f2f2f2; }
     .section-title { margin-top: 40px; color: #34495e; }
-    .back-btn { margin-top: 30px; padding: 10px 20px; font-size: 16px; background: #2ecc71; color: white; border: none; border-radius: 6px; cursor: pointer; }
+    .back-btn {
+      margin-top: 30px;
+      padding: 10px 20px;
+      font-size: 16px;
+      background: #2ecc71;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
     .back-btn:hover { background-color: #27ae60; }
     .knockout-section { margin-top: 40px; }
-    .knockout-btn { padding: 10px 20px; background: #9b59b6; color: white; border: none; border-radius: 6px; cursor: pointer; }
+    .knockout-btn {
+      padding: 10px 20px;
+      background: #9b59b6;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
     .knockout-btn:hover { background-color: #8e44ad; }
     .action-btn { margin: 0 5px; }
     select, input[type="number"] {
@@ -60,204 +76,198 @@
       <input type="number" id="numTeams" min="2" max="16" step="2" value="4" />
     </div>
     <button class="knockout-btn" onclick="createKnockout()">⚡ צור שלב נוקאאוט</button>
-    <p style="color: #e74c3c; font-weight: bold;">
-⚠️ אם כמות הקבוצות לא עומדת בתנאים — יש ליצור משחקים ידנית!
-</p>
-
     <button class="knockout-btn" onclick="deleteAllKnockout()">🗑️ מחק את כל שלבי הנוקאאוט</button>
     <div id="knockoutContainer"></div>
   </div>
 
   <button onclick="goBackToDashboard()">⬅️ חזור</button>
 
-<script>
-  const params = new URLSearchParams(window.location.search);
-  const tournamentId = params.get('tournamentId');
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const tournamentId = params.get('tournamentId');
 
-  async function createKnockout() {
-    const stage = document.getElementById('knockoutStage').value;
-    const numTeams = parseInt(document.getElementById('numTeams').value);
+    async function createKnockout() {
+      const stage = document.getElementById('knockoutStage').value;
+      const numTeams = parseInt(document.getElementById('numTeams').value);
 
-    if (!stage || isNaN(numTeams) || numTeams < 2) {
-      alert('נא לבחור שלב וכמות קבוצות תקינה.');
-      return;
+      if (!stage || isNaN(numTeams) || numTeams < 2) {
+        alert('נא לבחור שלב וכמות קבוצות תקינה.');
+        return;
+      }
+
+      const saveRes = await fetch('/api/games/create-knockout-auto', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tournamentId, stage, numTeams })
+      });
+
+      const data = await saveRes.json();
+      if (saveRes.ok) {
+        alert(`✅ שלב ${stage} נוצר בהצלחה`);
+        loadKnockout();
+      } else {
+        alert('❌ שגיאה: ' + data.error);
+      }
     }
 
-   // בדיקה משופרת: מונעת לולאות כבדות
-if (numTeams > 16 || numTeams % 2 !== 0) {
-  alert('⚠️ כמות קבוצות לא חוקית לנוקאאוט (רק מספר זוגי עד 16).\nבבקשה צור משחקים ידנית.');
-  return;
-}
+    async function loadKnockout() {
+      const res = await fetch(`/api/games/by-tournament?tournamentId=${tournamentId}`);
+      const games = await res.json();
+      const stages = {};
+      games.forEach(g => {
+        if (!g.knockoutStage) return;
+        if (!stages[g.knockoutStage]) stages[g.knockoutStage] = [];
+        stages[g.knockoutStage].push(g);
+      });
 
-
-    const saveRes = await fetch('/api/games/create-knockout-auto', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ tournamentId, stage, numTeams }),
-  signal: controller.signal // ← זה החדש
-});
-
-clearTimeout(timeout);
-
-    const data = await saveRes.json();
-    if (saveRes.ok) {
-      alert(`✅ שלב ${stage} נוצר בהצלחה`);
-      loadKnockout();
-    } else {
-      alert('❌ שגיאה: ' + data.error);
+      let html = '';
+      for (const stage of ['שמינית גמר', 'רבע גמר', 'חצי גמר', 'גמר']) {
+        html += `<h3>${stage}</h3>`;
+        if (stages[stage]) {
+          html += `<table>
+            <tr><th>קבוצה א'</th><th>קבוצה ב'</th><th>תוצאה</th><th>ניהול</th></tr>`;
+          stages[stage].forEach(g => {
+            html += `<tr>
+              <td>${g.teamA?.name || '---'}</td>
+              <td>${g.teamB?.name || '---'}</td>
+              <td>${g.scoreA ?? '-'} : ${g.scoreB ?? '-'}</td>
+              <td>
+                <button class="action-btn" onclick="editGame('${g._id}')">✏️ ערוך</button>
+                <button class="action-btn" onclick="deleteGame('${g._id}')">🗑️ מחק</button>
+              </td>
+            </tr>`;
+          });
+          html += `</table>`;
+        } else {
+          html += `<p>אין משחקים בשלב זה</p>`;
+        }
+      }
+      document.getElementById('knockoutContainer').innerHTML = html;
     }
 
-    
+    function editGame(gameId) {
+      window.location.href = `admin-edit-game.html?gameId=${gameId}&toredirect=standings&tournamentId=${tournamentId}`;
+    }
 
-    
-  }
+    async function deleteGame(gameId) {
+      if (!confirm('אתה בטוח שאתה רוצה למחוק משחק זה?')) return;
+      const res = await fetch(`/api/games/${gameId}`, { method: 'DELETE' });
+      if (res.ok) {
+        alert('🗑️ המשחק נמחק');
+        loadKnockout();
+      } else {
+        alert('❌ שגיאה במחיקת משחק');
+      }
+    }
 
-  async function loadKnockout() {
-    const res = await fetch(`/api/games/by-tournament?tournamentId=${tournamentId}`);
-    const games = await res.json();
-    const stages = {};
-    games.forEach(g => {
-      if (!g.knockoutStage) return;
-      if (!stages[g.knockoutStage]) stages[g.knockoutStage] = [];
-      stages[g.knockoutStage].push(g);
-    });
+    async function deleteAllKnockout() {
+      if (!confirm('למחוק את כל שלבי הנוקאאוט?')) return;
+      const res = await fetch(`/api/games/deleteAll/${tournamentId}`, { method: 'DELETE' });
+      if (res.ok) {
+        alert('🗑️ כל שלבי הנוקאאוט נמחקו');
+        loadKnockout();
+      } else {
+        alert('❌ שגיאה במחיקה');
+      }
+    }
 
-    let html = '';
-    for (const stage of ['שמינית גמר','רבע גמר','חצי גמר','גמר']) {
-      html += `<h3>${stage}</h3>`;
-      if (stages[stage]) {
-        html += `<table><tr><th>קבוצה א'</th><th>קבוצה ב'</th><th>תוצאה</th><th>ניהול</th></tr>`;
-        stages[stage].forEach(g => {
-          html += `<tr>
-            <td>${g.teamA?.name || '---'}</td>
-            <td>${g.teamB?.name || '---'}</td>
-            <td>${g.scoreA ?? '-'} : ${g.scoreB ?? '-'}</td>
-            <td>
-              <button class="action-btn" onclick="editGame('${g._id}')">✏️ ערוך</button>
-              <button class="action-btn" onclick="deleteGame('${g._id}')">🗑️ מחק</button>
-            </td>
+    async function loadStats() {
+      const [gamesRes, teamsRes] = await Promise.all([
+        fetch(`/api/games/by-tournament?tournamentId=${tournamentId}`),
+        fetch(`/api/teams/${tournamentId}`)
+      ]);
+
+      const games = await gamesRes.json();
+      const teams = await teamsRes.json();
+
+      const groups = {};
+      teams.forEach(t => {
+        const group = t.group || 'ליגה';
+        if (!groups[group]) groups[group] = [];
+        groups[group].push(t);
+      });
+
+      let standingsHTML = '';
+      for (const group in groups) {
+        standingsHTML += `<h3>${group}</h3>`;
+        const stats = {};
+        groups[group].forEach(t => {
+          stats[t._id] = {
+            name: t.name,
+            games: 0,
+            wins: 0,
+            draws: 0,
+            losses: 0,
+            points: t.points ?? 0
+          };
+        });
+
+        games.forEach(g => {
+          if (g.knockoutStage) return;
+          const [ta, tb] = [g.teamA?._id, g.teamB?._id];
+          if (!stats[ta] || !stats[tb]) return;
+          stats[ta].games++; stats[tb].games++;
+          if (g.scoreA > g.scoreB) {
+            stats[ta].wins++; stats[tb].losses++; stats[ta].points += 3;
+          } else if (g.scoreA < g.scoreB) {
+            stats[tb].wins++; stats[ta].losses++; stats[tb].points += 3;
+          } else {
+            stats[ta].draws++; stats[tb].draws++;
+            stats[ta].points += 1; stats[tb].points += 1;
+          }
+        });
+
+        const sorted = Object.values(stats).sort((a, b) => b.points - a.points);
+        standingsHTML += `<table>
+          <tr><th>מקום</th><th>קבוצה</th><th>מש</th><th>נ</th><th>ת</th><th>ה</th><th>נק'</th></tr>`;
+        sorted.forEach((t, i) => {
+          standingsHTML += `<tr>
+            <td>${i + 1}</td><td>${t.name}</td><td>${t.games}</td>
+            <td>${t.wins}</td><td>${t.draws}</td><td>${t.losses}</td>
+            <td>${t.points}</td>
           </tr>`;
         });
-        html += `</table>`;
-      } else {
-        html += `<p>אין משחקים בשלב זה</p>`;
+        standingsHTML += `</table>`;
       }
-    }
-    document.getElementById('knockoutContainer').innerHTML = html;
-  }
+      document.getElementById('standingsContainer').innerHTML = standingsHTML;
 
-  function editGame(gameId) {
-  window.location.href = `admin-edit-game.html?gameId=${gameId}&toredirect=standings&tournamentId=${tournamentId}`;
-  }
-
-  async function deleteGame(gameId) {
-    if (!confirm('אתה בטוח שאתה רוצה למחוק משחק זה?')) return;
-    const res = await fetch(`/api/games/${gameId}`, { method: 'DELETE' });
-    if (res.ok) {
-      alert('🗑️ המשחק נמחק');
-      loadKnockout();
-    } else {
-      alert('❌ שגיאה במחיקת משחק');
-    }
-  }
-
-  async function deleteAllKnockout() {
-    if (!confirm('למחוק את כל שלבי הנוקאאוט?')) return;
-    const res = await fetch(`/api/games/deleteAll/${tournamentId}`, { method: 'DELETE' });
-    if (res.ok) {
-      alert('🗑️ כל שלבי הנוקאאוט נמחקו');
-      loadKnockout();
-    } else {
-      alert('❌ שגיאה במחיקה');
-    }
-  }
-
-  async function loadStats() {
-    const [gamesRes, teamsRes] = await Promise.all([
-      fetch(`/api/games/by-tournament?tournamentId=${tournamentId}`),
-      fetch(`/api/teams/${tournamentId}`)
-    ]);
-
-    const games = await gamesRes.json();
-    const teams = await teamsRes.json();
-
-    const groups = {};
-    teams.forEach(t => {
-      const group = t.group || 'ליגה';
-      if (!groups[group]) groups[group] = [];
-      groups[group].push(t);
-    });
-
-    let standingsHTML = '';
-    for (const group in groups) {
-      standingsHTML += `<h3>${group}</h3>`;
-      const stats = {};
-      groups[group].forEach(t => {
-        stats[t._id] = { name: t.name, games: 0, wins: 0, draws: 0, losses: 0, points: t.points ?? 0 };
-      });
-
+      const scorers = {};
       games.forEach(g => {
-        if (g.knockoutStage) return;
-        const [ta, tb] = [g.teamA?._id, g.teamB?._id];
-        if (!stats[ta] || !stats[tb]) return;
-        stats[ta].games++; stats[tb].games++;
-        if (g.scoreA > g.scoreB) { stats[ta].wins++; stats[tb].losses++; stats[ta].points += 3; }
-        else if (g.scoreA < g.scoreB) { stats[tb].wins++; stats[ta].losses++; stats[tb].points += 3; }
-        else { stats[ta].draws++; stats[tb].draws++; stats[ta].points += 1; stats[tb].points += 1; }
+        for (const goal of g.goals?.teamA || []) {
+          if (!scorers[goal.scorer]) scorers[goal.scorer] = 0;
+          scorers[goal.scorer]++;
+        }
+        for (const goal of g.goals?.teamB || []) {
+          if (!scorers[goal.scorer]) scorers[goal.scorer] = 0;
+          scorers[goal.scorer]++;
+        }
       });
 
-      const sorted = Object.values(stats).sort((a,b)=>b.points-a.points);
-      standingsHTML += `<table><tr><th>מקום</th><th>קבוצה</th><th>מש</th><th>נ</th><th>ת</th><th>ה</th><th>נק'</th></tr>`;
-      sorted.forEach((t,i) => {
-        standingsHTML += `<tr>
-          <td>${i+1}</td><td>${t.name}</td><td>${t.games}</td>
-          <td>${t.wins}</td><td>${t.draws}</td><td>${t.losses}</td>
-          <td>${t.points}</td>
-        </tr>`;
+      const top = Object.entries(scorers).sort((a, b) => b[1] - a[1]).slice(0, 10);
+      let scorersHTML = `<table><tr><th>מקום</th><th>שחקן</th><th>שערים</th></tr>`;
+      top.forEach(([name, goals], i) => {
+        scorersHTML += `<tr><td>${i + 1}</td><td>${name}</td><td>${goals}</td></tr>`;
       });
-      standingsHTML += `</table>`;
+      scorersHTML += `</table>`;
+      document.getElementById('scorersContainer').innerHTML = scorersHTML;
     }
-    document.getElementById('standingsContainer').innerHTML = standingsHTML;
 
-    const scorers = {};
-    games.forEach(g => {
-      for (const goal of g.goals?.teamA || []) {
-        if (!scorers[goal.scorer]) scorers[goal.scorer] = 0;
-        scorers[goal.scorer]++;
-      }
-      for (const goal of g.goals?.teamB || []) {
-        if (!scorers[goal.scorer]) scorers[goal.scorer] = 0;
-        scorers[goal.scorer]++;
-      }
-    });
-
-  
-    const top = Object.entries(scorers).sort((a,b)=>b[1]-a[1]).slice(0,10);
-    let scorersHTML = `<table><tr><th>מקום</th><th>שחקן</th><th>שערים</th></tr>`;
-    top.forEach(([name, goals],i)=> {
-      scorersHTML += `<tr><td>${i+1}</td><td>${name}</td><td>${goals}</td></tr>`;
-    });
-    scorersHTML += `</table>`;
-    document.getElementById('scorersContainer').innerHTML = scorersHTML;
-  }
-
-  if (params.get('updated') === '1') {
-    console.log('ריענון אוטומטי אחרי עדכון');
+    if (params.get('updated') === '1') {
+      console.log('ריענון אוטומטי אחרי עדכון');
+      loadStats();
+      loadKnockout();
+    }
     loadStats();
     loadKnockout();
-  }
-  loadStats();
-  loadKnockout();
 
-  function goBackToDashboard() {
-  const adminId = new URLSearchParams(window.location.search).get('adminId');
-  if (adminId) {
-    window.location.href = `admin-dashboard.html?adminId=${adminId}`;
-  } else {
-    window.location.href = `admin-dashboard.html`;
-  }
-}
-
-</script>
+    function goBackToDashboard() {
+      const adminId = new URLSearchParams(window.location.search).get('adminId');
+      if (adminId) {
+        window.location.href = `admin-dashboard.html?adminId=${adminId}`;
+      } else {
+        window.location.href = `admin-dashboard.html`;
+      }
+    }
+  </script>
 </body>
 </html>
