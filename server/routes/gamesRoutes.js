@@ -60,7 +60,7 @@ router.post('/', async (req, res) => {
   }
 });
 
-// ✅ פונקציה חכמה לשיבוץ — נשארת כמו שהייתה
+// ✅ פונקציה חכמה לשיבוץ
 async function smartPairing(groups, stage) {
   let pairs = [];
   const positions = Object.keys(groups).length;
@@ -92,7 +92,7 @@ async function smartPairing(groups, stage) {
   return pairs;
 }
 
-// ✅ יצירת שלב נוקאאוט אוטומטי עם smartPairing ושדה side
+// ✅ יצירת שלב נוקאאוט אוטומטי עם טיפול ב-BYE
 router.post('/create-knockout-auto', async (req, res) => {
   try {
     const { tournamentId, stage, numTeams } = req.body;
@@ -106,8 +106,8 @@ router.post('/create-knockout-auto', async (req, res) => {
     else if (stage === 'חצי גמר') expected = 4;
     else if (stage === 'גמר') expected = 2;
 
-    if (numTeams !== expected) {
-      return res.status(400).json({ error: `❗ נדרש ${expected} קבוצות לשלב ${stage}` });
+    if (numTeams > expected) {
+      return res.status(400).json({ error: `❗ יש יותר מדי קבוצות. ${expected} זה המקסימום לשלב ${stage}` });
     }
 
     const allTeams = await Team.find({ tournamentId });
@@ -171,13 +171,43 @@ router.post('/create-knockout-auto', async (req, res) => {
       }
     }
 
+    // הוסף BYE אם חסר
+    if (numTeams < expected) {
+      const byesNeeded = expected - numTeams;
+
+      const stats = {};
+      allTeams.forEach(t => stats[t._id] = { team: t, points: 0, goalsDiff: 0, goalsFor: 0 });
+
+      for (const game of allGames) {
+        if (!game.knockoutStage) {
+          const ta = stats[game.teamA._id];
+          const tb = stats[game.teamB._id];
+          ta.goalsFor += game.scoreA || 0;
+          tb.goalsFor += game.scoreB || 0;
+          ta.goalsDiff += (game.scoreA || 0) - (game.scoreB || 0);
+          tb.goalsDiff += (game.scoreB || 0) - (game.scoreA || 0);
+          if (game.scoreA > game.scoreB) ta.points += 3;
+          else if (game.scoreA < game.scoreB) tb.points += 3;
+          else { ta.points += 1; tb.points += 1; }
+        }
+      }
+
+      const sorted = Object.values(stats).sort((a, b) =>
+        b.points - a.points || b.goalsDiff - a.goalsDiff || b.goalsFor - a.goalsFor
+      ).map(x => x.team);
+
+      for (let i = 0; i < byesNeeded; i++) {
+        pairs.push([sorted[i], null]);
+      }
+    }
+
     const newGames = [];
     for (let i = 0; i < pairs.length; i++) {
       const [teamA, teamB] = pairs[i];
       const game = new Game({
         tournamentId,
         teamA: teamA._id,
-        teamB: teamB._id,
+        teamB: teamB ? teamB._id : null,
         date: new Date(),
         time: '12:00',
         location: 'מגרש נוקאאוט',
@@ -199,8 +229,6 @@ router.post('/create-knockout-auto', async (req, res) => {
 router.put('/:gameId', async (req, res) => {
   try {
     const { scoreA, scoreB, ...rest } = req.body;
-
-   
 
     const updated = await Game.findByIdAndUpdate(
       req.params.gameId,
