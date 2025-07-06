@@ -142,15 +142,6 @@
     color: #fff;
   }
 
-  .export-pdf-button {
-    right: 15px;
-    background: #00c853;
-    color: #fff;
-  }
-
-  .export-pdf-button:hover {
-    background: #00b341;
-  }
 
   .house-title {
     margin-top: 20px;
@@ -230,26 +221,14 @@
     #logo {
       width: 200px;
     }
-    .back-button, .export-pdf-button {
-      font-size: 14px;
-      padding: 10px 16px;
-    }
+  
   }
 
-  @media print {
-    .section, table, .matches-grid, .match-box, #bracketContainer, #scorersContainer, .knockout-wrapper {
-      page-break-inside: avoid;
-      page-break-after: auto;
-    }
-    body {
-      -webkit-print-color-adjust: exact;
-    }
-  }
+
 </style>
 </head>
 <body>
   <button class="back-button" onclick="history.back()">🔙 חזור</button>
-  <button class="export-pdf-button" onclick="generatePDF()">📄 יצוא PDF</button>
   <img src="logo.png" id="logo" onclick="goHome()" />
   <h1 id="tournamentName">טעינת טורניר...</h1>
   <div id="error" class="error"></div>
