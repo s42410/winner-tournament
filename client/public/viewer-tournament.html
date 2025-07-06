@@ -6,7 +6,7 @@
   <title>📊 מעקב טורניר</title>
 <style>
   body {
-    background: linear-gradient(to right, #0d47a1, #1976d2);
+    background: linear-gradient(to right, #0d47a1, #42a5f5);
     font-family: 'Segoe UI', sans-serif;
     text-align: center;
     padding: 30px;
@@ -30,13 +30,13 @@
   }
 
   .section {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.15);
     padding: 25px;
     border-radius: 15px;
     margin: 20px auto;
     width: 95%;
     max-width: 1100px;
-    box-shadow: 0 0 20px rgba(0,0,0,0.2);
+    box-shadow: 0 0 25px rgba(255,255,255,0.1);
   }
 
   table {
@@ -67,11 +67,11 @@
   }
 
   .match-box {
-    background: linear-gradient(145deg, #42a5f5, #1e88e5);
-    border: 1px solid #000; /* פס שחור דק מסביב */
+    background: linear-gradient(145deg, #64b5f6, #42a5f5);
+    border: 1px solid #ddd;
     border-radius: 12px;
     padding: 15px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    box-shadow: 0 4px 20px rgba(255,255,255,0.1);
     transition: transform 0.2s ease;
     cursor: pointer;
     color: #fff;
@@ -86,7 +86,7 @@
   }
 
   .match-box.knockout {
-    background: linear-gradient(145deg, #3949ab, #1e88e5);
+    background: linear-gradient(145deg, #5c6bc0, #42a5f5);
   }
 
   .match-box:hover {
@@ -156,28 +156,19 @@
   #scorersContainer {
     border: 2px solid #000;
     border-radius: 12px;
-    background: rgba(255,255,255,0.05);
-    box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    background: rgba(255,255,255,0.1);
+    box-shadow: 0 0 15px rgba(255,255,255,0.1);
   }
 
   #scorersContainer h2::before {
     content: "👑 ";
   }
 
-  #scorersContainer table {
-    border: 2px solid #000;
-  }
-
-  #scorersContainer th {
-    background: #0d47a1;
-    color: #fff;
-  }
-
   .knockout-wrapper {
-    background: rgba(13, 71, 161, 0.8);
+    background: rgba(21, 101, 192, 0.7);
     padding: 30px;
     border-radius: 15px;
-    box-shadow: 0 0 20px rgba(0,0,0,0.4);
+    box-shadow: 0 0 30px rgba(255,255,255,0.1);
     color: #fff;
     max-width: 900px;
     margin: 30px auto;
@@ -197,7 +188,7 @@
   }
 
   .knockout-card {
-    background: #1976d2;
+    background: #42a5f5;
     margin: 10px 0;
     padding: 12px;
     border-radius: 8px;
@@ -220,21 +211,18 @@
   }
 
   @media (max-width: 600px) {
-  .matches-grid {
-    grid-template-columns: 1fr;
+    .matches-grid {
+      grid-template-columns: 1fr;
+    }
+    #logo {
+      width: 200px;
+    }
+    .back-button, .export-pdf-button {
+      font-size: 14px;
+      padding: 10px 16px;
+    }
   }
-  #logo {
-    width: 200px;
-  }
-  .back-button, .export-pdf-button {
-    font-size: 14px;
-    padding: 10px 16px;
-  }
-}
-
 </style>
-
-
 </head>
 <body>
   <button class="back-button" onclick="history.back()">🔙 חזור</button>
@@ -345,66 +333,59 @@
         });
 
         renderBracket(games);
-      } catch (err) {
-       
-      }
+      } catch (err) { console.error(err); }
     }
-function renderBracket(games) {
-  const container = document.getElementById('bracketContainer');
-  container.innerHTML = `
-    <div class="section knockout-wrapper">
-      <h2>🏆 שלבי נוקאאוט</h2>
-    </div>
-  `;
-  const wrapper = container.querySelector('.knockout-wrapper');
 
-  const stagesOrder = ['שמינית גמר', 'רבע גמר', 'חצי גמר', 'גמר'];
+    function renderBracket(games) {
+      const container = document.getElementById('bracketContainer');
+      container.innerHTML = `
+        <div class="section knockout-wrapper">
+          <h2>🏆 שלבי נוקאאוט</h2>
+        </div>
+      `;
+      const wrapper = container.querySelector('.knockout-wrapper');
 
-  stagesOrder.forEach(stageName => {
-    const stageGames = games.filter(g => g.knockoutStage === stageName);
-    if (stageGames.length > 0) {
-      let stageHTML = `<details><summary>${stageName} - לחץ כדי לראות משחקים</summary>`;
-      stageGames.forEach(g => {
-        // פרטי המשחק בלי אירועים פתוחים
-        const goalsA = (g.goals?.teamA || []).map(goal => `⚽ ${goal.scorer} דקה ${goal.minute}`).join('<br>');
-        const goalsB = (g.goals?.teamB || []).map(goal => `⚽ ${goal.scorer} דקה ${goal.minute}`).join('<br>');
-        const cardsA = (g.cards?.teamA || []).map(card => `${card.color==='yellow'?'🟨':'🟥'} ${card.player} דקה ${card.minute}`).join('<br>');
-        const cardsB = (g.cards?.teamB || []).map(card => `${card.color==='yellow'?'🟨':'🟥'} ${card.player} דקה ${card.minute}`).join('<br>');
+      const stagesOrder = ['שמינית גמר', 'רבע גמר', 'חצי גמר', 'גמר'];
 
-        const eventsHtml = `
-          <div class="knockout-details" style="display: none;">
-            <strong>אירועים:</strong><br>
-            ${goalsA ? '<u>' + g.teamA?.name + '</u><br>' + goalsA + '<br>' : ''}
-            ${cardsA ? cardsA + '<br>' : ''}
-            ${goalsB ? '<u>' + g.teamB?.name + '</u><br>' + goalsB + '<br>' : ''}
-            ${cardsB ? cardsB : ''}
-          </div>
-        `;
-
-        stageHTML += `
-          <div class="knockout-card">
-            ${g.teamA?.name || '---'} ${g.scoreA ?? '-'} : ${g.scoreB ?? '-'} ${g.teamB?.name || '---'}
-            ${eventsHtml}
-          </div>
-        `;
+      stagesOrder.forEach(stageName => {
+        const stageGames = games.filter(g => g.knockoutStage === stageName);
+        if (stageGames.length > 0) {
+          let stageHTML = `<details><summary>${stageName} - לחץ כדי לראות משחקים</summary>`;
+          stageGames.forEach(g => {
+            const goalsA = (g.goals?.teamA || []).map(goal => `⚽ ${goal.scorer} דקה ${goal.minute}`).join('<br>');
+            const goalsB = (g.goals?.teamB || []).map(goal => `⚽ ${goal.scorer} דקה ${goal.minute}`).join('<br>');
+            const cardsA = (g.cards?.teamA || []).map(card => `${card.color==='yellow'?'🟨':'🟥'} ${card.player} דקה ${card.minute}`).join('<br>');
+            const cardsB = (g.cards?.teamB || []).map(card => `${card.color==='yellow'?'🟨':'🟥'} ${card.player} דקה ${card.minute}`).join('<br>');
+            const eventsHtml = `
+              <div class="knockout-details" style="display: none;">
+                <strong>אירועים:</strong><br>
+                ${goalsA ? '<u>' + g.teamA?.name + '</u><br>' + goalsA + '<br>' : ''}
+                ${cardsA ? cardsA + '<br>' : ''}
+                ${goalsB ? '<u>' + g.teamB?.name + '</u><br>' + goalsB + '<br>' : ''}
+                ${cardsB ? cardsB : ''}
+              </div>
+            `;
+            stageHTML += `
+              <div class="knockout-card">
+                ${g.teamA?.name || '---'} ${g.scoreA ?? '-'} : ${g.scoreB ?? '-'} ${g.teamB?.name || '---'}
+                ${eventsHtml}
+              </div>
+            `;
+          });
+          stageHTML += `</details>`;
+          wrapper.innerHTML += stageHTML;
+        }
       });
-      stageHTML += `</details>`;
-      wrapper.innerHTML += stageHTML;
+
+      document.querySelectorAll('.knockout-card').forEach(card => {
+        card.addEventListener('click', (e) => {
+          e.stopPropagation();
+          document.querySelectorAll('.knockout-details').forEach(d => d.style.display = 'none');
+          const details = card.querySelector('.knockout-details');
+          details.style.display = 'block';
+        });
+      });
     }
-  });
-
-  // פתיחה/סגירה של אירועים
-  document.querySelectorAll('.knockout-card').forEach(card => {
-    card.addEventListener('click', (e) => {
-      e.stopPropagation();
-      document.querySelectorAll('.knockout-details').forEach(d => d.style.display = 'none');
-      const details = card.querySelector('.knockout-details');
-      details.style.display = 'block';
-    });
-  });
-}
-
-
 
     loadTournamentData();
   </script>
