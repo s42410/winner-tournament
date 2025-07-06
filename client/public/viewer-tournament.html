@@ -315,6 +315,73 @@
           }
         }
 
+        standingsContainer.innerHTML += `
+  <div class="section">
+    <h2>📊 טבלת דירוג</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>קבוצה</th>
+          <th>מש</th>
+          <th>נצ</th>
+          <th>ת</th>
+          <th>ה</th>
+          <th>נק'</th>
+        </tr>
+      </thead>
+      <tbody id="standingsTable"></tbody>
+    </table>
+  </div>
+`;
+
+const teamStats = teams.map(team => {
+  const teamGames = games.filter(g =>
+    g.teamA?._id === team._id || g.teamB?._id === team._id
+  );
+
+  let played = teamGames.length,
+      wins = 0,
+      draws = 0,
+      losses = 0,
+      points = 0;
+
+  teamGames.forEach(g => {
+    const isA = g.teamA?._id === team._id;
+    const gF = isA ? g.scoreA : g.scoreB;
+    const gA = isA ? g.scoreB : g.scoreA;
+
+    if (gF > gA) {
+      wins++;
+      points += 3;
+    } else if (gF === gA) {
+      draws++;
+      points += 1;
+    } else {
+      losses++;
+    }
+  });
+
+  return { name: team.name, played, wins, draws, losses, points };
+});
+
+teamStats.sort((a, b) => b.points - a.points);
+
+const standingsBody = document.getElementById('standingsTable');
+
+teamStats.forEach(t => {
+  standingsBody.innerHTML += `
+    <tr>
+      <td>${t.name}</td>
+      <td>${t.played}</td>
+      <td>${t.wins}</td>
+      <td>${t.draws}</td>
+      <td>${t.losses}</td>
+      <td>${t.points}</td>
+    </tr>
+  `;
+});
+
+
         const scorers = {};
         games.forEach(g => {
           (g.goals?.teamA || []).forEach(goal => scorers[goal.scorer] = (scorers[goal.scorer] || 0) + 1);
