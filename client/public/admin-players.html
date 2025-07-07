@@ -124,7 +124,7 @@
     <h4 id="teamName">שם הקבוצה: טוען...</h4>
 
     <input type="text" id="firstName" placeholder="שם פרטי" required />
-    <input type="text" id="lastName" placeholder="שם משפחה" required />
+    <input type="text" id="lastName" placeholder="שם משפחה"  />
     <input type="number" id="shirtNumber" placeholder="מספר חולצה" required />
     <button onclick="addPlayer()">➕ הוסף שחקן</button>
 
@@ -187,7 +187,7 @@
     const lastName = document.getElementById('lastName').value.trim();
     const shirtNumber = document.getElementById('shirtNumber').value.trim();
 
-    if (!firstName || !lastName || !shirtNumber) {
+    if (!firstName || !shirtNumber) {
       message.textContent = '❗ יש למלא את כל השדות';
       message.className = 'message error';
       return;
