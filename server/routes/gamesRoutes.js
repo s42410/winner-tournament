@@ -60,37 +60,40 @@ router.post('/', async (req, res) => {
   }
 });
 
-// ✅ פונקציה חכמה לשיבוץ
-async function smartPairing(groups, stage) {
+// ✅ smartPairing מותאם לכל הלוגיקות (1/2/3/4 בתים)
+async function smartPairing(groups, stage, numTeams) {
   let pairs = [];
-  const positions = Object.keys(groups).length;
-  const slots = {};
-  Object.entries(groups).forEach(([groupName, teams]) => {
-    teams.forEach((team, index) => {
-      const pos = index + 1;
-      if (!slots[pos]) slots[pos] = [];
-      slots[pos].push({ ...team, group: groupName });
+
+  // ממיין קבוצות בכל בית לפי נקודות והפרשי שערים
+  for (const g of Object.keys(groups)) {
+    groups[g].sort((a, b) => 
+      b.points - a.points || b.goalsDiff - a.goalsDiff || b.goalsFor - a.goalsFor
+    );
+  }
+
+  const allTeams = [];
+  Object.keys(groups).forEach(groupName => {
+    groups[groupName].forEach(teamObj => {
+      allTeams.push({ ...teamObj, group: groupName });
     });
   });
 
-  const half = Object.keys(slots).length / 2;
-  for (let i = 1; i <= half; i++) {
-    const slotA = slots[i];
-    const slotB = slots[positions + 1 - i];
+  // ממיין את כל הקבוצות
+  allTeams.sort((a, b) => 
+    b.points - a.points || b.goalsDiff - a.goalsDiff || b.goalsFor - a.goalsFor
+  );
 
-    while (slotA.length && slotB.length) {
-      const teamA = slotA.shift();
-      let opponentIndex = slotB.findIndex(t => t.group !== teamA.group);
-      if (opponentIndex === -1) {
-        slotA.push(teamA);
-        continue;
-      }
-      const teamB = slotB.splice(opponentIndex, 1)[0];
-      pairs.push([teamA.team, teamB.team]);
-    }
+  // בוחר רק את ה־numTeams הראשונות
+  const selected = allTeams.slice(0, numTeams);
+
+  // ההגרלה: ראשונים מול אחרונים
+  for (let i = 0; i < numTeams / 2; i++) {
+    pairs.push([selected[i].team, selected[numTeams - 1 - i].team]);
   }
+
   return pairs;
 }
+
 
 // ✅ יצירת שלב נוקאאוט אוטומטי עם טיפול ב-BYE
 router.post('/create-knockout-auto', async (req, res) => {
@@ -143,7 +146,7 @@ router.post('/create-knockout-auto', async (req, res) => {
         groups[g].sort((a, b) => b.points - a.points || b.goalsDiff - a.goalsDiff || b.goalsFor - a.goalsFor);
       }
 
-      pairs = await smartPairing(groups, stage);
+   pairs = await smartPairing(groups, stage, numTeams);
     } else {
       const stats = {};
       allTeams.forEach(t => stats[t._id] = { team: t, points: 0, goalsDiff: 0, goalsFor: 0 });
