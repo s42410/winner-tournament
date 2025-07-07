@@ -96,11 +96,13 @@ async function smartPairing(groups, stage, numTeams) {
 
 
 // ✅ יצירת שלב נוקאאוט אוטומטי עם טיפול ב-BYE
+// ✅ יצירת שלב נוקאאוט אוטומטי עם טיפול ב-BYE ובדיקת לוגיקה מדויקת
 router.post('/create-knockout-auto', async (req, res) => {
   try {
     const { tournamentId, stage, numTeams } = req.body;
+
     if (!tournamentId || !stage || !numTeams) {
-      return res.status(400).json({ error: '❗ חסרים נתונים' });
+      return res.status(400).json({ error: '❗ חסרים נתונים בבקשה' });
     }
 
     let expected = 0;
@@ -110,48 +112,38 @@ router.post('/create-knockout-auto', async (req, res) => {
     else if (stage === 'גמר') expected = 2;
 
     if (numTeams > expected) {
-      return res.status(400).json({ error: `❗ יש יותר מדי קבוצות. ${expected} זה המקסימום לשלב ${stage}` });
+      return res.status(400).json({ error: `❗ בשלב ${stage} ניתן מקסימום ${expected} קבוצות` });
     }
 
     const allTeams = await Team.find({ tournamentId });
     const allGames = await Game.find({ tournamentId }).populate('teamA teamB');
-    const hasGroups = allTeams.some(t => t.group && t.group.trim() !== '');
-    // ✅ בדיקת לוגיקה לפי כמות בתים וכמות קבוצות נדרשת
-const numGroups = new Set(allTeams.map(t => t.group?.trim()).filter(Boolean)).size;
-console.log(`מספר בתים: ${numGroups}, סך קבוצות: ${allTeams.length}`);
 
-if (numGroups === 1) {
-  if (stage === 'שמינית גמר' && allTeams.length < 16) {
-    return res.status(400).json({ error: 'צריך לפחות 16 קבוצות בליגה לשמינית גמר' });
-  }
-  if (stage === 'רבע גמר' && allTeams.length < 8) {
-    return res.status(400).json({ error: 'צריך לפחות 8 קבוצות בליגה לרבע גמר' });
-  }
-  if (stage === 'חצי גמר' && allTeams.length < 4) {
-    return res.status(400).json({ error: 'צריך לפחות 4 קבוצות בליגה לחצי גמר' });
-  }
-  if (stage === 'גמר' && allTeams.length < 2) {
-    return res.status(400).json({ error: 'צריך לפחות 2 קבוצות בליגה לגמר' });
-  }
-} else if (numGroups === 2 || numGroups === 3 || numGroups === 4) {
-  // אותה לוגיקה גם לבתים מרובים: עדיפות לפי 16, 8, 4, 2
-  if (stage === 'שמינית גמר' && allTeams.length < 16) {
-    return res.status(400).json({ error: 'צריך לפחות 16 קבוצות בבתים לשמינית גמר' });
-  }
-  if (stage === 'רבע גמר' && allTeams.length < 8) {
-    return res.status(400).json({ error: 'צריך לפחות 8 קבוצות בבתים לרבע גמר' });
-  }
-  if (stage === 'חצי גמר' && allTeams.length < 4) {
-    return res.status(400).json({ error: 'צריך לפחות 4 קבוצות בבתים לחצי גמר' });
-  }
-  if (stage === 'גמר' && allTeams.length < 2) {
-    return res.status(400).json({ error: 'צריך לפחות 2 קבוצות בבתים לגמר' });
-  }
-}
+    // בדיקה: כמה בתים וכמה קבוצות יש בפועל
+    const numGroups = new Set(allTeams.map(t => t.group?.trim()).filter(Boolean)).size;
+    console.log('✅ כל הקבוצות:', allTeams.map(t => t.name));
+    console.log('✅ מספר בתים:', numGroups, 'כמות קבוצות:', allTeams.length);
 
-console.log('✅ תנאי לוגיקה עברו בהצלחה');
+    // בדיקת לוגיקה לכל שלב: אם אין מספיק קבוצות זה מחזיר שגיאה יפה
+    if (stage === 'שמינית גמר' && allTeams.length < 16) {
+      return res.status(400).json({ error: 'צריך לפחות 16 קבוצות לשמינית גמר' });
+    }
+    if (stage === 'רבע גמר' && allTeams.length < 8) {
+      return res.status(400).json({ error: 'צריך לפחות 8 קבוצות לרבע גמר' });
+    }
+    if (stage === 'חצי גמר' && allTeams.length < 4) {
+      return res.status(400).json({ error: 'צריך לפחות 4 קבוצות לחצי גמר' });
+    }
+    if (stage === 'גמר' && allTeams.length < 2) {
+      return res.status(400).json({ error: 'צריך לפחות 2 קבוצות לגמר' });
+    }
+
+    // אם בחרת פחות קבוצות ממה שיש — זה בסדר
+    if (numTeams > allTeams.length) {
+      return res.status(400).json({ error: `❗ ביקשת ${numTeams} קבוצות אבל יש רק ${allTeams.length}` });
+    }
 
     let pairs = [];
+    const hasGroups = allTeams.some(t => t.group && t.group.trim() !== '');
 
     if (hasGroups) {
       const groups = {};
@@ -177,11 +169,8 @@ console.log('✅ תנאי לוגיקה עברו בהצלחה');
         }
       }
 
-      for (const g of Object.keys(groups)) {
-        groups[g].sort((a, b) => b.points - a.points || b.goalsDiff - a.goalsDiff || b.goalsFor - a.goalsFor);
-      }
+      pairs = await smartPairing(groups, stage, numTeams);
 
-   pairs = await smartPairing(groups, stage, numTeams);
     } else {
       const stats = {};
       allTeams.forEach(t => stats[t._id] = { team: t, points: 0, goalsDiff: 0, goalsFor: 0 });
@@ -200,7 +189,7 @@ console.log('✅ תנאי לוגיקה עברו בהצלחה');
         }
       }
 
-      const sorted = Object.values(stats).sort((a, b) =>
+      const sorted = Object.values(stats).sort((a,b) => 
         b.points - a.points || b.goalsDiff - a.goalsDiff || b.goalsFor - a.goalsFor
       ).map(x => x.team);
 
@@ -209,13 +198,12 @@ console.log('✅ תנאי לוגיקה עברו בהצלחה');
       }
     }
 
-    // הוסף BYE אם חסר
+    // BYE אם חסר
     if (numTeams < expected) {
       const byesNeeded = expected - numTeams;
-
+      console.log(`✅ מוסיף ${byesNeeded} BYE`);
       const stats = {};
       allTeams.forEach(t => stats[t._id] = { team: t, points: 0, goalsDiff: 0, goalsFor: 0 });
-
       for (const game of allGames) {
         if (!game.knockoutStage) {
           const ta = stats[game.teamA._id];
@@ -229,8 +217,7 @@ console.log('✅ תנאי לוגיקה עברו בהצלחה');
           else { ta.points += 1; tb.points += 1; }
         }
       }
-
-      const sorted = Object.values(stats).sort((a, b) =>
+      const sorted = Object.values(stats).sort((a,b) => 
         b.points - a.points || b.goalsDiff - a.goalsDiff || b.goalsFor - a.goalsFor
       ).map(x => x.team);
 
@@ -248,7 +235,7 @@ console.log('✅ תנאי לוגיקה עברו בהצלחה');
         teamB: teamB ? teamB._id : null,
         date: new Date(),
         time: '12:00',
-        location: 'מגרש נוקאאוט',
+        location: `מגרש ${stage}`,
         knockoutStage: stage,
         side: i < pairs.length / 2 ? 'L' : 'R'
       });
@@ -256,12 +243,14 @@ console.log('✅ תנאי לוגיקה עברו בהצלחה');
       newGames.push(game);
     }
 
-    res.status(201).json({ message: `✅ ${stage} נוצר`, games: newGames });
+    res.status(201).json({ message: `✅ ${stage} נוצר בהצלחה`, games: newGames });
 
   } catch (err) {
-    res.status(500).json({ error: '❌ שגיאה ביצירת נוקאאוט', details: err.message });
+    console.error('❌ שגיאה ביצירת נוקאאוט:', err);
+    res.status(500).json({ error: '❌ שגיאה כללית', details: err.message });
   }
 });
+
 
 // ✅ עדכון תוצאה ויצירת שלב הבא לפי מנצחות בלבד
 router.put('/:gameId', async (req, res) => {
