@@ -51,7 +51,6 @@ router.post('/', async (req, res) => {
     if (!name || !color || !tournamentId) {
       return res.status(400).json({ error: 'נא למלא את כל השדות' });
     }
-
     const newTeam = new Team({ name, color, group, tournamentId, players: [] });
     await newTeam.save();
     res.status(201).json({ message: '✅ הקבוצה נוספה בהצלחה', team: newTeam });
@@ -64,22 +63,17 @@ router.post('/', async (req, res) => {
 router.put('/:teamId', async (req, res) => {
   try {
     const { name, color, group } = req.body;
-
     if (!name || !color) {
       return res.status(400).json({ error: 'נא למלא את כל השדות' });
     }
-
     const updateFields = { name, color };
     if (group !== undefined) updateFields.group = group;
-
     const updated = await Team.findByIdAndUpdate(
       req.params.teamId,
       updateFields,
       { new: true }
     );
-
     if (!updated) return res.status(404).json({ error: 'קבוצה לא נמצאה' });
-
     res.json({ message: '✏️ הקבוצה עודכנה בהצלחה', team: updated });
   } catch (err) {
     res.status(500).json({ error: '❌ שגיאה בעדכון קבוצה', details: err.message });
@@ -90,19 +84,15 @@ router.put('/:teamId', async (req, res) => {
 router.put('/group/:teamId', async (req, res) => {
   try {
     const { group } = req.body;
-
     if (group === undefined) {
       return res.status(400).json({ error: 'שדה בית חסר' });
     }
-
     const updated = await Team.findByIdAndUpdate(
       req.params.teamId,
       { group },
       { new: true }
     );
-
     if (!updated) return res.status(404).json({ error: 'קבוצה לא נמצאה' });
-
     res.json({ message: '✅ הבית עודכן בהצלחה', team: updated });
   } catch (err) {
     res.status(500).json({ error: '❌ שגיאה בעדכון הבית', details: err.message });
@@ -112,18 +102,14 @@ router.put('/group/:teamId', async (req, res) => {
 // ✅ הוספת שחקן לקבוצה
 router.post('/add-player/:teamId', async (req, res) => {
   try {
-    const { fullName, shirtNumber } = req.body;
-
-    if (!fullName || !shirtNumber) {
-      return res.status(400).json({ error: 'נא למלא שם מלא ומספר חולצה' });
+    const { firstName, lastName, shirtNumber } = req.body;
+    if (!firstName || !lastName || !shirtNumber) {
+      return res.status(400).json({ error: 'נא למלא את כל השדות' });
     }
-
     const team = await Team.findById(req.params.teamId);
     if (!team) return res.status(404).json({ error: 'קבוצה לא נמצאה' });
-
-    team.players.push({ fullName, shirtNumber });
+    team.players.push({ firstName, lastName, shirtNumber });
     await team.save();
-
     res.json({ message: '✅ שחקן נוסף בהצלחה', team });
   } catch (err) {
     res.status(500).json({ error: '❌ שגיאה בהוספת שחקן', details: err.message });
@@ -135,15 +121,12 @@ router.delete('/remove-player/:teamId/:index', async (req, res) => {
   try {
     const team = await Team.findById(req.params.teamId);
     if (!team) return res.status(404).json({ error: 'קבוצה לא נמצאה' });
-
     const index = parseInt(req.params.index);
     if (isNaN(index) || index < 0 || index >= team.players.length) {
       return res.status(400).json({ error: 'אינדקס שחקן לא תקין' });
     }
-
     team.players.splice(index, 1);
     await team.save();
-
     res.json({ message: '🗑️ שחקן נמחק בהצלחה', team });
   } catch (err) {
     res.status(500).json({ error: '❌ שגיאה במחיקת שחקן', details: err.message });

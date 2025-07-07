@@ -1,7 +1,8 @@
 const mongoose = require('mongoose');
 
 const playerSchema = new mongoose.Schema({
-fullName: String,
+  firstName: String,
+  lastName: String,
   shirtNumber: Number
 });
 
