@@ -413,19 +413,24 @@ teamStats.forEach(t => {
             details.innerHTML = html || 'אין אירועים רשומים';
             details.style.display = 'block';
           };
-          gamesList.appendChild(box);
-        });
+          // זה הסוף של הלולאת forEach:
+gamesList.appendChild(box);
+}); // <- שים לב לסוגריים האלה!!
 
-        // ✅ בלוק מוכן להדבקה — אחרי שמייצרים את הטבלאות
+// ואז:
 if (format === 'groups') {
   document.getElementById('leagueTableContainer').style.display = 'none';
 }
 if (format === 'league') {
-  document.querySelectorAll('.house-title').forEach(h => h.closest('.section').style.display = 'none');
+  document.querySelectorAll('.house-title').forEach(h => {
+    const section = h.closest('.section');
+    if (section) section.style.display = 'none';
+  });
 }
 
+// ואז:
+renderBracket(games);
 
-        renderBracket(games);
       } catch (err) { console.error(err); }
     }
 
