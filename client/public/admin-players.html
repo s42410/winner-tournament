@@ -195,11 +195,16 @@
 
 
     try {
-      const res = await fetch(`/api/teams/add-player/${teamId}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ firstName, lastName, shirtNumber })
-      });
+    const body = { firstName, shirtNumber };
+if (lastName) {
+  body.lastName = lastName;
+}
+
+const res = await fetch(`/api/teams/add-player/${teamId}`, {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify(body)
+});
 
       const data = await res.json();
 
