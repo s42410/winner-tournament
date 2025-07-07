@@ -154,20 +154,28 @@ router.post('/create-knockout-auto', async (req, res) => {
       });
 
       for (const game of allGames) {
-        if (!game.knockoutStage) {
-          const ta = groups[game.teamA.group].find(x => x.team._id.equals(game.teamA._id));
-          const tb = groups[game.teamB.group].find(x => x.team._id.equals(game.teamB._id));
-          if (ta && tb) {
-            ta.goalsFor += game.scoreA || 0;
-            tb.goalsFor += game.scoreB || 0;
-            ta.goalsDiff += (game.scoreA || 0) - (game.scoreB || 0);
-            tb.goalsDiff += (game.scoreB || 0) - (game.scoreA || 0);
-            if (game.scoreA > game.scoreB) ta.points += 3;
-            else if (game.scoreA < game.scoreB) tb.points += 3;
-            else { ta.points += 1; tb.points += 1; }
-          }
-        }
+  if (!game.knockoutStage) {
+    if (game.teamA && game.teamA.group && groups[game.teamA.group]) {
+      const ta = groups[game.teamA.group].find(x => x.team._id.equals(game.teamA._id));
+      if (ta) {
+        ta.goalsFor += game.scoreA || 0;
+        ta.goalsDiff += (game.scoreA || 0) - (game.scoreB || 0);
+        if (game.scoreA > game.scoreB) ta.points += 3;
+        else if (game.scoreA === game.scoreB) ta.points += 1;
       }
+    }
+    if (game.teamB && game.teamB.group && groups[game.teamB.group]) {
+      const tb = groups[game.teamB.group].find(x => x.team._id.equals(game.teamB._id));
+      if (tb) {
+        tb.goalsFor += game.scoreB || 0;
+        tb.goalsDiff += (game.scoreB || 0) - (game.scoreA || 0);
+        if (game.scoreB > game.scoreA) tb.points += 3;
+        else if (game.scoreA === game.scoreB) tb.points += 1;
+      }
+    }
+  }
+}
+
 
       pairs = await smartPairing(groups, stage, numTeams);
 
