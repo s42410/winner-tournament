@@ -283,6 +283,7 @@
         standingsContainer.innerHTML = '';
 
         const hasGroups = teams.some(team => team.group);
+        console.log("📌 האם יש בתים? hasGroups =", hasGroups);
 
         if (hasGroups) {
           const groups = {};
@@ -384,14 +385,11 @@ teamStats.forEach(t => {
   `;
 });
 
-// ✅ אחרי כל היצירה של הטבלאות — תסתיר מה שצריך לפי הפורמט
-if (format === 'groups') {
-  // אם זה פורמט בתים — תסתיר את הטבלה הכללית
+if (hasGroups) {
+  // יש בתים — מציגים רק את טבלאות הבתים ומסתירים את הטבלה הכללית
   document.getElementById('leagueTableContainer').style.display = 'none';
-}
-
-if (format === 'league') {
-  // אם זה פורמט ליגה — תסתיר את כל הבתים
+} else {
+  // אין בתים — מציגים רק את טבלת הליגה ומסתירים את טבלאות הבתים
   document.querySelectorAll('.house-title').forEach(h => {
     const section = h.closest('.section');
     if (section) section.style.display = 'none';
