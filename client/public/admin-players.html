@@ -123,8 +123,7 @@
     <h2>👟 ניהול שחקנים בקבוצה</h2>
     <h4 id="teamName">שם הקבוצה: טוען...</h4>
 
-    <input type="text" id="firstName" placeholder="שם פרטי" required />
-    <input type="text" id="lastName" placeholder="שם משפחה"  />
+   <input type="text" id="fullName" placeholder="שם מלא" required />
     <input type="number" id="shirtNumber" placeholder="מספר חולצה" required />
     <button onclick="addPlayer()">➕ הוסף שחקן</button>
 
@@ -183,11 +182,10 @@
   }
 
   async function addPlayer() {
-    const firstName = document.getElementById('firstName').value.trim();
-    const lastName = document.getElementById('lastName').value.trim();
+    const fullName = document.getElementById('fullName').value.trim();
     const shirtNumber = document.getElementById('shirtNumber').value.trim();
 
-    if (!firstName || !shirtNumber) {
+    if (!fullName  || !shirtNumber) {
   alert("יש למלא שם פרטי ומספר חולצה");
   return; // ❗ זה עוצר את הפונקציה אם חסר
 }
@@ -195,10 +193,8 @@
 
 
     try {
-    const body = { firstName, shirtNumber };
-if (lastName) {
-  body.lastName = lastName;
-}
+    const body = { fullName, shirtNumber };
+
 
 const res = await fetch(`/api/teams/add-player/${teamId}`, {
   method: 'POST',
@@ -211,8 +207,7 @@ const res = await fetch(`/api/teams/add-player/${teamId}`, {
       if (res.ok) {
         message.textContent = '✅ שחקן נוסף בהצלחה';
         message.className = 'message success';
-        document.getElementById('firstName').value = '';
-        document.getElementById('lastName').value = '';
+        document.getElementById('fullName').value = '';
         document.getElementById('shirtNumber').value = '';
         document.getElementById('firstName').focus();
         fetchPlayers();
@@ -251,26 +246,20 @@ const res = await fetch(`/api/teams/add-player/${teamId}`, {
   }
 
   // הוספת מעבר בין שדות עם Enter
-  document.getElementById('firstName').addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      document.getElementById('lastName').focus();
-    }
-  });
+ document.getElementById('fullName').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    document.getElementById('shirtNumber').focus();
+  }
+});
 
-  document.getElementById('lastName').addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      document.getElementById('shirtNumber').focus();
-    }
-  });
+document.getElementById('shirtNumber').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    addPlayer();
+  }
+});
 
-  document.getElementById('shirtNumber').addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      addPlayer();
-    }
-  });
 
   loadTeamData();
   fetchPlayers();

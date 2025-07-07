@@ -112,16 +112,16 @@ router.put('/group/:teamId', async (req, res) => {
 // ✅ הוספת שחקן לקבוצה
 router.post('/add-player/:teamId', async (req, res) => {
   try {
-    const { firstName, lastName, shirtNumber } = req.body;
+    const { fullName, shirtNumber } = req.body;
 
-    if (!firstName || !lastName || !shirtNumber) {
-      return res.status(400).json({ error: 'נא למלא את כל השדות' });
+    if (!fullName || !shirtNumber) {
+      return res.status(400).json({ error: 'נא למלא שם מלא ומספר חולצה' });
     }
 
     const team = await Team.findById(req.params.teamId);
     if (!team) return res.status(404).json({ error: 'קבוצה לא נמצאה' });
 
-    team.players.push({ firstName, lastName, shirtNumber });
+    team.players.push({ fullName, shirtNumber });
     await team.save();
 
     res.json({ message: '✅ שחקן נוסף בהצלחה', team });
