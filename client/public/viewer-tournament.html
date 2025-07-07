@@ -384,6 +384,21 @@ teamStats.forEach(t => {
   `;
 });
 
+// ✅ אחרי כל היצירה של הטבלאות — תסתיר מה שצריך לפי הפורמט
+if (format === 'groups') {
+  // אם זה פורמט בתים — תסתיר את הטבלה הכללית
+  document.getElementById('leagueTableContainer').style.display = 'none';
+}
+
+if (format === 'league') {
+  // אם זה פורמט ליגה — תסתיר את כל הבתים
+  document.querySelectorAll('.house-title').forEach(h => {
+    const section = h.closest('.section');
+    if (section) section.style.display = 'none';
+  });
+}
+
+
 
         const scorers = {};
         games.forEach(g => {
@@ -417,18 +432,6 @@ teamStats.forEach(t => {
 gamesList.appendChild(box);
 }); // <- שים לב לסוגריים האלה!!
 
-// ואז:
-if (format === 'groups') {
-  document.getElementById('leagueTableContainer').style.display = 'none';
-}
-if (format === 'league') {
-  document.querySelectorAll('.house-title').forEach(h => {
-    const section = h.closest('.section');
-    if (section) section.style.display = 'none';
-  });
-}
-
-// ואז:
 renderBracket(games);
 
       } catch (err) { console.error(err); }
