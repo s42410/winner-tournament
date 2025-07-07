@@ -188,10 +188,11 @@
     const shirtNumber = document.getElementById('shirtNumber').value.trim();
 
     if (!firstName || !shirtNumber) {
-      message.textContent = '❗ יש למלא את כל השדות';
-      message.className = 'message error';
-      return;
-    }
+  alert("יש למלא שם פרטי ומספר חולצה");
+  return; // ❗ זה עוצר את הפונקציה אם חסר
+}
+
+
 
     try {
       const res = await fetch(`/api/teams/add-player/${teamId}`, {
