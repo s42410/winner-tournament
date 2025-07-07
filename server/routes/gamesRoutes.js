@@ -116,6 +116,41 @@ router.post('/create-knockout-auto', async (req, res) => {
     const allTeams = await Team.find({ tournamentId });
     const allGames = await Game.find({ tournamentId }).populate('teamA teamB');
     const hasGroups = allTeams.some(t => t.group && t.group.trim() !== '');
+    // ✅ בדיקת לוגיקה לפי כמות בתים וכמות קבוצות נדרשת
+const numGroups = new Set(allTeams.map(t => t.group?.trim()).filter(Boolean)).size;
+console.log(`מספר בתים: ${numGroups}, סך קבוצות: ${allTeams.length}`);
+
+if (numGroups === 1) {
+  if (stage === 'שמינית גמר' && allTeams.length < 16) {
+    return res.status(400).json({ error: 'צריך לפחות 16 קבוצות בליגה לשמינית גמר' });
+  }
+  if (stage === 'רבע גמר' && allTeams.length < 8) {
+    return res.status(400).json({ error: 'צריך לפחות 8 קבוצות בליגה לרבע גמר' });
+  }
+  if (stage === 'חצי גמר' && allTeams.length < 4) {
+    return res.status(400).json({ error: 'צריך לפחות 4 קבוצות בליגה לחצי גמר' });
+  }
+  if (stage === 'גמר' && allTeams.length < 2) {
+    return res.status(400).json({ error: 'צריך לפחות 2 קבוצות בליגה לגמר' });
+  }
+} else if (numGroups === 2 || numGroups === 3 || numGroups === 4) {
+  // אותה לוגיקה גם לבתים מרובים: עדיפות לפי 16, 8, 4, 2
+  if (stage === 'שמינית גמר' && allTeams.length < 16) {
+    return res.status(400).json({ error: 'צריך לפחות 16 קבוצות בבתים לשמינית גמר' });
+  }
+  if (stage === 'רבע גמר' && allTeams.length < 8) {
+    return res.status(400).json({ error: 'צריך לפחות 8 קבוצות בבתים לרבע גמר' });
+  }
+  if (stage === 'חצי גמר' && allTeams.length < 4) {
+    return res.status(400).json({ error: 'צריך לפחות 4 קבוצות בבתים לחצי גמר' });
+  }
+  if (stage === 'גמר' && allTeams.length < 2) {
+    return res.status(400).json({ error: 'צריך לפחות 2 קבוצות בבתים לגמר' });
+  }
+}
+
+console.log('✅ תנאי לוגיקה עברו בהצלחה');
+
     let pairs = [];
 
     if (hasGroups) {
