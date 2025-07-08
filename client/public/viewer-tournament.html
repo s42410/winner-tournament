@@ -247,9 +247,13 @@
   <script>
     const tournamentId = new URLSearchParams(window.location.search).get('id');
     function goHome() { window.location.href = 'index.html'; }
-    function formatDate(dateStr) {
-      const date = new Date(dateStr); return date.toLocaleDateString('he-IL');
-    }
+function formatDateTime(dateStr, timeStr) {
+  const date = new Date(dateStr);
+  const datePart = date.toLocaleDateString('he-IL');
+  const timePart = timeStr || date.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
+  return `${datePart} ${timePart}`;
+}
+
     function generatePDF() {
   const element = document.body;
   const opt = {
@@ -410,12 +414,13 @@ if (hasGroups) {
         const gamesList = document.getElementById('gamesList');
         games.forEach(g => {
           const box = document.createElement('div');
+
           box.className = 'match-box' + (g.knockoutStage ? ' knockout' : '');
           box.innerHTML = `${g.knockoutStage ? `🏆 ${g.knockoutStage}<br>` : ''}
-            ${g.teamA?.name || '---'} ${g.scoreA ?? '-'} : ${g.scoreB ?? '-'} ${g.teamB?.name || '---'}<br>
-            📅 ${formatDate(g.date)}
-             ⏰ ${new Date(g.date).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}
-            <div class="details"></div>`;
+  ${g.teamA?.name || '---'} ${g.scoreA ?? '-'} : ${g.scoreB ?? '-'} ${g.teamB?.name || '---'}<br>
+  📅⏰ ${formatDateTime(g.date, g.time)}
+  <div class="details"></div>`;
+
           box.onclick = () => {
             document.querySelectorAll('.details').forEach(d => d.style.display = 'none');
             const details = box.querySelector('.details');
