@@ -414,6 +414,7 @@ if (hasGroups) {
           box.innerHTML = `${g.knockoutStage ? `🏆 ${g.knockoutStage}<br>` : ''}
             ${g.teamA?.name || '---'} ${g.scoreA ?? '-'} : ${g.scoreB ?? '-'} ${g.teamB?.name || '---'}<br>
             📅 ${formatDate(g.date)}
+             ⏰ ${new Date(g.date).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}
             <div class="details"></div>`;
           box.onclick = () => {
             document.querySelectorAll('.details').forEach(d => d.style.display = 'none');
