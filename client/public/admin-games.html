@@ -291,14 +291,19 @@ async function fetchGames() {
   const res = await fetch(`/api/games/${tournamentId}`);
   const games = await res.json();
 
-  // שלב 1: מיין את כל המשחקים מראש לפי תאריך ושעה
   games.sort((a, b) => {
-    const dateA = new Date(`${a.date}T${a.time || '00:00'}`);
-    const dateB = new Date(`${b.date}T${b.time || '00:00'}`);
-    return dateA - dateB;
-  });
+  const dA = a.date;
+  const dB = b.date;
+  if (dA < dB) return -1;
+  if (dA > dB) return 1;
 
-  // שלב 2: קבץ לפי מיקום/בית
+  // אם אותו תאריך - השווה שעות
+  const tA = a.time || '00:00';
+  const tB = b.time || '00:00';
+  return tA.localeCompare(tB);
+});
+
+
   const grouped = {};
   games.forEach(game => {
     const loc = game.location || 'כללי';
@@ -306,11 +311,20 @@ async function fetchGames() {
     grouped[loc].push(game);
   });
 
-  // שלב 3: מחק את התוכן הקודם
   gamesContainer.innerHTML = '';
 
-  // שלב 4: עבור קבוצה-קבוצה, הוצג משחקים בסדר שכבר ממוין
   Object.entries(grouped).forEach(([group, arr]) => {
+      // מיין את המשחקים בתוך כל קבוצה שוב לפי תאריך ושעה
+  arr.sort((a, b) => {
+    const dA = a.date;
+    const dB = b.date;
+    if (dA < dB) return -1;
+    if (dA > dB) return 1;
+    const tA = a.time || '00:00';
+    const tB = b.time || '00:00';
+    return tA.localeCompare(tB);
+  });
+
     gamesContainer.innerHTML += `<div class="group-title">${group}</div>`;
     gamesContainer.innerHTML += `
       <table>
@@ -346,9 +360,6 @@ async function fetchGames() {
     `;
   });
 }
-
-
-
 
 async function saveGame() {
   const teamA = teamASelect.value;
@@ -416,13 +427,10 @@ function editGame(gameId) {
   window.location.href = `admin-edit-game.html?gameId=${gameId}&toredirect=games&tournamentId=${tournamentId}`;
 }
 
-
-// ✅ מוסיף רענון אם חזרנו אחרי עריכה
 if (new URLSearchParams(window.location.search).get('updated') === '1') {
   fetchGames();
 }
 
-// ✅ רענון גם אם חוזרים עם back
 window.addEventListener('pageshow', function(event) {
   if (event.persisted) {
     fetchGames();
@@ -440,7 +448,6 @@ function goBackToDashboard() {
     window.location.href = `admin-dashboard.html`;
   }
 }
-
 </script>
 </body>
 </html>
