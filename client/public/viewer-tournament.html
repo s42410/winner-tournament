@@ -281,6 +281,16 @@ function formatDateTime(dateStr, timeStr) {
         const format = tournament.format; // שמור את הפורמט
         const teams = await teamsRes.json();
         const games = await gamesRes.json();
+        games.sort((a, b) => {
+        const dA = a.date;
+        const dB = b.date;
+       if (dA < dB) return -1;
+       if (dA > dB) return 1;
+       const tA = a.time || '00:00';
+       const tB = b.time || '00:00';
+       return tA.localeCompare(tB);
+      });
+
         document.getElementById('tournamentName').innerText = tournament.name || 'טורניר ללא שם';
 
         const standingsContainer = document.getElementById('standingsContainer');
