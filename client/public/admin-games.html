@@ -290,7 +290,7 @@ async function autoGenerateGroupStage() {
 async function fetchGames() {
   const res = await fetch(`/api/games/${tournamentId}`);
   const games = await res.json();
-  
+
   const grouped = {};
   games.forEach(game => {
     const loc = game.location || 'כללי';
@@ -298,7 +298,8 @@ async function fetchGames() {
     grouped[loc].push(game);
   });
 
-   Object.values(grouped).forEach(arr => {
+  // מיון כל בית/מגרש
+  Object.values(grouped).forEach(arr => {
     arr.sort((a, b) => {
       const dateA = new Date(`${a.date}T${a.time || '00:00'}`);
       const dateB = new Date(`${b.date}T${b.time || '00:00'}`);
@@ -307,7 +308,9 @@ async function fetchGames() {
   });
 
   gamesContainer.innerHTML = '';
-  for (const group in grouped) {
+
+  // 👇 שים לב להבדל פה!
+  Object.entries(grouped).forEach(([group, arr]) => {
     gamesContainer.innerHTML += `<div class="group-title">${group}</div>`;
     gamesContainer.innerHTML += `
       <table>
@@ -323,7 +326,7 @@ async function fetchGames() {
           </tr>
         </thead>
         <tbody>
-          ${grouped[group].map(game => `
+          ${arr.map(game => `
             <tr>
               <td>${game.teamA?.name || '---'}</td>
               <td>${game.teamB?.name || '---'}</td>
@@ -341,8 +344,9 @@ async function fetchGames() {
         </tbody>
       </table>
     `;
-  }
+  });
 }
+
 
 async function saveGame() {
   const teamA = teamASelect.value;
