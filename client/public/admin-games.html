@@ -290,6 +290,14 @@ async function autoGenerateGroupStage() {
 async function fetchGames() {
   const res = await fetch(`/api/games/${tournamentId}`);
   const games = await res.json();
+
+  // מיין את המשחקים לפי תאריך ושעה
+games.sort((a, b) => {
+  const dateA = new Date(`${a.date}T${a.time || '00:00'}`);
+  const dateB = new Date(`${b.date}T${b.time || '00:00'}`);
+  return dateA - dateB;
+});
+
   const grouped = {};
   games.forEach(game => {
     const loc = game.location || 'כללי';
