@@ -291,14 +291,14 @@ async function fetchGames() {
   const res = await fetch(`/api/games/${tournamentId}`);
   const games = await res.json();
 
-  // מיון את כל המשחקים מראש לפני הקיבוץ
+  // שלב 1: מיין את כל המשחקים מראש לפי תאריך ושעה
   games.sort((a, b) => {
     const dateA = new Date(`${a.date}T${a.time || '00:00'}`);
     const dateB = new Date(`${b.date}T${b.time || '00:00'}`);
     return dateA - dateB;
   });
 
-  // קיבוץ לפי מיקום/בית
+  // שלב 2: קבץ לפי מיקום/בית
   const grouped = {};
   games.forEach(game => {
     const loc = game.location || 'כללי';
@@ -306,8 +306,10 @@ async function fetchGames() {
     grouped[loc].push(game);
   });
 
+  // שלב 3: מחק את התוכן הקודם
   gamesContainer.innerHTML = '';
 
+  // שלב 4: עבור קבוצה-קבוצה, הוצג משחקים בסדר שכבר ממוין
   Object.entries(grouped).forEach(([group, arr]) => {
     gamesContainer.innerHTML += `<div class="group-title">${group}</div>`;
     gamesContainer.innerHTML += `
@@ -344,6 +346,7 @@ async function fetchGames() {
     `;
   });
 }
+
 
 
 
