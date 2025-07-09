@@ -468,6 +468,16 @@ renderBracket(games);
         const stageGames = games.filter(g => g.knockoutStage === stageName);
         if (stageGames.length > 0) {
           let stageHTML = `<details><summary>${stageName} - לחץ כדי לראות משחקים</summary>`;
+            stageGames.sort((a,b) => {
+      const dA = a.date;
+      const dB = b.date;
+      if (dA < dB) return -1;
+      if (dA > dB) return 1;
+      const tA = a.time || '00:00';
+      const tB = b.time || '00:00';
+      return tA.localeCompare(tB);
+      });
+
           stageGames.forEach(g => {
             const goalsA = (g.goals?.teamA || []).map(goal => `⚽ ${goal.scorer} דקה ${goal.minute}`).join('<br>');
             const goalsB = (g.goals?.teamB || []).map(goal => `⚽ ${goal.scorer} דקה ${goal.minute}`).join('<br>');
