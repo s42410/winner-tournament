@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const Game = require('../models/Game');
 const Team = require('../models/Team');
+const mongoose = require('mongoose');
+
 
 // ✅ שליפת משחק בודד כולל קבוצות
 router.get('/game/:gameId', async (req, res) => {
@@ -327,10 +329,12 @@ router.delete('/:gameId', async (req, res) => {
 
 router.delete('/deleteAll/:tournamentId', async (req, res) => {
   try {
-    const result = await Game.deleteMany({
-      tournamentId: req.params.tournamentId,
-      knockoutStage: { $ne: null }
-    });
+    const tournamentId = new mongoose.Types.ObjectId(req.params.tournamentId);
+const result = await Game.deleteMany({
+  tournamentId,
+  knockoutStage: { $ne: null }
+});
+
     res.json({ message: `🗑️ נמחקו ${result.deletedCount} משחקי נוקאאוט` });
   } catch (err) {
     res.status(500).json({ error: '❌ שגיאה במחיקה', details: err.message });
@@ -339,7 +343,10 @@ router.delete('/deleteAll/:tournamentId', async (req, res) => {
 
 router.delete('/group-stage/:tournamentId', async (req, res) => {
   try {
-    await Game.deleteMany({ tournamentId: req.params.tournamentId });
+    const tournamentId = new mongoose.Types.ObjectId(req.params.tournamentId);
+await Game.deleteMany({ tournamentId });
+
+    
     res.json({ message: '✅ כל משחקי שלב הבתים והליגה נמחקו בהצלחה' });
   } catch (err) {
     res.status(500).json({ error: '❌ שגיאה במחיקה', details: err.message });
@@ -349,7 +356,9 @@ router.delete('/group-stage/:tournamentId', async (req, res) => {
 
 router.put('/reset-scores/:tournamentId', async (req, res) => {
   try {
-    const query = { tournamentId: req.params.tournamentId };
+    const tournamentId = new mongoose.Types.ObjectId(req.params.tournamentId);
+const query = { tournamentId };
+
     console.log('🤖 איפוס תוצאות - QUERY:', query);
 
     const result = await Game.updateMany(
