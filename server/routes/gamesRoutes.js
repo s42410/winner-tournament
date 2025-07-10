@@ -349,15 +349,22 @@ router.delete('/group-stage/:tournamentId', async (req, res) => {
 
 router.put('/reset-scores/:tournamentId', async (req, res) => {
   try {
-    await Game.updateMany(
-      { tournamentId: req.params.tournamentId },
+    const query = { tournamentId: req.params.tournamentId };
+    console.log('🤖 איפוס תוצאות - QUERY:', query);
+
+    const result = await Game.updateMany(
+      query,
       { $set: { scoreA: null, scoreB: null, goals: [] } }
     );
-    res.json({ message: '🔄 כל התוצאות אופסו בהצלחה' });
+
+    console.log('🔍 תוצאות איפוס:', result);
+
+    res.json({ message: '🔄 כל התוצאות אופסו בהצלחה', details: result });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
+
 
 
 module.exports = router;
