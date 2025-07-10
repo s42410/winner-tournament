@@ -164,6 +164,8 @@
       <button onclick="autoGenerateGames()">⚙️ יצירה אוטומטית</button>
       <button onclick="autoGenerateGroupStage()">🏆 יצירה אוטומטית שלב בתים</button>
       <button onclick="deleteAllGroupStageGames()">🗑️ מחק את כל משחקי שלב הבתים</button>
+      <button onclick="resetAllScores()">🔄 אפס את כל התוצאות</button>
+
     </div>
 
     <div id="manualForm" class="form-section">
@@ -422,6 +424,13 @@ async function deleteAllGroupStageGames() {
   await fetch(`/api/games/group-stage/${tournamentId}`, { method: 'DELETE' });
   fetchGames();
 }
+
+async function resetAllScores() {
+  if (!confirm('לאפס את כל התוצאות?')) return;
+  await fetch(`/api/games/reset-scores/${tournamentId}`, { method: 'PUT' });
+  fetchGames();
+}
+
 
 function editGame(gameId) {
   window.location.href = `admin-edit-game.html?gameId=${gameId}&toredirect=games&tournamentId=${tournamentId}`;

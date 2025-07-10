@@ -153,13 +153,13 @@ router.post('/create-knockout-auto', async (req, res) => {
         groups[g].push({ team: t, points: 0, goalsDiff: 0, goalsFor: 0 });
       });
 
-      for (const game of allGames) {
-  if (!game.knockoutStage) {
+for (const game of allGames) {
+  if (!game.knockoutStage && game.scoreA != null && game.scoreB != null) {
     if (game.teamA && game.teamA.group && groups[game.teamA.group]) {
       const ta = groups[game.teamA.group].find(x => x.team._id.equals(game.teamA._id));
       if (ta) {
-        ta.goalsFor += game.scoreA || 0;
-        ta.goalsDiff += (game.scoreA || 0) - (game.scoreB || 0);
+        ta.goalsFor += game.scoreA;
+        ta.goalsDiff += game.scoreA - game.scoreB;
         if (game.scoreA > game.scoreB) ta.points += 3;
         else if (game.scoreA === game.scoreB) ta.points += 1;
       }
@@ -167,14 +167,15 @@ router.post('/create-knockout-auto', async (req, res) => {
     if (game.teamB && game.teamB.group && groups[game.teamB.group]) {
       const tb = groups[game.teamB.group].find(x => x.team._id.equals(game.teamB._id));
       if (tb) {
-        tb.goalsFor += game.scoreB || 0;
-        tb.goalsDiff += (game.scoreB || 0) - (game.scoreA || 0);
+        tb.goalsFor += game.scoreB;
+        tb.goalsDiff += game.scoreB - game.scoreA;
         if (game.scoreB > game.scoreA) tb.points += 3;
         else if (game.scoreA === game.scoreB) tb.points += 1;
       }
     }
   }
 }
+
 
 
       pairs = await smartPairing(groups, stage, numTeams);
@@ -184,18 +185,19 @@ router.post('/create-knockout-auto', async (req, res) => {
       allTeams.forEach(t => stats[t._id] = { team: t, points: 0, goalsDiff: 0, goalsFor: 0 });
 
       for (const game of allGames) {
-        if (!game.knockoutStage) {
-          const ta = stats[game.teamA._id];
-          const tb = stats[game.teamB._id];
-          ta.goalsFor += game.scoreA || 0;
-          tb.goalsFor += game.scoreB || 0;
-          ta.goalsDiff += (game.scoreA || 0) - (game.scoreB || 0);
-          tb.goalsDiff += (game.scoreB || 0) - (game.scoreA || 0);
-          if (game.scoreA > game.scoreB) ta.points += 3;
-          else if (game.scoreA < game.scoreB) tb.points += 3;
-          else { ta.points += 1; tb.points += 1; }
-        }
-      }
+  if (!game.knockoutStage && game.scoreA != null && game.scoreB != null) {
+    const ta = stats[game.teamA._id];
+    const tb = stats[game.teamB._id];
+    ta.goalsFor += game.scoreA;
+    tb.goalsFor += game.scoreB;
+    ta.goalsDiff += game.scoreA - game.scoreB;
+    tb.goalsDiff += game.scoreB - game.scoreA;
+    if (game.scoreA > game.scoreB) ta.points += 3;
+    else if (game.scoreA < game.scoreB) tb.points += 3;
+    else { ta.points += 1; tb.points += 1; }
+  }
+}
+
 
       const sorted = Object.values(stats).sort((a,b) => 
         b.points - a.points || b.goalsDiff - a.goalsDiff || b.goalsFor - a.goalsFor
@@ -213,18 +215,19 @@ router.post('/create-knockout-auto', async (req, res) => {
       const stats = {};
       allTeams.forEach(t => stats[t._id] = { team: t, points: 0, goalsDiff: 0, goalsFor: 0 });
       for (const game of allGames) {
-        if (!game.knockoutStage) {
-          const ta = stats[game.teamA._id];
-          const tb = stats[game.teamB._id];
-          ta.goalsFor += game.scoreA || 0;
-          tb.goalsFor += game.scoreB || 0;
-          ta.goalsDiff += (game.scoreA || 0) - (game.scoreB || 0);
-          tb.goalsDiff += (game.scoreB || 0) - (game.scoreA || 0);
-          if (game.scoreA > game.scoreB) ta.points += 3;
-          else if (game.scoreA < game.scoreB) tb.points += 3;
-          else { ta.points += 1; tb.points += 1; }
-        }
-      }
+  if (!game.knockoutStage && game.scoreA != null && game.scoreB != null) {
+    const ta = stats[game.teamA._id];
+    const tb = stats[game.teamB._id];
+    ta.goalsFor += game.scoreA;
+    tb.goalsFor += game.scoreB;
+    ta.goalsDiff += game.scoreA - game.scoreB;
+    tb.goalsDiff += game.scoreB - game.scoreA;
+    if (game.scoreA > game.scoreB) ta.points += 3;
+    else if (game.scoreA < game.scoreB) tb.points += 3;
+    else { ta.points += 1; tb.points += 1; }
+  }
+}
+
       const sorted = Object.values(stats).sort((a,b) => 
         b.points - a.points || b.goalsDiff - a.goalsDiff || b.goalsFor - a.goalsFor
       ).map(x => x.team);
