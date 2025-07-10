@@ -206,6 +206,8 @@
           if (g.knockoutStage) return;
           const [ta, tb] = [g.teamA?._id, g.teamB?._id];
           if (!stats[ta] || !stats[tb]) return;
+          if (g.scoreA == null || g.scoreB == null) return;
+
           stats[ta].games++; stats[tb].games++;
           if (g.scoreA > g.scoreB) {
             stats[ta].wins++; stats[tb].losses++; stats[ta].points += 3;
