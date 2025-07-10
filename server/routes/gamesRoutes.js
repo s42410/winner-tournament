@@ -346,4 +346,18 @@ router.delete('/group-stage/:tournamentId', async (req, res) => {
   }
 });
 
+
+router.put('/reset-scores/:tournamentId', async (req, res) => {
+  try {
+    await Game.updateMany(
+      { tournamentId: req.params.tournamentId },
+      { $set: { scoreA: null, scoreB: null, goals: [] } }
+    );
+    res.json({ message: '🔄 כל התוצאות אופסו בהצלחה' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+
 module.exports = router;
