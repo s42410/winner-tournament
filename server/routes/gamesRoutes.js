@@ -329,35 +329,50 @@ router.delete('/:gameId', async (req, res) => {
 
 router.delete('/deleteAll/:tournamentId', async (req, res) => {
   try {
-    const tournamentId = new mongoose.Types.ObjectId(req.params.tournamentId);
-const result = await Game.deleteMany({
-  tournamentId,
-  knockoutStage: { $ne: null }
-});
+    const idStr = req.params.tournamentId;
+    const query = {
+      $or: [
+        { tournamentId: new mongoose.Types.ObjectId(idStr) },
+        { tournamentId: idStr }
+      ],
+      knockoutStage: { $ne: null }
+    };
 
+    const result = await Game.deleteMany(query);
     res.json({ message: `🗑️ נמחקו ${result.deletedCount} משחקי נוקאאוט` });
   } catch (err) {
-    res.status(500).json({ error: '❌ שגיאה במחיקה', details: err.message });
+    res.status(500).json({ error: err.message });
   }
 });
 
+
 router.delete('/group-stage/:tournamentId', async (req, res) => {
   try {
-    const tournamentId = new mongoose.Types.ObjectId(req.params.tournamentId);
-await Game.deleteMany({ tournamentId });
+    const idStr = req.params.tournamentId;
+    const query = {
+      $or: [
+        { tournamentId: new mongoose.Types.ObjectId(idStr) },
+        { tournamentId: idStr }
+      ]
+    };
 
-    
-    res.json({ message: '✅ כל משחקי שלב הבתים והליגה נמחקו בהצלחה' });
+    const result = await Game.deleteMany(query);
+    res.json({ message: '✅ כל משחקי שלב הבתים והליגה נמחקו בהצלחה', details: result });
   } catch (err) {
-    res.status(500).json({ error: '❌ שגיאה במחיקה', details: err.message });
+    res.status(500).json({ error: err.message });
   }
 });
 
 
 router.put('/reset-scores/:tournamentId', async (req, res) => {
   try {
-    const tournamentId = new mongoose.Types.ObjectId(req.params.tournamentId);
-const query = { tournamentId };
+    const idStr = req.params.tournamentId;
+    const query = {
+      $or: [
+        { tournamentId: new mongoose.Types.ObjectId(idStr) },
+        { tournamentId: idStr }
+      ]
+    };
 
     console.log('🤖 איפוס תוצאות - QUERY:', query);
 
@@ -373,6 +388,7 @@ const query = { tournamentId };
     res.status(500).json({ error: err.message });
   }
 });
+
 
 
 
