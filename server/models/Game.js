@@ -18,8 +18,8 @@ const gameSchema = new mongoose.Schema({
   date: { type: Date, required: true },
   time: { type: String },
   location: { type: String },
-  scoreA: { type: Number, default: 0 },
-  scoreB: { type: Number, default: 0 },
+  scoreA: { type: Number, default: null },
+scoreB: { type: Number, default: null },
   goals: {
     teamA: [goalSchema],
     teamB: [goalSchema]
