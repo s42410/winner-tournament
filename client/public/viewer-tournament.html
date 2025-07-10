@@ -320,6 +320,7 @@ function formatDateTime(dateStr, timeStr) {
               teamGames.forEach(g => {
                 const isA = g.teamA?._id === team._id;
                 const gF = isA ? g.scoreA : g.scoreB, gA = isA ? g.scoreB : g.scoreA;
+                if (gF == null || gA == null) return; 
                 if (gF > gA) { wins++; points += 3; }
                 else if (gF === gA) { draws++; points += 1; }
                 else { losses++; }
@@ -367,7 +368,7 @@ const teamStats = teams.map(team => {
     const isA = g.teamA?._id === team._id;
     const gF = isA ? g.scoreA : g.scoreB;
     const gA = isA ? g.scoreB : g.scoreA;
-
+    if (gF == null || gA == null) return; 
     if (gF > gA) {
       wins++;
       points += 3;
