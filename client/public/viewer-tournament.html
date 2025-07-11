@@ -316,15 +316,18 @@ function formatDateTime(dateStr, timeStr) {
               groupTeams.some(t => t._id === g.teamA?._id) || groupTeams.some(t => t._id === g.teamB?._id));
             const groupStats = groupTeams.map(team => {
               const teamGames = groupGames.filter(g => g.teamA?._id === team._id || g.teamB?._id === team._id);
-              let played = teamGames.length, wins = 0, draws = 0, losses = 0, points = 0;
-              teamGames.forEach(g => {
-                const isA = g.teamA?._id === team._id;
-                const gF = isA ? g.scoreA : g.scoreB, gA = isA ? g.scoreB : g.scoreA;
-                if (gF == null || gA == null) return; 
-                if (gF > gA) { wins++; points += 3; }
-                else if (gF === gA) { draws++; points += 1; }
-                else { losses++; }
-              });
+            const playedGames = teamGames.filter(g => g.scoreA != null && g.scoreB != null);
+let played = playedGames.length, wins = 0, draws = 0, losses = 0, points = 0;
+
+playedGames.forEach(g => {
+  const isA = g.teamA?._id === team._id;
+  const gF = isA ? g.scoreA : g.scoreB;
+  const gA = isA ? g.scoreB : g.scoreA;
+  if (gF > gA) { wins++; points += 3; }
+  else if (gF === gA) { draws++; points += 1; }
+  else { losses++; }
+});
+
               return { name: team.name, played, wins, draws, losses, points };
             }).sort((a,b)=>b.points-a.points);
             const groupBody = document.getElementById(`standings-${groupName}`);
@@ -358,27 +361,28 @@ const teamStats = teams.map(team => {
     g.teamA?._id === team._id || g.teamB?._id === team._id
   );
 
-  let played = teamGames.length,
-      wins = 0,
-      draws = 0,
-      losses = 0,
-      points = 0;
+ const playedGames = teamGames.filter(g => g.scoreA != null && g.scoreB != null);
+let played = playedGames.length,
+    wins = 0,
+    draws = 0,
+    losses = 0,
+    points = 0;
 
-  teamGames.forEach(g => {
-    const isA = g.teamA?._id === team._id;
-    const gF = isA ? g.scoreA : g.scoreB;
-    const gA = isA ? g.scoreB : g.scoreA;
-    if (gF == null || gA == null) return; 
-    if (gF > gA) {
-      wins++;
-      points += 3;
-    } else if (gF === gA) {
-      draws++;
-      points += 1;
-    } else {
-      losses++;
-    }
-  });
+playedGames.forEach(g => {
+  const isA = g.teamA?._id === team._id;
+  const gF = isA ? g.scoreA : g.scoreB;
+  const gA = isA ? g.scoreB : g.scoreA;
+  if (gF > gA) {
+    wins++;
+    points += 3;
+  } else if (gF === gA) {
+    draws++;
+    points += 1;
+  } else {
+    losses++;
+  }
+});
+
 
   return { name: team.name, played, wins, draws, losses, points };
 });
